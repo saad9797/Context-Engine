@@ -12,6 +12,8 @@ Rest Saas/            Django + DRF backend — auth, tenancy, encrypted connecti
                        and the Node.js ingestion engine under ingestion/ingestion-engine/
 Rest Saas Frontend/   React + Vite console — connections, ingestion runs, saved
                        contexts, architecture graph view, audit log
+mcp-server/           MCP server exposing saved contexts to Claude Code/Desktop
+                       directly, instead of copy-pasting JSON into a chat
 problem.md            The original problem statement
 initial_idea.md       Earlier draft of the idea before it became Contexa
 gaps.md               Security/architecture review that shaped the current backend

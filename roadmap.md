@@ -37,7 +37,9 @@ So: the extraction engine — the hardest, most novel part — is genuinely soli
 
 Ranked by "how much this unlocks the core value prop," not by build difficulty. Effort is rough (solo dev, reusing what already exists).
 
-### P1 — MCP server (Claude Code / Claude Desktop integration)
+### P1 — MCP server (Claude Code / Claude Desktop integration) ✅ built
+
+*Update: implemented in `mcp-server/`. All six tools below are live and tested against the real API — see its README for setup. Not yet published to npm (`npx contexa-mcp` still needs a local path in the meantime).*
 
 **Why first:** everything else you build is wasted if the delivery mechanism stays "copy JSON, paste into chat." That's friction a developer routes around after the second use. An MCP server is the difference between "a tool I remember to use" and "a tool that's just there."
 
@@ -163,7 +165,7 @@ You cannot sell "cuts your AI costs" on faith. Instrument it from day one of P2:
 
 ## 7. Suggested build order (next 2–3 months, solo)
 
-1. **P1 (MCP server)** — smallest effort, unlocks real usage of everything already built, lets you start dogfooding immediately.
+1. ~~**P1 (MCP server)**~~ — **done.** Unlocks real usage of everything already built; start dogfooding it now.
 2. **P2 (task-scoped optimization)** — turns the core pitch from aspirational into measured; do this while dogfooding P1 so you have real tasks to test scoring against.
 3. **P3 (freshness/drift)** — cheap, and directly addresses the biggest trust risk once people start actually relying on the MCP flow day-to-day.
 4. **P6's plain-English summary** — small effort, disproportionate demo/onboarding value; do this before investing in the full visual diagram.
