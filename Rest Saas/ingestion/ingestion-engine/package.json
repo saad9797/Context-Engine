@@ -1,0 +1,16 @@
+{
+  "name": "ingestion-engine",
+  "version": "1.0.0",
+  "description": "Inspects Postgres, object storage, and GitHub repos to produce structured context JSON.",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node run.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.0.0",
+    "@azure/storage-blob": "^12.0.0",
+    "@octokit/rest": "^20.0.0",
+    "mongodb": "^7.5.0",
+    "pg": "^8.0.0"
+  }
+}

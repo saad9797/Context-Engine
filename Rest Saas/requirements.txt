@@ -1,0 +1,12 @@
+django>=4.2,<5.0
+djangorestframework>=3.14
+python-dotenv>=1.0
+psycopg2-binary>=2.9
+dj-database-url>=2.1
+django-redis>=5.4
+django-rq>=2.10
+redis>=5.0
+cryptography>=42.0
+PyJWT[crypto]>=2.8
+requests>=2.31
+dnspython>=2.6
