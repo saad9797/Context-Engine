@@ -2074,10 +2074,27 @@ function CodebaseTab({ codebase }) {
         </div>
       ))}
 
-      {codebase.env_template && (
+      {codebase.env_vars && codebase.env_vars.length > 0 && (
         <>
-          <div style={{ fontWeight: 600, fontSize: 13, margin: "18px 0 10px" }}>Env template</div>
-          <div className="cxa-code-block">{codebase.env_template}</div>
+          <div style={{ fontWeight: 600, fontSize: 13, margin: "18px 0 10px" }}>
+            Environment variables ({codebase.env_vars.length})
+          </div>
+          <div style={{ fontSize: 12, color: "var(--text-faint)", marginBottom: 10 }}>
+            Key names and inferred purpose only, detected from a .env.example/.template file —
+            values are never extracted or stored, even from the template itself.
+          </div>
+          <table className="cxa-table">
+            <thead><tr><th>Key</th><th>Inferred purpose</th><th></th></tr></thead>
+            <tbody>
+              {codebase.env_vars.map((v) => (
+                <tr key={v.name}>
+                  <td className="cxa-mono colname">{v.name}</td>
+                  <td>{v.inferred_purpose}</td>
+                  <td>{v.likely_sensitive && <Badge tone="err">credential-shaped</Badge>}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </>
       )}
     </div>

@@ -182,7 +182,9 @@ function filterCodebase(codebase) {
     // Already curated upstream by the GitHub inspector (key files by role,
     // with content) — this is exactly what code-gen needs, pass through as-is.
     key_files_by_role: codebase.key_files_by_role,
-    env_template: codebase.env_template,
+    // Key names + inferred purpose only — never raw values, not even from
+    // a "template" file (roadmap.md P4 / proposal §6.4, §9).
+    env_vars: codebase.env_vars,
     branch_names: codebase.branch_names,
   };
 }

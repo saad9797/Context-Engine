@@ -1,6 +1,7 @@
 "use strict";
 
 const { Octokit } = require("@octokit/rest");
+const { parseEnvKeys } = require("../env-parser");
 
 // Files whose *content* is worth reading to understand the app's shape.
 // Broadened beyond JS/TS conventions to Python, Ruby, Go, Java, PHP, .NET.
@@ -304,9 +305,15 @@ async function inspectGitHub({ token, owner, repo, branch }) {
   const readmeFile = rawTree.find((f) => /^readme\.(md|txt|rst)$/i.test(f.path));
   if (readmeFile) readme = await getFileContent(octokit, owner, repo, readmeFile.path, defaultBranch);
 
-  let envTemplate = null;
+  // Parsed down to {name, inferred_purpose, likely_sensitive} immediately —
+  // the raw file content (which a real .env.example occasionally carries a
+  // forgotten real value in) is never retained past this call.
+  let envVars = [];
   const envFile = rawTree.find((f) => /\.env\.(example|template|sample)$/i.test(f.path));
-  if (envFile) envTemplate = await getFileContent(octokit, owner, repo, envFile.path, defaultBranch);
+  if (envFile) {
+    const rawEnvContent = await getFileContent(octokit, owner, repo, envFile.path, defaultBranch);
+    envVars = parseEnvKeys(rawEnvContent);
+  }
 
   const { data: commits } = await octokit.repos.listCommits({ owner, repo, per_page: 10 });
   const recentCommits = commits.map((c) => ({
@@ -343,7 +350,7 @@ async function inspectGitHub({ token, owner, repo, branch }) {
     },
     file_tree: buildNestedTree(allFiles),
     readme,
-    env_template: envTemplate,
+    env_vars: envVars,
     key_files_by_role: filesByRole,
     key_files_truncated: budgetExhausted, // true = more high-value files existed than the byte budget allowed
     recent_commits: recentCommits,

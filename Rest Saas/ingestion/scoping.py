@@ -211,7 +211,7 @@ def build_scoped_context(claude_context, task):
             matched = [f for f in files if f.get("path") in included["files"]]
             if matched:
                 key_files[role] = matched
-        # repository/stack/file_tree/env_template stay as-is regardless of
+        # repository/stack/file_tree/env_vars stay as-is regardless of
         # task — cheap, and useful orientation context no matter what's
         # being built.
         scoped["codebase"] = {**codebase, "key_files_by_role": key_files}

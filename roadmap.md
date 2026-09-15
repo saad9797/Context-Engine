@@ -94,7 +94,9 @@ Ranked by "how much this unlocks the core value prop," not by build difficulty. 
 
 ---
 
-### P4 — Env var / secrets handling (proposal §6.4 — currently entirely missing)
+### P4 — Env var / secrets handling (proposal §6.4) ✅ built
+
+*Update: implemented in `ingestion-engine/src/env-parser.js`, wired into the GitHub inspector at the source (raw .env.example content is parsed into {name, inferred_purpose, likely_sensitive} immediately and never retained past that call — not just filtered out downstream). Found and fixed a real pre-existing exposure along the way: `claude_context` was previously carrying the *raw text* of any detected `.env.example` file verbatim, which would leak a real value if a repo owner ever forgot to blank one out in their "template". Verified with a simulated leaked Stripe key in a test fixture — confirmed the value never appears anywhere in the parsed output, only the key name and inferred purpose. Also caught and fixed a real gap in the sensitivity heuristic itself (`AWS_ACCESS_KEY_ID` wasn't flagged — ends in `_ID` not `_KEY`) before shipping it.
 
 **Why:** you've already invested heavily in security posture (encrypted connections, SSRF guard, GitHub App instead of PATs, audit log — see `gaps.md`). Env var handling is explicitly described in your own proposal as opt-in-per-key with no scraped values, and right now none of that exists. This is a credibility gap if a security-conscious team evaluates the product against its own pitch deck.
 
