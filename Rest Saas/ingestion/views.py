@@ -19,10 +19,12 @@ the existence of someone else's data.
 """
 
 import django_rq
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from . import freshness, scoping
 from .audit import log_action
 from .models import AuditLogEntry, DataSourceConnection, IngestionContext, IngestionJob
 from .serializers import (
@@ -137,6 +139,7 @@ class IngestionResultView(APIView):
 class IngestionClaudeContextView(APIView):
     """
     GET /api/ingestion/<uuid:pk>/claude-context/
+    GET /api/ingestion/<uuid:pk>/claude-context/?task=<free text>
 
     Returns only the distilled `claude_context` slice of a saved ingestion —
     schema, relationships, storage patterns, codebase conventions, and the
@@ -145,6 +148,13 @@ class IngestionClaudeContextView(APIView):
 
     Falls back to computing it on the fly for contexts saved before this
     field existed, so older saved records don't 404 or 500.
+
+    With `?task=...` (roadmap.md P2), trims the context down to what looks
+    relevant to that task via keyword matching plus one hop of architecture-
+    graph expansion — see ingestion/scoping.py. Falls back to the full
+    context (with `_scoping.matched: false`) if the task yields no usable
+    keywords or matches nothing, rather than risk silently handing back an
+    empty or misleadingly narrow context.
     """
 
     def get(self, request, pk):
@@ -171,7 +181,82 @@ class IngestionClaudeContextView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        return Response(claude_context)
+        task = request.query_params.get("task", "").strip()
+        if not task:
+            return Response(claude_context)
+
+        full_tokens = scoping.approx_tokens(claude_context)
+        scoped = scoping.build_scoped_context(claude_context, task)
+        if scoped is None:
+            result = dict(claude_context)
+            result["_scoping"] = {
+                "task": task,
+                "matched": False,
+                "note": "No entities matched this task description closely enough — returning the full context instead of an empty or misleading scope.",
+            }
+            return Response(result)
+
+        scoped_tokens = scoping.approx_tokens(scoped)
+        scoped["_scoping"] = {
+            "task": task,
+            "matched": True,
+            "approx_tokens_full": full_tokens,
+            "approx_tokens_scoped": scoped_tokens,
+            "reduction_pct": round((1 - scoped_tokens / full_tokens) * 100) if full_tokens else 0,
+        }
+        return Response(scoped)
+
+
+class IngestionFreshnessView(APIView):
+    """
+    GET /api/ingestion/<uuid:pk>/freshness/
+
+    Reports how long ago a context was generated, and — when the context
+    has a stored fingerprint and the job that produced it referenced live
+    connections the caller still owns — whether the underlying source has
+    actually drifted since then (roadmap.md P3), via a fresh, deliberately
+    cheap re-check (schema shape for Postgres, collection existence for
+    Mongo, latest commit sha for GitHub — see ingestion/freshness.py).
+
+    Falls back to an age-only report (`checked_live: false`) for contexts
+    saved before schema_fingerprint existed, or if the originating job/
+    connections can no longer be found (e.g. the connection was deleted).
+    A live check that fails to reach every referenced source at all (not
+    just "no drift detected") is reported as `check_error`, not silently
+    treated as drift-free.
+    """
+
+    def get(self, request, pk):
+        context = IngestionContext.objects.filter(id=pk, user=request.user).first()
+        if context is None:
+            return Response({"error": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        age_seconds = (timezone.now() - context.created_at).total_seconds()
+        base = {
+            "generated_at": context.created_at,
+            "age_hours": round(age_seconds / 3600, 1),
+        }
+
+        if not context.schema_fingerprint:
+            return Response({**base, "checked_live": False, "note": "This context predates drift detection — re-run ingestion to enable it."})
+
+        job = IngestionJob.objects.filter(result_id=context.id, user=request.user).first()
+        if job is None:
+            return Response({**base, "checked_live": False, "note": "Original ingestion job not found — can't re-check live sources."})
+
+        try:
+            live, source_errors = freshness.check_live_fingerprint(job.connection_refs or {}, request.user)
+        except freshness.FreshnessCheckError as e:
+            return Response({**base, "checked_live": False, "check_error": str(e)})
+
+        details = freshness.compare_fingerprints(context.schema_fingerprint, live)
+        return Response({
+            **base,
+            "checked_live": True,
+            "drifted": any(v is True for v in details.values()),
+            "details": details,
+            "source_errors": source_errors or None,
+        })
 
 
 class IngestionListView(APIView):

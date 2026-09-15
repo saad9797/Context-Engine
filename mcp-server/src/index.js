@@ -26,34 +26,32 @@ server.tool(
   "Fetch the distilled claude_context for one saved Contexa ingestion: database schema, " +
     "relationships, storage conventions, codebase structure and key files, and the unified " +
     "architecture graph. This is the actual artifact meant to be read before generating code — " +
-    "call list_projects first if you don't already have a context_id.",
-  { context_id: z.string().describe("An ingestion context id, from list_projects") },
-  async ({ context_id }) => json(await apiRequest(`/api/ingestion/${context_id}/claude-context/`))
+    "call list_projects first if you don't already have a context_id. Pass `task` to trim the " +
+    "result down to what's relevant to that task (e.g. 'add an endpoint for applicant job " +
+    "applications') instead of the full schema — check the returned _scoping.matched field: " +
+    "if false, nothing matched closely enough and the full context was returned instead.",
+  {
+    context_id: z.string().describe("An ingestion context id, from list_projects"),
+    task: z.string().optional().describe("What you're building — trims the context to relevant entities if given"),
+  },
+  async ({ context_id, task }) => {
+    const path = task
+      ? `/api/ingestion/${context_id}/claude-context/?task=${encodeURIComponent(task)}`
+      : `/api/ingestion/${context_id}/claude-context/`;
+    return json(await apiRequest(path));
+  }
 );
 
 server.tool(
   "check_freshness",
-  "Report how long ago a saved context was generated. Does NOT detect whether the underlying " +
-    "database schema or repository has actually changed since then (Contexa doesn't do drift " +
-    "detection yet) — this is only an age check, so treat a large age_hours as a reason to " +
-    "consider calling run_ingestion again before relying on the context for a real task.",
+  "Check how long ago a saved context was generated, and — when possible — whether the " +
+    "underlying database/repo has actually drifted since then via a fresh, cheap live re-check " +
+    "(schema shape for Postgres, collection existence for Mongo, latest commit for GitHub). " +
+    "Check the response's checked_live field: if false, only age is known (older context, or " +
+    "the original connections/job can't be found) — treat a large age_hours as a reason to " +
+    "consider run_ingestion regardless. If checked_live is true, trust `drifted` directly.",
   { context_id: z.string() },
-  async ({ context_id }) => {
-    const contexts = await apiRequest("/api/ingestion/");
-    const match = contexts.find((c) => c.id === context_id);
-    if (!match) {
-      throw new Error(`No context with id ${context_id} found for this account.`);
-    }
-    const ageMs = Date.now() - new Date(match.created_at).getTime();
-    return json({
-      context_id,
-      generated_at: match.created_at,
-      age_hours: Math.round((ageMs / 3600000) * 10) / 10,
-      note:
-        "Age only, not verified drift. If this looks stale and you're about to generate code " +
-        "against it, consider calling run_ingestion first.",
-    });
-  }
+  async ({ context_id }) => json(await apiRequest(`/api/ingestion/${context_id}/freshness/`))
 );
 
 server.tool(

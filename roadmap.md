@@ -59,7 +59,9 @@ Ranked by "how much this unlocks the core value prop," not by build difficulty. 
 
 ---
 
-### P2 — Task-scoped optimization layer
+### P2 — Task-scoped optimization layer ✅ built
+
+*Update: implemented in `ingestion/scoping.py` + `?task=` on the claude-context endpoint, the MCP `get_context` tool, and a "Scope to this task" box in the claude_context UI. Real result on the 77-table ATS project: 50% token reduction for a genuine task description, with only actually-relevant tables kept (verified the naive column-name-matching approach first tried was too weak — 27% reduction, half the schema kept — before fixing scoring to require a name match, not just any column match).*
 
 **Why:** this is the layer your own proposal (§6.6) says "directly answers the cost problem," and it's the one thing standing between "aspirational token savings" and "measured token savings" you can put a number on in your pitch.
 
@@ -76,7 +78,9 @@ Ranked by "how much this unlocks the core value prop," not by build difficulty. 
 
 ---
 
-### P3 — Freshness / drift detection
+### P3 — Freshness / drift detection ✅ built
+
+*Update: implemented in `ingestion/freshness.py` + `GET /api/ingestion/<id>/freshness/`, the MCP `check_freshness` tool, and a "Check freshness" button in the UI. Live checks bypass the Node engine entirely (direct psycopg2/pymongo/GitHub-API calls from Django, ~5s timeout) so this stays genuinely cheap. Verified against real infrastructure: no-drift correctly reported against an unchanged Neon DB/Mongo Atlas cluster/GitHub repo, and actual drift detection confirmed by deliberately corrupting a stored fingerprint and seeing it caught. Mongo's live check is collection-existence only (not field-level) to stay cheap — documented in the code, not hidden.*
 
 **Why:** an outdated context package is worse than no context package, because nobody thinks to double-check it. This is a trust mechanism, and trust is the actual thing you're selling (a developer has to trust the package enough to hand it to an assistant without re-verifying everything by hand — otherwise the product saves no time).
 

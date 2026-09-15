@@ -20,6 +20,12 @@ class IngestionContext(models.Model):
     project_name = models.CharField(max_length=255, blank=True)
     data = models.JSONField()
     created_at = models.DateTimeField(auto_now_add=True)
+    # Cheap shape hashes per source, computed once at ingestion time from
+    # data already extracted (no extra queries) — compared against a fresh
+    # lightweight live check by the freshness endpoint (see
+    # ingestion/freshness.py, roadmap.md P3). Null for records saved before
+    # this field existed.
+    schema_fingerprint = models.JSONField(null=True, blank=True)
 
     class Meta:
         ordering = ["-created_at"]

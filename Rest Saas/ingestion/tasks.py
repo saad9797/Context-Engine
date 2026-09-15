@@ -15,6 +15,7 @@ from django.utils import timezone
 
 from core.network_guard import assert_safe_config
 
+from . import freshness
 from .github_app import mint_installation_token
 from .models import DataSourceConnection, GitHubAppInstallation, IngestionContext, IngestionJob
 
@@ -207,6 +208,7 @@ def run_ingestion_job(job_id):
             user_id=job.user_id,
             project_name=context.get("_meta", {}).get("project", {}).get("project_name", ""),
             data=context,
+            schema_fingerprint=freshness.compute_stored_fingerprint(context),
         )
 
         job.status = "succeeded"

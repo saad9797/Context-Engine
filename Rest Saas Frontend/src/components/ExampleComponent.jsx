@@ -1595,6 +1595,66 @@ function ListView({ apiFetch, onOpen, onNew, refreshKey }) {
    DetailView — GET /api/ingestion/<id>/
 --------------------------------------------------------------------------- */
 
+// Inline, on-demand freshness/drift check (roadmap.md P3) — never runs
+// automatically (it does live network I/O against the user's own
+// database/repo), only when explicitly requested.
+function FreshnessCheck({ apiFetch, contextId }) {
+  const [state, setState] = useState("idle"); // idle | loading | done | error
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
+
+  const check = () => {
+    setState("loading");
+    setError(null);
+    apiFetch(`/api/ingestion/${contextId}/freshness/`)
+      .then((res) => { setResult(res); setState("done"); })
+      .catch((e) => { setError(e); setState("error"); });
+  };
+
+  if (state === "idle") {
+    return (
+      <button className="cxa-btn cxa-btn-ghost cxa-btn-sm" onClick={check}>
+        <Icon.Gear /> Check freshness
+      </button>
+    );
+  }
+  if (state === "loading") {
+    return (
+      <span className="cxa-mono" style={{ fontSize: 12, color: "var(--text-faint)", display: "inline-flex", alignItems: "center", gap: 6 }}>
+        <Spinner size={12} /> Checking live sources…
+      </span>
+    );
+  }
+  if (state === "error") {
+    return (
+      <span style={{ fontSize: 12, color: "var(--text-faint)" }}>
+        Couldn't check: {error.message}{" "}
+        <button className="cxa-btn cxa-btn-text cxa-btn-sm" onClick={check}>Retry</button>
+      </span>
+    );
+  }
+  if (!result.checked_live) {
+    return (
+      <span style={{ fontSize: 12, color: "var(--text-faint)" }}>
+        {result.check_error ? `Live check failed: ${result.check_error}` : result.note} ({result.age_hours}h old)
+      </span>
+    );
+  }
+  if (result.drifted) {
+    const changed = Object.entries(result.details || {}).filter(([, v]) => v === true).map(([k]) => k);
+    return (
+      <span style={{ fontSize: 12, color: "var(--copper)", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 6 }}>
+        <Icon.Alert width={13} height={13} /> Drifted since generation ({changed.join(", ")}) — re-run ingestion to refresh.
+      </span>
+    );
+  }
+  return (
+    <span style={{ fontSize: 12, color: "var(--text-faint)", display: "inline-flex", alignItems: "center", gap: 6 }}>
+      <Icon.Check width={12} height={12} /> No drift detected ({result.age_hours}h old)
+    </span>
+  );
+}
+
 function DetailView({ apiFetch, contextId, onBack, onOpenClaudeContext }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
@@ -1661,9 +1721,10 @@ function DetailView({ apiFetch, contextId, onBack, onOpenClaudeContext }) {
         <div>
           <div className="cxa-eyebrow">Ingestion context</div>
           <h1 className="cxa-h1" style={{ marginBottom: 4 }}>{meta.project?.project_name || "Untitled project"}</h1>
-          <p className="cxa-lede" style={{ marginBottom: 0 }}>
+          <p className="cxa-lede" style={{ marginBottom: 6 }}>
             Generated {formatDate(meta.generated_at)} · {meta.ingestion_duration_ms ? `${(meta.ingestion_duration_ms / 1000).toFixed(1)}s` : "—"}
           </p>
+          <FreshnessCheck apiFetch={apiFetch} contextId={contextId} />
         </div>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
           <button className="cxa-btn cxa-btn-primary" onClick={() => onOpenClaudeContext(contextId)}>
@@ -2097,6 +2158,9 @@ function ClaudeContextView({ apiFetch, contextId, onBack }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [promptCopied, setPromptCopied] = useState(false);
+  const [taskInput, setTaskInput] = useState("");
+  const [appliedTask, setAppliedTask] = useState("");
+  const [scoping, setScoping] = useState(false);
 
   const copyPrompt = async () => {
     const prompt = `Here is my project's schema and codebase context, distilled for code generation:\n\n${JSON.stringify(data, null, 2)}\n\nUsing this context, generate a working API endpoint that fits the existing schema and conventions.`;
@@ -2105,15 +2169,39 @@ function ClaudeContextView({ apiFetch, contextId, onBack }) {
     setTimeout(() => setPromptCopied(false), 1600);
   };
 
-  useEffect(() => {
-    let cancelled = false;
-    setData(null);
+  const load = useCallback((task) => {
+    setScoping(!!task);
     setError(null);
-    apiFetch(`/api/ingestion/${contextId}/claude-context/`)
-      .then((res) => { if (!cancelled) setData(res); })
-      .catch((e) => { if (!cancelled) setError(e); });
-    return () => { cancelled = true; };
+    const path = task
+      ? `/api/ingestion/${contextId}/claude-context/?task=${encodeURIComponent(task)}`
+      : `/api/ingestion/${contextId}/claude-context/`;
+    apiFetch(path)
+      .then((res) => setData(res))
+      .catch((e) => setError(e))
+      .finally(() => setScoping(false));
   }, [apiFetch, contextId]);
+
+  useEffect(() => {
+    setData(null);
+    setTaskInput("");
+    setAppliedTask("");
+    load("");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contextId]);
+
+  const applyTask = () => {
+    const trimmed = taskInput.trim();
+    setAppliedTask(trimmed);
+    load(trimmed);
+  };
+
+  const clearTask = () => {
+    setTaskInput("");
+    setAppliedTask("");
+    load("");
+  };
+
+  const info = data?._scoping;
 
   return (
     <div className="cxa-page wide">
@@ -2128,6 +2216,45 @@ function ClaudeContextView({ apiFetch, contextId, onBack }) {
         relationships, and storage conventions, with scan statistics, extension internals,
         and bulk sample data already stripped out.
       </p>
+
+      <div className="cxa-card" style={{ padding: 14, marginBottom: 18, display: "flex", gap: 8, alignItems: "flex-start", flexWrap: "wrap" }}>
+        <div style={{ flex: "1 1 320px", minWidth: 240 }}>
+          <input
+            className="cxa-input"
+            placeholder="What are you building? e.g. &quot;add an endpoint for applicant job applications&quot;"
+            value={taskInput}
+            onChange={(e) => setTaskInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") applyTask(); }}
+          />
+          <div style={{ fontSize: 11.5, color: "var(--text-faint)", marginTop: 5 }}>
+            Trims the context down to what's relevant to this task instead of the full schema —
+            leave blank for everything.
+          </div>
+        </div>
+        <button className="cxa-btn cxa-btn-primary cxa-btn-sm" onClick={applyTask} disabled={scoping || !taskInput.trim()}>
+          {scoping ? <Spinner size={13} /> : <Icon.Sparkle />} Scope to this task
+        </button>
+        {appliedTask && (
+          <button className="cxa-btn cxa-btn-ghost cxa-btn-sm" onClick={clearTask} disabled={scoping}>
+            <Icon.X /> Clear
+          </button>
+        )}
+      </div>
+
+      {info && info.matched && (
+        <Alert tone="info" title={`Scoped to: "${info.task}"`}>
+          ~{info.approx_tokens_full.toLocaleString()} → ~{info.approx_tokens_scoped.toLocaleString()} tokens
+          ({info.reduction_pct}% smaller). Keyword/heuristic matching, not semantic search — if
+          something relevant looks missing, clear the scope and browse the full context instead.
+        </Alert>
+      )}
+      {info && info.matched === false && (
+        <Alert tone="err" title="No close matches">
+          Nothing in this project matched "{info.task}" closely enough, so the full context is
+          shown below instead of an empty or misleading scope. Try different wording — this is
+          plain keyword matching against table/collection/route/file names, not semantic search.
+        </Alert>
+      )}
 
       {error && (
         <Alert tone="err" title="Couldn't load claude_context">
