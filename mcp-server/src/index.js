@@ -55,6 +55,16 @@ server.tool(
 );
 
 server.tool(
+  "get_changes",
+  "Structural diff against the most recent earlier run of the same project (same GitHub repo, " +
+    "or same Postgres/Mongo connection) — tables/collections/routes/key files added or removed, " +
+    "and column type changes. Check has_previous first: false means no earlier run was found " +
+    "(first run, or not enough identity to match one) rather than 'nothing changed'.",
+  { context_id: z.string() },
+  async ({ context_id }) => json(await apiRequest(`/api/ingestion/${context_id}/diff/`))
+);
+
+server.tool(
   "list_connections",
   "List the caller's saved data-source connections (Postgres/MongoDB/object storage) by id, " +
     "name, and kind. Credentials themselves are never returned. Use the returned ids with " +

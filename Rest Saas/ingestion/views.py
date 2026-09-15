@@ -24,7 +24,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from . import freshness, scoping
+from . import diffing, freshness, scoping
 from .audit import log_action
 from .models import AuditLogEntry, DataSourceConnection, IngestionContext, IngestionJob
 from .serializers import (
@@ -256,6 +256,39 @@ class IngestionFreshnessView(APIView):
             "drifted": any(v is True for v in details.values()),
             "details": details,
             "source_errors": source_errors or None,
+        })
+
+
+class IngestionDiffView(APIView):
+    """
+    GET /api/ingestion/<uuid:pk>/diff/
+
+    Structural diff (roadmap.md P5) against the most recent earlier saved
+    context that looks like the same project — same GitHub owner/repo, or
+    same Postgres/Mongo connection id, found via the job that produced each
+    context (see ingestion/diffing.py). Tables/collections/routes/key files
+    added or removed, and per-table column type changes — not a raw JSON
+    diff, which would be noisy on every timestamp or sample-data change.
+
+    `has_previous: false` means no earlier run of this project was found
+    (first run, or connections don't carry enough identity to match) —
+    not an error.
+    """
+
+    def get(self, request, pk):
+        context = IngestionContext.objects.filter(id=pk, user=request.user).first()
+        if context is None:
+            return Response({"error": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        previous = diffing.find_previous_context(context, request.user)
+        if previous is None:
+            return Response({"has_previous": False})
+
+        return Response({
+            "has_previous": True,
+            "previous_context_id": str(previous.id),
+            "previous_generated_at": previous.created_at,
+            "diff": diffing.diff_contexts(previous.data, context.data),
         })
 
 

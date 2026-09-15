@@ -109,7 +109,9 @@ Ranked by "how much this unlocks the core value prop," not by build difficulty. 
 
 ---
 
-### P5 — Versioning & diffing
+### P5 — Versioning & diffing ✅ built
+
+*Update: implemented in `ingestion/diffing.py` + `GET /api/ingestion/<id>/diff/`, the MCP `get_changes` tool, and a "Changes" tab in the UI (only shown when a previous run of the same project is actually found). "Same project" is matched by GitHub owner/repo or connection id, found via the job that produced each context — not exact connection_refs equality. Verified with synthetic before/after data covering every diff type (tables/columns/collections/fields/routes/key files, added/removed/type-changed) and against real repeated runs of the same repo, which correctly show zero diff since nothing had actually changed.*
 
 **Why:** "reusable and versionable" is one of your four core value props (§4) and currently a context package is just an unversioned snapshot that gets overwritten by the next run. Diffing is also what makes P3 (drift) actionable instead of just alarming — "here's what changed" is more useful than "something changed."
 

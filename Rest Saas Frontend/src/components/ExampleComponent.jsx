@@ -1659,14 +1659,22 @@ function DetailView({ apiFetch, contextId, onBack, onOpenClaudeContext }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [tab, setTab] = useState("overview");
+  const [diffData, setDiffData] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
     setData(null);
     setError(null);
+    setDiffData(null);
+    setTab("overview");
     apiFetch(`/api/ingestion/${contextId}/`)
       .then((res) => { if (!cancelled) setData(res); })
       .catch((e) => { if (!cancelled) setError(e); });
+    // Diffing is a plain DB read (no live network I/O, unlike freshness),
+    // cheap enough to just fetch alongside the context itself.
+    apiFetch(`/api/ingestion/${contextId}/diff/`)
+      .then((res) => { if (!cancelled) setDiffData(res); })
+      .catch(() => { /* non-critical — the Changes tab just won't offer itself */ });
     return () => { cancelled = true; };
   }, [apiFetch, contextId]);
 
@@ -1708,6 +1716,7 @@ function DetailView({ apiFetch, contextId, onBack, onOpenClaudeContext }) {
     storage && { id: "storage", label: "Storage", n: storage.buckets?.length || storage.containers?.length },
     codebase && { id: "codebase", label: "Codebase" },
     graph && { id: "architecture", label: "Architecture", n: graph.nodes?.length },
+    diffData?.has_previous && { id: "changes", label: "Changes", n: countDiffItems(diffData.diff) },
     { id: "raw", label: "Raw JSON" },
   ].filter(Boolean);
 
@@ -1758,7 +1767,106 @@ function DetailView({ apiFetch, contextId, onBack, onOpenClaudeContext }) {
       {tab === "storage" && storage && <StorageTab storage={storage} />}
       {tab === "codebase" && codebase && <CodebaseTab codebase={codebase} />}
       {tab === "architecture" && graph && <ArchitectureTab graph={graph} />}
+      {tab === "changes" && diffData?.has_previous && (
+        <ChangesTab diffData={diffData} />
+      )}
       {tab === "raw" && <JSONViewer data={data} filename={`context-${contextId}.json`} />}
+    </div>
+  );
+}
+
+// Counts individual added/removed/changed items across every diff section,
+// for the tab's badge — not just the number of sections that changed.
+function countDiffItems(diff) {
+  if (!diff) return 0;
+  let n = 0;
+  for (const section of Object.values(diff)) {
+    for (const [key, value] of Object.entries(section)) {
+      if (Array.isArray(value)) n += value.length;
+    }
+  }
+  return n;
+}
+
+function DiffList({ title, tone, items }) {
+  if (!items || items.length === 0) return null;
+  return (
+    <div style={{ marginBottom: 10 }}>
+      <div style={{ fontSize: 12, fontWeight: 600, color: `var(--${tone})`, marginBottom: 4 }}>
+        {title} ({items.length})
+      </div>
+      <ul style={{ margin: 0, paddingLeft: 18 }}>
+        {items.map((item) => (
+          <li key={typeof item === "string" ? item : JSON.stringify(item)} className="cxa-mono" style={{ fontSize: 12.5, color: "var(--text-muted)" }}>
+            {typeof item === "string" ? item : `${item.column} — ${item.from} → ${item.to}`}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+// "What changed since last run" (roadmap.md P5) — grouped by section
+// (database/mongo/codebase), each with added/removed/changed lists. Only
+// ever shown when a previous run of the same project was actually found.
+function ChangesTab({ diffData }) {
+  const { diff, previous_generated_at } = diffData;
+  const empty = Object.keys(diff || {}).length === 0;
+
+  return (
+    <div>
+      <p className="cxa-lede" style={{ marginBottom: 18 }}>
+        Compared against the run generated {formatDate(previous_generated_at)} — structural
+        changes only (schema shape, routes, key files), not every timestamp or sample-data
+        difference.
+      </p>
+
+      {empty && (
+        <Alert tone="info" title="No structural changes">
+          Nothing added, removed, or changed since the last run of this project.
+        </Alert>
+      )}
+
+      {diff.database && (
+        <div className="cxa-card" style={{ padding: 16, marginBottom: 16 }}>
+          <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 10 }}>PostgreSQL</div>
+          <DiffList title="Tables added" tone="green" items={diff.database.tables_added} />
+          <DiffList title="Tables removed" tone="red" items={diff.database.tables_removed} />
+          {(diff.database.tables_changed || []).map((t) => (
+            <div key={t.table} style={{ marginBottom: 10 }}>
+              <div className="cxa-mono" style={{ fontSize: 12.5, fontWeight: 600, marginBottom: 4 }}>{t.table}</div>
+              <DiffList title="Columns added" tone="green" items={t.columns_added} />
+              <DiffList title="Columns removed" tone="red" items={t.columns_removed} />
+              <DiffList title="Type changed" tone="copper" items={t.columns_type_changed} />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {diff.mongo_database && (
+        <div className="cxa-card" style={{ padding: 16, marginBottom: 16 }}>
+          <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 10 }}>MongoDB</div>
+          <DiffList title="Collections added" tone="green" items={diff.mongo_database.collections_added} />
+          <DiffList title="Collections removed" tone="red" items={diff.mongo_database.collections_removed} />
+          {(diff.mongo_database.collections_changed || []).map((c) => (
+            <div key={c.collection} style={{ marginBottom: 10 }}>
+              <div className="cxa-mono" style={{ fontSize: 12.5, fontWeight: 600, marginBottom: 4 }}>{c.collection}</div>
+              <DiffList title="Fields added" tone="green" items={c.fields_added} />
+              <DiffList title="Fields removed" tone="red" items={c.fields_removed} />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {diff.codebase && (
+        <div className="cxa-card" style={{ padding: 16, marginBottom: 16 }}>
+          <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 10 }}>Codebase</div>
+          <DiffList title="Routes added" tone="green" items={diff.codebase.routes_added} />
+          <DiffList title="Routes removed" tone="red" items={diff.codebase.routes_removed} />
+          <DiffList title="Key files added" tone="green" items={diff.codebase.key_files_added} />
+          <DiffList title="Key files removed" tone="red" items={diff.codebase.key_files_removed} />
+        </div>
+      )}
     </div>
   );
 }

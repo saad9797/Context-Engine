@@ -9,8 +9,9 @@ It's a thin wrapper: every tool here is a direct call to the existing Contexa RE
 | Tool | What it does |
 |---|---|
 | `list_projects` | List your saved ingestion contexts (summary only — counts, not full schema). |
-| `get_context` | Fetch the full distilled `claude_context` for one saved context id. |
-| `check_freshness` | How long ago a context was generated (age only — not real drift detection yet, see `roadmap.md` P3). |
+| `get_context` | Fetch the distilled `claude_context` for one saved context id. Pass `task` to trim it to what's relevant (roadmap.md P2). |
+| `check_freshness` | Age, plus a real live drift check against the actual source when possible (roadmap.md P3). |
+| `get_changes` | Structural diff (tables/routes/key files added/removed, column type changes) against the last run of the same project (roadmap.md P5). |
 | `list_connections` | Your saved Postgres/Mongo/storage connections (ids + names, never credentials). |
 | `list_github_installations` | Your connected GitHub App installations. |
 | `run_ingestion` | Start a fresh ingestion run against given connection(s)/installation and wait for it to finish. |
