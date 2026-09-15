@@ -1761,7 +1761,7 @@ function DetailView({ apiFetch, contextId, onBack, onOpenClaudeContext }) {
         ))}
       </div>
 
-      {tab === "overview" && <OverviewTab meta={meta} database={database} mongo={mongo} storage={storage} codebase={codebase} />}
+      {tab === "overview" && <OverviewTab meta={meta} database={database} mongo={mongo} storage={storage} codebase={codebase} summary={data.plain_english_summary} />}
       {tab === "postgres" && database && <PostgresTab database={database} />}
       {tab === "mongo" && mongo && <MongoTab mongo={mongo} />}
       {tab === "storage" && storage && <StorageTab storage={storage} />}
@@ -1871,7 +1871,7 @@ function ChangesTab({ diffData }) {
   );
 }
 
-function OverviewTab({ meta, database, mongo, storage, codebase }) {
+function OverviewTab({ meta, database, mongo, storage, codebase, summary }) {
   const cards = [
     database && { label: "PostgreSQL", value: `${database.tables?.length ?? 0} tables`, sub: database.metadata?.database_name, icon: Icon.Postgres },
     mongo && {
@@ -1889,6 +1889,28 @@ function OverviewTab({ meta, database, mongo, storage, codebase }) {
 
   return (
     <div>
+      {summary && (
+        <div
+          className="cxa-card"
+          style={{
+            padding: 16,
+            marginBottom: 20,
+            display: "flex",
+            gap: 12,
+            alignItems: "flex-start",
+            borderColor: "rgba(161,95,43,0.28)",
+            background: "var(--copper-dim)",
+          }}
+        >
+          <Icon.Sparkle style={{ color: "var(--copper)", flexShrink: 0, marginTop: 2 }} />
+          <div>
+            <div style={{ fontSize: 11, color: "var(--copper)", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 600, marginBottom: 4 }}>
+              What this is
+            </div>
+            <div style={{ fontSize: 13.5, lineHeight: 1.55 }}>{summary}</div>
+          </div>
+        </div>
+      )}
       <div className="cxa-grid-2" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", marginBottom: 26 }}>
         {cards.map((c) => (
           <div className="cxa-card" key={c.label} style={{ padding: 16, display: "flex", gap: 12, alignItems: "flex-start" }}>
@@ -2212,12 +2234,172 @@ function CodebaseTab({ codebase }) {
 const GRAPH_NODE_ICON = { table: Icon.Postgres, collection: Icon.Mongo, bucket: Icon.Storage, route: Icon.Github };
 const GRAPH_EDGE_LABEL = { fk: "foreign key →", references: "references →", uploads_to: "uploads to →" };
 
+// ─── Visual diagram (roadmap.md P6) ─────────────────────────────────────────
+//
+// Nodes laid out in columns by type (route → table/collection → bucket, a
+// rough left-to-right request flow), sorted alphabetically within each
+// column. Edges are SVG beziers — same-column edges (the common case: most
+// FK edges are table→table) arc out to the side rather than drawing straight
+// through other nodes in between. Not a force-directed layout — deterministic
+// and cheap to compute is worth more here than optimal node placement for a
+// graph a user is scanning, not exploring node-by-node.
+const GRAPH_COLUMN_ORDER = ["route", "table", "collection", "bucket"];
+const DIAGRAM_NODE_WIDTH = 190;
+const DIAGRAM_NODE_HEIGHT = 28;
+const DIAGRAM_ROW_GAP = 8;
+const DIAGRAM_COLUMN_GAP = 130;
+const DIAGRAM_PADDING = 24;
+const DIAGRAM_HEADER_HEIGHT = 30;
+
+function truncateGraphLabel(name, max = 25) {
+  if (!name) return "";
+  return name.length > max ? `${name.slice(0, max - 1)}…` : name;
+}
+
+function ArchitectureDiagram({ graph }) {
+  const [hoveredId, setHoveredId] = useState(null);
+  const [filter, setFilter] = useState("");
+
+  const layout = useMemo(() => {
+    const byType = {};
+    for (const n of graph.nodes) (byType[n.type] ||= []).push(n);
+    const presentColumns = GRAPH_COLUMN_ORDER.filter((t) => byType[t]?.length);
+    const extraTypes = Object.keys(byType).filter((t) => !GRAPH_COLUMN_ORDER.includes(t));
+    const columns = [...presentColumns, ...extraTypes];
+
+    const positions = {};
+    columns.forEach((type, colIdx) => {
+      const nodes = [...(byType[type] || [])].sort((a, b) => a.name.localeCompare(b.name));
+      nodes.forEach((n, rowIdx) => {
+        positions[n.id] = {
+          node: n,
+          x: DIAGRAM_PADDING + colIdx * (DIAGRAM_NODE_WIDTH + DIAGRAM_COLUMN_GAP),
+          y: DIAGRAM_PADDING + DIAGRAM_HEADER_HEIGHT + rowIdx * (DIAGRAM_NODE_HEIGHT + DIAGRAM_ROW_GAP),
+          col: colIdx,
+        };
+      });
+    });
+
+    const maxRows = Math.max(1, ...columns.map((t) => byType[t]?.length || 0));
+    const width = DIAGRAM_PADDING * 2 + columns.length * DIAGRAM_NODE_WIDTH + Math.max(0, columns.length - 1) * DIAGRAM_COLUMN_GAP;
+    const height = DIAGRAM_PADDING * 2 + DIAGRAM_HEADER_HEIGHT + maxRows * (DIAGRAM_NODE_HEIGHT + DIAGRAM_ROW_GAP);
+
+    const edges = (graph.edges || [])
+      .map((e, i) => {
+        const from = positions[e.from];
+        const to = positions[e.to];
+        if (!from || !to) return null;
+        let d;
+        if (from.col === to.col) {
+          const sx = from.x + DIAGRAM_NODE_WIDTH, sy = from.y + DIAGRAM_NODE_HEIGHT / 2;
+          const tx = to.x + DIAGRAM_NODE_WIDTH, ty = to.y + DIAGRAM_NODE_HEIGHT / 2;
+          const bulge = 42 + Math.min(60, Math.abs(sy - ty) * 0.08);
+          d = `M ${sx} ${sy} C ${sx + bulge} ${sy}, ${tx + bulge} ${ty}, ${tx} ${ty}`;
+        } else {
+          const x1 = from.x + DIAGRAM_NODE_WIDTH, y1 = from.y + DIAGRAM_NODE_HEIGHT / 2;
+          const x2 = to.x, y2 = to.y + DIAGRAM_NODE_HEIGHT / 2;
+          const midX = (x1 + x2) / 2;
+          d = `M ${x1} ${y1} C ${midX} ${y1}, ${midX} ${y2}, ${x2} ${y2}`;
+        }
+        return { id: `e${i}`, d, from: e.from, to: e.to, kind: e.kind };
+      })
+      .filter(Boolean);
+
+    return { positions, columns, width, height, edges };
+  }, [graph]);
+
+  const filterLower = filter.trim().toLowerCase();
+  const matchesFilter = (node) => !filterLower || (node?.name || "").toLowerCase().includes(filterLower);
+
+  const nodeDimmed = (id) => {
+    if (hoveredId) {
+      if (id === hoveredId) return false;
+      return !layout.edges.some((e) => (e.from === hoveredId && e.to === id) || (e.to === hoveredId && e.from === id));
+    }
+    if (filterLower) return !matchesFilter(layout.positions[id]?.node);
+    return false;
+  };
+
+  const edgeDimmed = (e) => {
+    if (hoveredId) return e.from !== hoveredId && e.to !== hoveredId;
+    if (filterLower) return !matchesFilter(layout.positions[e.from]?.node) && !matchesFilter(layout.positions[e.to]?.node);
+    return false;
+  };
+
+  return (
+    <div>
+      <input
+        className="cxa-input"
+        style={{ marginBottom: 12, maxWidth: 320 }}
+        placeholder="Filter by name…"
+        value={filter}
+        onChange={(ev) => setFilter(ev.target.value)}
+      />
+      <div className="cxa-card" style={{ padding: 16, overflow: "auto", maxHeight: 640 }}>
+        <svg width={layout.width} height={layout.height} style={{ display: "block" }}>
+          {layout.columns.map((type, i) => (
+            <text
+              key={type}
+              x={DIAGRAM_PADDING + i * (DIAGRAM_NODE_WIDTH + DIAGRAM_COLUMN_GAP)}
+              y={DIAGRAM_PADDING + 14}
+              fontSize="11"
+              fontWeight="600"
+              fill="var(--text-faint)"
+              style={{ textTransform: "uppercase", letterSpacing: "0.05em" }}
+            >
+              {type}s
+            </text>
+          ))}
+          {layout.edges.map((e) => (
+            <path
+              key={e.id}
+              d={e.d}
+              fill="none"
+              stroke={edgeDimmed(e) ? "var(--border)" : "var(--copper)"}
+              strokeWidth={edgeDimmed(e) ? 1 : 1.4}
+              strokeDasharray={e.kind === "references" ? "4 3" : e.kind === "uploads_to" ? "1 3" : undefined}
+              opacity={edgeDimmed(e) ? 0.3 : 0.65}
+            />
+          ))}
+          {Object.values(layout.positions).map(({ node, x, y }) => (
+            <g
+              key={node.id}
+              transform={`translate(${x}, ${y})`}
+              onMouseEnter={() => setHoveredId(node.id)}
+              onMouseLeave={() => setHoveredId(null)}
+              style={{ cursor: "pointer", opacity: nodeDimmed(node.id) ? 0.3 : 1 }}
+            >
+              <rect
+                width={DIAGRAM_NODE_WIDTH}
+                height={DIAGRAM_NODE_HEIGHT}
+                rx={6}
+                fill="var(--surface-raised)"
+                stroke={hoveredId === node.id ? "var(--copper)" : "var(--border-soft)"}
+                strokeWidth={hoveredId === node.id ? 1.5 : 1}
+              />
+              <text x={10} y={DIAGRAM_NODE_HEIGHT / 2 + 4} fontSize="11.5" fill="var(--text)" className="cxa-mono">
+                {truncateGraphLabel(node.name)}
+              </text>
+              <title>{node.name}</title>
+            </g>
+          ))}
+        </svg>
+      </div>
+      <div style={{ fontSize: 11.5, color: "var(--text-faint)", marginTop: 8 }}>
+        Hover a node to highlight its connections — {graph.edges?.length || 0} edges: solid = foreign
+        key, dashed = inferred reference, dotted = uploads to.
+      </div>
+    </div>
+  );
+}
+
 // Node/edge list view of architecture_graph — grouped by node type with each
-// node's outgoing edges underneath. Not a canvas diagram (a real graph-
-// drawing library is a reasonable follow-up); this is the "one place that
-// shows how everything connects" surface in the meantime, merging what used
-// to be four unrelated JSON trees (tables, collections, buckets, routes).
+// node's outgoing edges underneath. Complements the diagram above: better
+// for scanning every node in a type at once or reading edge metadata,
+// where the diagram is better for seeing the overall shape of the graph.
 function ArchitectureTab({ graph }) {
+  const [view, setView] = useState("diagram"); // diagram | list
+
   const nodesById = useMemo(() => Object.fromEntries(graph.nodes.map((n) => [n.id, n])), [graph.nodes]);
   const edgesByFrom = useMemo(() => {
     const map = {};
@@ -2233,11 +2415,24 @@ function ArchitectureTab({ graph }) {
 
   return (
     <div>
-      <p className="cxa-lede" style={{ marginBottom: 20 }}>
-        {graph.nodes.length} nodes, {graph.edges.length} edges — tables, collections, storage
-        buckets, and detected routes merged into one graph instead of four separate trees.
-      </p>
-      {Object.entries(groups).map(([type, nodes]) => (
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
+        <p className="cxa-lede" style={{ marginBottom: 0 }}>
+          {graph.nodes.length} nodes, {graph.edges.length} edges — tables, collections, storage
+          buckets, and detected routes merged into one graph instead of four separate trees.
+        </p>
+        <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
+          <button className={cx("cxa-btn", "cxa-btn-sm", view === "diagram" ? "cxa-btn-primary" : "cxa-btn-ghost")} onClick={() => setView("diagram")}>
+            Diagram
+          </button>
+          <button className={cx("cxa-btn", "cxa-btn-sm", view === "list" ? "cxa-btn-primary" : "cxa-btn-ghost")} onClick={() => setView("list")}>
+            List
+          </button>
+        </div>
+      </div>
+
+      {view === "diagram" && <ArchitectureDiagram graph={graph} />}
+
+      {view === "list" && Object.entries(groups).map(([type, nodes]) => (
         <div key={type} style={{ marginBottom: 22 }}>
           <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 10, textTransform: "capitalize" }}>
             {type}s <span className="cxa-mono" style={{ color: "var(--text-faint)", fontWeight: 400 }}>({nodes.length})</span>

@@ -200,6 +200,7 @@ function buildClaudeContext(rawContext) {
     project: rawContext._meta?.project || {},
     generated_at: rawContext._meta?.generated_at,
     sources: rawContext._meta?.sources,
+    summary: rawContext.plain_english_summary || null,
     database: filterDatabase(rawContext.database),
     mongo_database: filterMongoDatabase(rawContext.mongo_database),
     object_storage: filterObjectStorage(rawContext.object_storage),

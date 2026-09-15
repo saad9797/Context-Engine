@@ -124,7 +124,9 @@ Ranked by "how much this unlocks the core value prop," not by build difficulty. 
 
 ---
 
-### P6 — The human-facing moat (underweighted in the current proposal)
+### P6 — The human-facing moat (underweighted in the current proposal) ✅ built
+
+*Update: both pieces shipped. `ingestion-engine/src/summary-builder.js` generates the plain-English "What this is" summary — deliberately template-based over already-extracted facts, not an LLM call (no Anthropic API key is configured in this environment, and a deterministic generator has no hallucination risk). Caught and fixed a real quality issue before shipping: Prisma's internal `_prisma_migrations` table was showing up as a "top table" in the summary — now excluded from the featured sample via a pattern for framework-internal bookkeeping tables. The Architecture tab now has a real SVG diagram (columns by node type, same-column edges arc to the side since most FK edges are table→table) alongside the original list view, with hover-to-highlight-connections and a name filter — verified on the real 77-table/108-edge ATS graph, not just a toy example.*
 
 **Why this matters strategically:** the proposal's differentiation table (§8) frames Contexa entirely against AI-assistant context problems. That's real, but it's also the part most exposed to being commoditized — Claude Code, Cursor, and Copilot are all actively improving at live repo exploration and caching (this very project uses a memory-file system for exactly that reason). A product whose entire pitch is "we're a cache in front of what agents will eventually do themselves" has a shrinking moat.
 
@@ -173,11 +175,15 @@ You cannot sell "cuts your AI costs" on faith. Instrument it from day one of P2:
 
 ## 7. Suggested build order (next 2–3 months, solo)
 
-1. ~~**P1 (MCP server)**~~ — **done.** Unlocks real usage of everything already built; start dogfooding it now.
-2. **P2 (task-scoped optimization)** — turns the core pitch from aspirational into measured; do this while dogfooding P1 so you have real tasks to test scoring against.
-3. **P3 (freshness/drift)** — cheap, and directly addresses the biggest trust risk once people start actually relying on the MCP flow day-to-day.
-4. **P6's plain-English summary** — small effort, disproportionate demo/onboarding value; do this before investing in the full visual diagram.
-5. **P4 (env vars)** — closes a real gap against your own security pitch; low effort, do it opportunistically alongside the above.
-6. **P5 (versioning/diffing) and P6's visual diagram** — bigger investments, justified once P1–P3 prove people are actually using this repeatedly (versioning only matters if there's a "before" to compare against — i.e., repeat usage, which P1 is what drives).
+**P1 through P6 are all built** (see the ✅ marks above) — every item originally listed here is done and verified against real infrastructure, not just synthetic examples. What's left below is what was deliberately deferred, plus what actually using P1–P6 for real work will surface next.
 
-Deliberately not in this list yet: billing, teams/orgs, the visual drag-and-drop builder, fine-tuned LLM generation, vector search/RAG. All of those are real parts of the longer-term proposal, but building them before P1–P3 prove the core loop works risks polishing a product nobody has validated wants the thing you're polishing.
+1. ~~**P1 (MCP server)**~~ — done.
+2. ~~**P2 (task-scoped optimization)**~~ — done.
+3. ~~**P3 (freshness/drift)**~~ — done.
+4. ~~**P6's plain-English summary**~~ — done.
+5. ~~**P4 (env vars)**~~ — done.
+6. ~~**P5 (versioning/diffing) and P6's visual diagram**~~ — done.
+
+**Next, now that the core loop is real:** actually dogfood the MCP server on a real task end-to-end (connect it to Claude Code, point it at a real project, see whether `get_context`/`get_changes`/`check_freshness` genuinely change how a session goes) — that's the signal for whether P2's keyword scoring holds up outside the one repo it was tuned against, and whether anything above needs a second pass before it's worth showing anyone else.
+
+Deliberately not built yet: billing, teams/orgs, the visual drag-and-drop builder, fine-tuned LLM generation, vector search/RAG, and publishing `contexa-mcp` to npm (still a local-path install). All of those are real parts of the longer-term proposal, but building them before the core loop has been dogfooded risks polishing a product nobody has validated wants the thing you're polishing.

@@ -2,6 +2,7 @@
 
 const { buildClaudeContext } = require("./context-filter");
 const { buildArchitectureGraph } = require("./graph-builder");
+const { buildPlainEnglishSummary } = require("./summary-builder");
 
 // Progress is reported as single-line "PROGRESS::{json}" markers on stderr —
 // ingestion/tasks.py tails this process's stderr and parses them to update
@@ -165,6 +166,17 @@ async function runIngestion(config) {
     console.error("[ingestion] Architecture graph build failed:", e.message);
     errors.architectureGraph = e.message;
     context.architecture_graph = null;
+  }
+
+  try {
+    // A few plain-English sentences orienting a new developer (or Claude,
+    // at the start of a session) — the first thing worth reading, before
+    // any JSON (roadmap.md P6).
+    context.plain_english_summary = buildPlainEnglishSummary(context);
+  } catch (e) {
+    console.error("[ingestion] Summary generation failed:", e.message);
+    errors.plainEnglishSummary = e.message;
+    context.plain_english_summary = null;
   }
 
   try {
