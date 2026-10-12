@@ -12,6 +12,7 @@ from .views import (
     IngestionListView,
     IngestionResultView,
 )
+from .views_crypto import TransitPublicKeyView
 from .views_github import (
     GitHubInstallationDetailView,
     GitHubInstallationListView,
@@ -46,6 +47,7 @@ urlpatterns = [
     path("api/ingestion/<uuid:pk>/", IngestionResultView.as_view(), name="ingestion-result"),
     path("api/connections/", DataSourceConnectionListCreateView.as_view(), name="connection-list-create"),
     path("api/connections/<uuid:pk>/", DataSourceConnectionDetailView.as_view(), name="connection-detail"),
+    path("api/crypto/public-key/", TransitPublicKeyView.as_view(), name="transit-public-key"),
     path("api/audit-log/", AuditLogListView.as_view(), name="audit-log"),
     path("api/integrations/github/manifest/", GitHubManifestView.as_view(), name="github-manifest"),
     path(

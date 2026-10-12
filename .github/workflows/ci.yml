@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    env:
+      # Test-only, ephemeral, never used for anything real — regenerated on
+      # every run rather than committed as a fixed literal (see the
+      # "Generate test-only secrets" step below), so there's nothing here
+      # to accidentally get wrong or to mistake for a real credential.
+      DJANGO_SECRET_KEY: ci-test-only-not-a-real-secret
+      TRANSIT_PRIVATE_KEY: "not-a-real-key-but-non-empty"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        working-directory: Rest Saas
+        run: pip install -r requirements-dev.txt
+      - name: Generate test-only secrets
+        # FIELD_ENCRYPTION_KEY must be a real, validly-formatted Fernet key
+        # — core/crypto.py constructs a real Fernet() from it, and the test
+        # suite's tenancy fixtures actually call encrypt via
+        # DataSourceConnection.set_config(). Generated fresh each run
+        # instead of a hardcoded literal in this file.
+        run: echo "FIELD_ENCRYPTION_KEY=$(python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())')" >> "$GITHUB_ENV"
+      - name: Django system check
+        working-directory: Rest Saas
+        run: python manage.py check
+      - name: Check for missing migrations
+        working-directory: Rest Saas
+        run: python manage.py makemigrations --check --dry-run
+      - name: Run tests
+        working-directory: Rest Saas
+        run: pytest -v
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: npm
+          cache-dependency-path: "Rest Saas Frontend/package-lock.json"
+      - name: Install dependencies
+        working-directory: Rest Saas Frontend
+        run: npm ci
+      - name: Build
+        working-directory: Rest Saas Frontend
+        run: npm run build
+
+  ingestion-engine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: npm
+          cache-dependency-path: "Rest Saas/ingestion/ingestion-engine/package-lock.json"
+      - name: Install dependencies
+        working-directory: Rest Saas/ingestion/ingestion-engine
+        run: npm ci
+      - name: Syntax-check every module loads
+        working-directory: Rest Saas/ingestion/ingestion-engine
+        run: node -e "require('./src/index.js'); require('./src/context-filter.js'); require('./src/graph-builder.js'); require('./src/summary-builder.js'); require('./src/ssrf-guard.js'); require('./src/env-parser.js'); console.log('all modules load cleanly')"

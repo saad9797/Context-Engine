@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from core.transit_crypto import TransitDecryptionError, decrypt_transit_payload
+
 from .models import AuditLogEntry, DataSourceConnection, GitHubAppInstallation, IngestionJob
 
 
@@ -9,13 +11,22 @@ class DataSourceConnectionSerializer(serializers.ModelSerializer):
     and immediately encrypted (DataSourceConnection.set_config); they are
     never included in any response, including this serializer's own output
     right after creation.
+
+    `transit_payload` is the preferred path: the frontend encrypts the
+    config client-side (core/transit_crypto.py) and posts the encrypted
+    envelope instead of raw `config`, so the credential is never sent as
+    plaintext over the wire in the first place. `config` stays supported
+    directly for any caller that isn't the browser (the MCP server, a
+    future CLI) where there's no separate "client" to encrypt in — those
+    already rely on TLS + the caller's own auth token.
     """
 
-    config = serializers.JSONField(write_only=True)
+    config = serializers.JSONField(write_only=True, required=False)
+    transit_payload = serializers.JSONField(write_only=True, required=False)
 
     class Meta:
         model = DataSourceConnection
-        fields = ["id", "name", "kind", "config", "created_at", "updated_at", "last_used_at"]
+        fields = ["id", "name", "kind", "config", "transit_payload", "created_at", "updated_at", "last_used_at"]
         read_only_fields = ["id", "created_at", "updated_at", "last_used_at"]
 
     def validate_name(self, value):
@@ -30,8 +41,20 @@ class DataSourceConnectionSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("You already have a connection with this name.")
         return value
 
+    def validate(self, attrs):
+        if not attrs.get("config") and not attrs.get("transit_payload"):
+            raise serializers.ValidationError("Either config or transit_payload is required.")
+        return attrs
+
     def create(self, validated_data):
-        config = validated_data.pop("config")
+        transit_payload = validated_data.pop("transit_payload", None)
+        config = validated_data.pop("config", None)
+        if transit_payload is not None:
+            try:
+                config = decrypt_transit_payload(transit_payload)
+            except TransitDecryptionError as e:
+                raise serializers.ValidationError({"transit_payload": str(e)})
+
         connection = DataSourceConnection(user=self.context["request"].user, **validated_data)
         connection.set_config(config)
         connection.save()

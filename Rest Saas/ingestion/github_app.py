@@ -35,6 +35,24 @@ class GitHubAppError(RuntimeError):
     pass
 
 
+def _request(method: str, url: str, **kwargs) -> requests.Response:
+    """
+    Every function below calls this instead of `requests.*` directly. A bad
+    HTTP status was already turned into GitHubAppError at each call site,
+    but a failure *before* any response — DNS, connection refused/reset, TLS,
+    timeout — raises requests.exceptions.RequestException, which callers
+    only ever caught as `except github_app.GitHubAppError`. That gap is what
+    turned a transient network hiccup during "Continue with GitHub" into an
+    unhandled 500 instead of the clean 502 the callback view already knows
+    how to return. Centralized here so every call site is covered, not just
+    the ones someone remembers to wrap.
+    """
+    try:
+        return requests.request(method, url, timeout=kwargs.pop("timeout", 15), **kwargs)
+    except requests.exceptions.RequestException as e:
+        raise GitHubAppError(f"Could not reach GitHub ({method} {url}): {e}") from e
+
+
 def _require_app_configured():
     if not (settings.GITHUB_APP_ID and settings.GITHUB_APP_PRIVATE_KEY):
         raise ImproperlyConfigured(
@@ -69,10 +87,10 @@ def mint_installation_token(installation_id: int) -> dict:
     installation. Returns {"token": ..., "expires_at": ...}. Never persisted
     — callers pass the token straight to the Node runner for a single job.
     """
-    resp = requests.post(
+    resp = _request(
+        "POST",
         f"{GITHUB_API}/app/installations/{installation_id}/access_tokens",
         headers=_app_headers(),
-        timeout=15,
     )
     if resp.status_code != 201:
         raise GitHubAppError(
@@ -84,11 +102,7 @@ def mint_installation_token(installation_id: int) -> dict:
 
 def get_installation(installation_id: int) -> dict:
     """Fetch installation metadata (account login/type) as the App itself."""
-    resp = requests.get(
-        f"{GITHUB_API}/app/installations/{installation_id}",
-        headers=_app_headers(),
-        timeout=15,
-    )
+    resp = _request("GET", f"{GITHUB_API}/app/installations/{installation_id}", headers=_app_headers())
     if resp.status_code != 200:
         raise GitHubAppError(
             f"Failed to fetch installation {installation_id}: {resp.status_code} {resp.text[:300]}"
@@ -102,11 +116,7 @@ def delete_installation(installation_id: int) -> None:
     just our own DB record) — this is the "revocable instantly" property a
     PAT never had.
     """
-    resp = requests.delete(
-        f"{GITHUB_API}/app/installations/{installation_id}",
-        headers=_app_headers(),
-        timeout=15,
-    )
+    resp = _request("DELETE", f"{GITHUB_API}/app/installations/{installation_id}", headers=_app_headers())
     if resp.status_code not in (204, 404):
         raise GitHubAppError(
             f"Failed to revoke installation {installation_id}: {resp.status_code} {resp.text[:300]}"
@@ -116,13 +126,13 @@ def delete_installation(installation_id: int) -> None:
 def list_installation_repos(installation_id: int) -> list:
     """Repos the installation actually has access to, for populating the UI."""
     token = mint_installation_token(installation_id)["token"]
-    resp = requests.get(
+    resp = _request(
+        "GET",
         f"{GITHUB_API}/installation/repositories",
         headers={
             "Authorization": f"Bearer {token}",
             "Accept": "application/vnd.github+json",
         },
-        timeout=15,
     )
     if resp.status_code != 200:
         raise GitHubAppError(
@@ -167,7 +177,8 @@ def exchange_oauth_code(code: str) -> dict:
     is the "Sign in with GitHub" half; installing the App for repo access is
     a separate step (list_user_installations / the install-url flow).
     """
-    resp = requests.post(
+    resp = _request(
+        "POST",
         "https://github.com/login/oauth/access_token",
         headers={"Accept": "application/json"},
         data={
@@ -175,9 +186,15 @@ def exchange_oauth_code(code: str) -> dict:
             "client_secret": settings.GITHUB_APP_CLIENT_SECRET,
             "code": code,
         },
-        timeout=15,
     )
-    data = resp.json()
+    # GitHub returns plain-text/HTML (not JSON) for some failure modes here
+    # (a bad Accept header being ignored, an outage page, etc.) — resp.json()
+    # would raise a raw, uncaught ValueError in that case instead of the
+    # clean GitHubAppError callers already know how to handle.
+    try:
+        data = resp.json()
+    except ValueError:
+        raise GitHubAppError(f"OAuth exchange returned a non-JSON response: {resp.status_code} {resp.text[:300]}")
     if "access_token" not in data:
         raise GitHubAppError(f"OAuth exchange failed: {data}")
     return data
@@ -185,10 +202,10 @@ def exchange_oauth_code(code: str) -> dict:
 
 def get_github_user(user_access_token: str) -> dict:
     """The identity of whoever just completed the OAuth flow."""
-    resp = requests.get(
+    resp = _request(
+        "GET",
         "https://api.github.com/user",
         headers={"Authorization": f"Bearer {user_access_token}", "Accept": "application/vnd.github+json"},
-        timeout=15,
     )
     if resp.status_code != 200:
         raise GitHubAppError(f"Failed to fetch GitHub user: {resp.status_code} {resp.text[:300]}")
@@ -197,10 +214,10 @@ def get_github_user(user_access_token: str) -> dict:
 
 def list_user_installations(user_access_token: str) -> list:
     """Which installations of this App the logged-in GitHub user can see."""
-    resp = requests.get(
+    resp = _request(
+        "GET",
         "https://api.github.com/user/installations",
         headers={"Authorization": f"Bearer {user_access_token}", "Accept": "application/vnd.github+json"},
-        timeout=15,
     )
     if resp.status_code != 200:
         raise GitHubAppError(f"Failed to list user installations: {resp.status_code} {resp.text[:300]}")
@@ -214,10 +231,10 @@ def convert_manifest_code(code: str) -> dict:
     responsible for handing these to the operator to paste into env vars;
     they are intentionally never written to the database.
     """
-    resp = requests.post(
+    resp = _request(
+        "POST",
         f"{GITHUB_API}/app-manifests/{code}/conversions",
         headers={"Accept": "application/vnd.github+json"},
-        timeout=15,
     )
     if resp.status_code != 201:
         raise GitHubAppError(

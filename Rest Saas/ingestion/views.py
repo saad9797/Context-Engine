@@ -155,6 +155,13 @@ class IngestionClaudeContextView(APIView):
     context (with `_scoping.matched: false`) if the task yields no usable
     keywords or matches nothing, rather than risk silently handing back an
     empty or misleadingly narrow context.
+
+    With `?max_tokens=<int>` (either alone or combined with `?task=`),
+    additionally enforces a hard ceiling via scoping.trim_to_budget — cutting
+    sample data, file contents, and finally the least-connected tables/
+    collections until the payload fits, or as close as it can get without
+    emptying a section entirely. Useful for fitting a context into a smaller
+    model's window or a tighter prompt budget than task-scoping alone lands on.
     """
 
     def get(self, request, pk):
@@ -182,29 +189,47 @@ class IngestionClaudeContextView(APIView):
             )
 
         task = request.query_params.get("task", "").strip()
-        if not task:
-            return Response(claude_context)
+        max_tokens = _parse_max_tokens(request.query_params.get("max_tokens"))
 
         full_tokens = scoping.approx_tokens(claude_context)
-        scoped = scoping.build_scoped_context(claude_context, task)
-        if scoped is None:
-            result = dict(claude_context)
-            result["_scoping"] = {
-                "task": task,
-                "matched": False,
-                "note": "No entities matched this task description closely enough — returning the full context instead of an empty or misleading scope.",
-            }
-            return Response(result)
+        result = claude_context
+        scoping_info = None
 
-        scoped_tokens = scoping.approx_tokens(scoped)
-        scoped["_scoping"] = {
-            "task": task,
-            "matched": True,
-            "approx_tokens_full": full_tokens,
-            "approx_tokens_scoped": scoped_tokens,
-            "reduction_pct": round((1 - scoped_tokens / full_tokens) * 100) if full_tokens else 0,
-        }
-        return Response(scoped)
+        if task:
+            scoped = scoping.build_scoped_context(claude_context, task)
+            if scoped is None:
+                scoping_info = {
+                    "task": task,
+                    "matched": False,
+                    "note": "No entities matched this task description closely enough — returning the full context instead of an empty or misleading scope.",
+                }
+            else:
+                result = scoped
+                scoped_tokens = scoping.approx_tokens(scoped)
+                scoping_info = {
+                    "task": task,
+                    "matched": True,
+                    "approx_tokens_full": full_tokens,
+                    "approx_tokens_scoped": scoped_tokens,
+                    "reduction_pct": round((1 - scoped_tokens / full_tokens) * 100) if full_tokens else 0,
+                }
+
+        if max_tokens:
+            pre_budget_tokens = scoping.approx_tokens(result)
+            result, budget_applied = scoping.trim_to_budget(result, max_tokens)
+            if budget_applied:
+                scoping_info = {
+                    **(scoping_info or {"task": None, "matched": None}),
+                    "max_tokens": max_tokens,
+                    "approx_tokens_before_budget": pre_budget_tokens,
+                    "approx_tokens_after_budget": scoping.approx_tokens(result),
+                    "budget_applied": True,
+                }
+
+        if scoping_info is not None:
+            result = dict(result)
+            result["_scoping"] = scoping_info
+        return Response(result)
 
 
 class IngestionFreshnessView(APIView):
@@ -355,6 +380,19 @@ class AuditLogListView(APIView):
 
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
+
+def _parse_max_tokens(raw):
+    if not raw:
+        return None
+    try:
+        value = int(raw)
+    except ValueError:
+        return None
+    # Clamped rather than trusted as-is — a 0/negative value would make
+    # trim_to_budget a no-op in a confusing way, and an absurdly large one
+    # defeats the point of a "budget" at all.
+    return max(500, min(value, 200_000))
+
 
 def _summarise(context_row):
     """Reduce one saved context row to list-view-safe summary fields."""

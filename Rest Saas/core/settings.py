@@ -43,6 +43,9 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
+    # First-ish so the id exists for the entire response cycle, including
+    # anything logged by exception handling further down the chain.
+    "core.middleware.RequestIDMiddleware",
 ]
 
 ROOT_URLCONF = "core.urls"
@@ -115,6 +118,12 @@ REST_FRAMEWORK = {
         # database/repo — this is the knob that stops one tenant's runaway
         # script (or bug) from saturating the Node runner pool.
         "ingestion": os.getenv("INGESTION_RATE_LIMIT", "20/hour"),
+        # Added 2026-09-28 (production-readiness audit) — login/register had
+        # no rate limiting at all. Login is scoped tighter per-minute since
+        # brute-force needs fine-grained limiting; register is scoped
+        # per-hour since a legitimate user only does it once.
+        "auth_login": os.getenv("AUTH_LOGIN_RATE_LIMIT", "10/min"),
+        "auth_register": os.getenv("AUTH_REGISTER_RATE_LIMIT", "10/hour"),
     },
 }
 
@@ -132,6 +141,15 @@ if not FIELD_ENCRYPTION_KEY and not DEBUG:
         "print(Fernet.generate_key().decode())\""
     )
 
+# RSA keypair for browser-side transit encryption of connection credentials
+# (core/transit_crypto.py) — separate from FIELD_ENCRYPTION_KEY above, which
+# only covers encryption at rest. See .env.example for the generation command.
+TRANSIT_PRIVATE_KEY = os.getenv("TRANSIT_PRIVATE_KEY", "").replace("\\n", "\n")
+if not TRANSIT_PRIVATE_KEY and not DEBUG:
+    raise ImproperlyConfigured(
+        "TRANSIT_PRIVATE_KEY is required outside DEBUG. See .env.example for the generation command."
+    )
+
 # ─── SSRF egress guard ──────────────────────────────────────────────────────
 # Hosts explicitly trusted to resolve to private/internal IP ranges (e.g. a
 # self-hosted DB reachable only over a VPN/VPC). Everything else resolving to
@@ -140,6 +158,10 @@ if not FIELD_ENCRYPTION_KEY and not DEBUG:
 SSRF_ALLOWED_HOSTS = {
     h.strip().lower() for h in os.getenv("SSRF_ALLOWED_HOSTS", "").split(",") if h.strip()
 }
+
+# Caps the ingestion-engine Node subprocess's V8 heap (see
+# ingestion/tasks.py for what this does and doesn't guard against).
+INGESTION_MAX_MEMORY_MB = int(os.getenv("INGESTION_MAX_MEMORY_MB", "512"))
 
 # ─── GitHub App ─────────────────────────────────────────────────────────────
 GITHUB_APP_ID = os.getenv("GITHUB_APP_ID", "")
@@ -150,7 +172,62 @@ GITHUB_APP_CLIENT_SECRET = os.getenv("GITHUB_APP_CLIENT_SECRET", "")
 GITHUB_APP_WEBHOOK_SECRET = os.getenv("GITHUB_APP_WEBHOOK_SECRET", "")
 GITHUB_APP_BASE_URL = os.getenv("GITHUB_APP_BASE_URL", "http://localhost:8000")
 
-# Where to send the browser back to after "Continue with GitHub" completes —
-# GitHub redirects to *us* first (to exchange the code server-side), then we
-# redirect on to the SPA carrying the issued token.
+# ─── Google OAuth ("Continue with Google") ──────────────────────────────────
+# From Google Cloud Console → APIs & Services → Credentials → OAuth client ID
+# (type "Web application"), with an authorized redirect URI of
+# {BACKEND_BASE_URL}/api/auth/google/callback/. Login is disabled (503) until
+# both are set — no manifest-style self-setup flow exists for Google.
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
+
+# This backend's own public URL, used to build the Google OAuth redirect_uri.
+# Kept as a separate var from GITHUB_APP_BASE_URL (whose name ties it
+# conceptually to the GitHub App) even though they're normally the same
+# value — falls back to it so most deployments don't need to set both.
+BACKEND_BASE_URL = os.getenv("BACKEND_BASE_URL", GITHUB_APP_BASE_URL)
+
+# Where to send the browser back to after "Continue with GitHub"/"Continue
+# with Google" completes — the provider redirects to *us* first (to exchange
+# the code server-side), then we redirect on to the SPA carrying the issued
+# token.
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
+# Django's default console handler for unhandled-exception tracebacks is
+# filtered to DEBUG=True only (django.utils.log.DEFAULT_LOGGING's 'console'
+# handler has require_debug_true) — since this project intentionally runs
+# with DEBUG=False even locally, that meant every 500 showed up in the
+# runserver log as a bare status line with the actual exception logged
+# nowhere. This restores console tracebacks regardless of DEBUG.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "filters": {
+        # Attaches request_id to every record so the formatter below can
+        # reference it — "-" for anything logged outside a request cycle
+        # (startup, a management command, an RQ worker job).
+        "request_id": {"()": "core.middleware.RequestIDLogFilter"},
+    },
+    "formatters": {
+        "with_request_id": {
+            "format": "%(asctime)s %(levelname)s [%(request_id)s] %(name)s: %(message)s",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "filters": ["request_id"],
+            "formatter": "with_request_id",
+        },
+    },
+    "root": {
+        # Catches anything not explicitly routed below — previously there
+        # was no root handler at all once the default LOGGING config was
+        # overridden, meaning any logger.info()/warning() call anywhere in
+        # the app (present or future) would have gone nowhere silently.
+        "handlers": ["console"],
+        "level": "INFO",
+    },
+    "loggers": {
+        "django.request": {"handlers": ["console"], "level": "ERROR", "propagate": False},
+    },
+}

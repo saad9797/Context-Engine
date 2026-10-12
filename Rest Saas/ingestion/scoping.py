@@ -248,3 +248,147 @@ def approx_tokens(obj):
     ExampleComponent.jsx's rawTokensApprox) so numbers shown to a user are
     consistent regardless of whether they came from the API or the UI."""
     return round(len(json.dumps(obj)) / 4)
+
+
+def _graph_degree(graph):
+    """How many architecture-graph edges touch each node id — a cheap proxy
+    for how structurally central an entity is (a table five others
+    foreign-key into is more likely to matter to whatever's being built
+    than one nothing references), used to decide what to cut first when a
+    token budget forces trimming below what keyword scoping alone removed."""
+    degree = {}
+    for e in (graph or {}).get("edges") or []:
+        degree[e.get("from")] = degree.get(e.get("from"), 0) + 1
+        degree[e.get("to")] = degree.get(e.get("to"), 0) + 1
+    return degree
+
+
+def trim_to_budget(claude_context, max_tokens):
+    """
+    Enforces a hard token ceiling on top of whatever task scoping already
+    did (or on the full context, if there was no task). Applied in order of
+    how much information each cut loses relative to tokens it frees —
+    cheapest, least-lossy cuts first, whole-entity removal only as a last
+    resort:
+
+      1. Sample rows/documents — shape is still visible from columns/
+         schema_shape, just not example values.
+      2. The file tree and long key-file contents — file *names*/roles
+         usually matter more for a first pass than full source.
+      3. Storage example keys/folder listings — illustrative, not structural.
+      4. Whole tables/collections, least-connected first (see
+         `_graph_degree`), stopping short of removing the very last table
+         or collection entirely — an empty section reads as "this project
+         has no database," which is worse than going slightly over budget.
+
+    Returns (context, budget_applied) — budget_applied is False when the
+    context was already under budget and nothing was touched.
+    """
+    if not max_tokens or max_tokens <= 0:
+        return claude_context, False
+    if approx_tokens(claude_context) <= max_tokens:
+        return claude_context, False
+
+    # Cheap deep copy — callers pass a dict that may be reused/returned
+    # elsewhere (e.g. the unscoped claude_context cached on the model), and
+    # every cut below mutates in place.
+    result = json.loads(json.dumps(claude_context))
+
+    for table in (result.get("database") or {}).get("tables") or []:
+        table["sample_rows"] = []
+    for col in (result.get("mongo_database") or {}).get("collections") or []:
+        col["sample_documents"] = []
+    if approx_tokens(result) <= max_tokens:
+        return result, True
+
+    codebase = result.get("codebase")
+    if codebase and codebase.get("file_tree"):
+        codebase["file_tree"] = {
+            "total_files": codebase["file_tree"].get("total_files"),
+            "truncated": True,
+            "tree": [],
+        }
+    if approx_tokens(result) <= max_tokens:
+        return result, True
+
+    if codebase:
+        for files in (codebase.get("key_files_by_role") or {}).values():
+            for f in files:
+                if f.get("content") and len(f["content"]) > 800:
+                    f["content"] = f["content"][:800] + "\n… (truncated for token budget)"
+    if approx_tokens(result) <= max_tokens:
+        return result, True
+
+    for container in (result.get("object_storage") or {}).get("containers") or []:
+        container["example_keys"] = []
+        container["folders"] = (container.get("folders") or [])[:3]
+    if approx_tokens(result) <= max_tokens:
+        return result, True
+
+    tables = (result.get("database") or {}).get("tables") or []
+    collections = (result.get("mongo_database") or {}).get("collections") or []
+    degree = _graph_degree(result.get("architecture_graph"))
+    name_to_id = {n.get("name"): n.get("id") for n in (result.get("architecture_graph") or {}).get("nodes") or []}
+
+    def importance(name):
+        return degree.get(name_to_id.get(name), 0)
+
+    candidates = sorted(
+        [(importance(f'{t.get("schema","")}.{t.get("name","")}'.strip(".")), "table", f'{t.get("schema","")}.{t.get("name","")}'.strip(".")) for t in tables]
+        + [(importance(f'{c.get("database","")}.{c.get("name","")}'.strip(".")), "collection", f'{c.get("database","")}.{c.get("name","")}'.strip(".")) for c in collections],
+        key=lambda x: x[0],
+    )
+    remaining = {"table": len(tables), "collection": len(collections)}
+
+    for _, kind, name in candidates:
+        if approx_tokens(result) <= max_tokens:
+            break
+        if remaining[kind] <= 1:
+            continue  # never drop the last table/collection outright
+        _drop_entity(result, kind, name)
+        remaining[kind] -= 1
+
+    return result, True
+
+
+def _drop_entity(result, kind, name):
+    """
+    Removes one table/collection *and* everything else in the payload that
+    exists only to describe it: its architecture-graph node/edges and its
+    api_generation_hints entry. Without this, dropping a table from
+    `database.tables` left an orphaned node still sitting in
+    architecture_graph and a still-full suggested_resources entry — on the
+    real project this was tested against, those two alone accounted for
+    over 25% of total tokens, so trimming only the table list barely moved
+    the total at all.
+    """
+    if kind == "table":
+        result["database"]["tables"] = [
+            t for t in result["database"]["tables"]
+            if f'{t.get("schema","")}.{t.get("name","")}'.strip(".") != name
+        ]
+    else:
+        result["mongo_database"]["collections"] = [
+            c for c in result["mongo_database"]["collections"]
+            if f'{c.get("database","")}.{c.get("name","")}'.strip(".") != name
+        ]
+
+    graph = result.get("architecture_graph")
+    if graph:
+        node_type = "table" if kind == "table" else "collection"
+        dropped_ids = {n["id"] for n in graph.get("nodes") or [] if n.get("type") == node_type and n.get("name") == name}
+        if dropped_ids:
+            graph["nodes"] = [n for n in graph["nodes"] if n["id"] not in dropped_ids]
+            graph["edges"] = [
+                e for e in graph.get("edges") or []
+                if e.get("from") not in dropped_ids and e.get("to") not in dropped_ids
+            ]
+
+    hints = result.get("api_generation_hints")
+    if hints and hints.get("suggested_resources"):
+        source = "postgres" if kind == "table" else "mongo"
+        bare_name = name.rsplit(".", 1)[-1]
+        hints["suggested_resources"] = [
+            r for r in hints["suggested_resources"]
+            if not (r.get("source") == source and r.get("name") == bare_name)
+        ]

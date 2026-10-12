@@ -18,10 +18,11 @@ from .serializers import LoginSerializer, RegisterSerializer, UserSerializer
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
-    # DRF's default ScopedRateThrottle would otherwise require a
-    # throttle_scope; these endpoints aren't the abuse vector this project
-    # is guarding against (ingestion job creation is), so leave unthrottled.
-    throttle_classes = []
+    # Unauthenticated + unlimited account creation is a real spam/abuse
+    # vector (bulk fake accounts, automated signups) — ScopedRateThrottle
+    # keys by IP here since there's no user yet. Rate is in
+    # DEFAULT_THROTTLE_RATES["auth_register"].
+    throttle_scope = "auth_register"
 
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
@@ -36,7 +37,13 @@ class RegisterView(APIView):
 
 class LoginView(APIView):
     permission_classes = [AllowAny]
-    throttle_classes = []
+    # Unauthenticated + unlimited is a straightforward password-brute-force
+    # vector — the previous `throttle_classes = []` here was a real gap
+    # (found in a 2026-09-28 production-readiness audit), not a deliberate
+    # choice; every failed OR successful attempt still counts against the
+    # scope since ScopedRateThrottle only sees "a request happened," which
+    # is the correct conservative behavior for a login endpoint.
+    throttle_scope = "auth_login"
 
     def post(self, request):
         serializer = LoginSerializer(data=request.data)

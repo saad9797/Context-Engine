@@ -1,13 +1,24 @@
-django>=4.2,<5.0
-djangorestframework>=3.14
-python-dotenv>=1.0
-psycopg2-binary>=2.9
-dj-database-url>=2.1
-django-redis>=5.4
-django-rq>=2.10
-redis>=5.0
-cryptography>=42.0
-PyJWT[crypto]>=2.8
-requests>=2.31
-dnspython>=2.6
-pymongo>=4.6
+# Exact-pinned to what this project is actually built and tested against
+# (via `pip freeze` in the working dev environment, 2026-09-28) — a range
+# pin here previously let `django-cors-headers` go completely unlisted
+# (Django won't even start without it, since it's in MIDDLEWARE) and let
+# Django itself resolve to a 4.x line that has never been run against this
+# codebase (the tested version is 5.2.17). Bump deliberately, not by
+# accident of a fresh install picking up whatever's newest.
+django==5.2.17
+django-cors-headers==4.9.0
+djangorestframework==3.17.2  # 3.17.1 has two known CVEs (PYSEC-2026-3827, -3828); found via pip-audit 2026-09-28
+python-dotenv==1.2.2
+psycopg2-binary==2.9.12
+dj-database-url==3.1.2
+django-redis==7.0.0
+django-rq==4.2.0
+redis==8.1.0
+cryptography==50.0.1
+PyJWT[crypto]==2.13.0
+requests==2.34.2
+dnspython==2.8.0
+pymongo==4.18.1
+# Production WSGI server — manage.py runserver is dev-only (Django's own
+# warning on every startup says so).
+gunicorn==26.2.0

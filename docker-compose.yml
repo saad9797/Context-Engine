@@ -1,0 +1,44 @@
+# Local-dev convenience only — brings up Redis + the backend + the worker
+# with one command, so you don't need Redis installed natively (the
+# `Rest Saas/README.md` Docker/WSL2/Memurai options are the alternative).
+# Not a production deployment config — see docs/DEPLOYMENT.md for that.
+# The frontend is intentionally not included here: it's a static build,
+# run separately with `npm run dev` per `Rest Saas Frontend/README.md`.
+#
+# NOT build/run-tested in the environment this was written in (Docker is
+# not installed there) — standard compose patterns, but verify with a real
+# `docker compose up` before relying on it.
+
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  backend:
+    build:
+      context: ./Rest Saas
+    command: python manage.py runserver 0.0.0.0:8000
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./Rest Saas/.env
+    environment:
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      - redis
+    volumes:
+      - ./Rest Saas:/app
+
+  worker:
+    build:
+      context: ./Rest Saas
+    command: python manage.py rqworker ingestion --worker-class rq.worker.SimpleWorker
+    env_file:
+      - ./Rest Saas/.env
+    environment:
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      - redis
+    volumes:
+      - ./Rest Saas:/app

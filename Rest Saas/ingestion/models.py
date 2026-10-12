@@ -119,6 +119,25 @@ class GitHubIdentity(models.Model):
         return f"{self.github_login} ({self.github_id}) — {self.user}"
 
 
+class GoogleIdentity(models.Model):
+    """
+    Links one Django account to the Google account that logged into it via
+    "Continue with Google" (accounts/views_google.py). Keyed by Google's
+    OIDC `sub` claim, a stable opaque per-account id Google guarantees never
+    changes or gets reused — unlike email, which a user can change later.
+    """
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="google_identity"
+    )
+    google_id = models.CharField(max_length=255, unique=True)
+    email = models.EmailField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.email or self.google_id} — {self.user}"
+
+
 class IngestionJob(models.Model):
     """
     An async ingestion run. Created in `pending`, enqueued to the `ingestion`

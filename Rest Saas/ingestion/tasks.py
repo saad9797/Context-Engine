@@ -11,6 +11,7 @@ import subprocess
 import threading
 from pathlib import Path
 
+from django.conf import settings
 from django.utils import timezone
 
 from core.network_guard import assert_safe_config
@@ -24,6 +25,19 @@ INGESTION_RUNNER = Path(__file__).resolve().parent / "ingestion-engine" / "run.j
 # Off the request thread now, so a large schema/repo can be given real time
 # instead of racing a 120s HTTP timeout.
 JOB_TIMEOUT_SECONDS = 600
+
+# Caps the Node subprocess's V8 heap (--max-old-space-size, in MB) — added
+# 2026-09-28 (production-readiness audit): a pathologically large schema or
+# repo previously had no resource ceiling beyond the wall-clock timeout
+# above, so a slow memory blowup could exhaust host RAM well before 600s
+# elapsed. This is a real but partial guard, not an absolute one — it caps
+# V8's own heap, not native-addon/buffer memory the AWS/Azure SDKs can
+# allocate off-heap, and there is no cross-platform equivalent of POSIX
+# resource.setrlimit for total process RSS (Windows has no rlimit at all).
+# When the heap ceiling is hit, Node exits non-zero with a clear OOM
+# message, which the existing `returncode != 0` handling below turns into a
+# normal failed-job error instead of taking the host down.
+INGESTION_MAX_MEMORY_MB = int(getattr(settings, "INGESTION_MAX_MEMORY_MB", 512))
 
 _PROGRESS_RE = re.compile(r"^PROGRESS::(\{.*\})\s*$")
 
@@ -146,7 +160,7 @@ def run_ingestion_job(job_id):
         _validate_ssrf(runner_config)
 
         proc = subprocess.Popen(
-            ["node", str(INGESTION_RUNNER)],
+            ["node", f"--max-old-space-size={INGESTION_MAX_MEMORY_MB}", str(INGESTION_RUNNER)],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,

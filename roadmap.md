@@ -1,4 +1,4 @@
-# Contexa: Evolution Roadmap
+G# Contexa: Evolution Roadmap
 
 *What to build next to turn the current prototype into a product developers actually adopt and pay for.*
 
@@ -187,3 +187,4 @@ You cannot sell "cuts your AI costs" on faith. Instrument it from day one of P2:
 **Next, now that the core loop is real:** actually dogfood the MCP server on a real task end-to-end (connect it to Claude Code, point it at a real project, see whether `get_context`/`get_changes`/`check_freshness` genuinely change how a session goes) — that's the signal for whether P2's keyword scoring holds up outside the one repo it was tuned against, and whether anything above needs a second pass before it's worth showing anyone else.
 
 Deliberately not built yet: billing, teams/orgs, the visual drag-and-drop builder, fine-tuned LLM generation, vector search/RAG, and publishing `contexa-mcp` to npm (still a local-path install). All of those are real parts of the longer-term proposal, but building them before the core loop has been dogfooded risks polishing a product nobody has validated wants the thing you're polishing.
+
