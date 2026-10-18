@@ -8,7 +8,7 @@ const { apiRequest } = require("./client.js");
 
 const server = new McpServer({ name: "contexa", version: "0.1.0" });
 
-const json = (value) => ({ content: [{ type: "text", text: JSON.stringify(value, null, 2) }] });
+const json = (value) => ({ content: [{ type: "text", text: JSON.stringify(value) }] });
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 server.tool(
@@ -22,8 +22,28 @@ server.tool(
 );
 
 server.tool(
+  "get_context_packs",
+  "Preferred context for coding: reusable base pack and task-specific pack with complete source units, ORM blocks, enums, and coverage gaps. Read the base once per base_id, then use only the task pack for follow-up work. Check report.missing and report.omitted before generating code; ask for missing contracts. Never assume generated code is verified.",
+  {
+    context_id: z.string().uuid(),
+    pack: z.enum(["both", "base", "task"]).optional().describe("Request only task after the matching base is already in the conversation"),
+    task: z.string().max(4000).optional(),
+    endpoints: z.string().max(2000).optional(),
+    access: z.string().max(2000).optional(),
+    rules: z.string().max(4000).optional(),
+    response_shape: z.string().max(4000).optional(),
+    max_tokens: z.number().int().min(1000).max(32000).optional(),
+    include_paths: z.array(z.string().max(500)).max(15).optional(),
+  },
+  async ({ context_id, pack = "both", ...body }) => {
+    const output = await apiRequest(`/api/ingestion/${context_id}/context-pack/`, { method: "POST", body });
+    return json(pack === "both" ? output : { [pack]: output[pack], report: output.report });
+  }
+);
+
+server.tool(
   "get_context",
-  "Fetch the distilled claude_context for one saved Contexa ingestion: database schema, " +
+  "Legacy overview export; prefer get_context_packs for code generation and small task-focused context. Fetch the distilled claude_context for one saved Contexa ingestion: database schema, " +
     "relationships, storage conventions, codebase structure and key files, and the unified " +
     "architecture graph. This is the actual artifact meant to be read before generating code — " +
     "call list_projects first if you don't already have a context_id. Pass `task` to trim the " +
@@ -90,6 +110,7 @@ server.tool(
     "call get_context with it to fetch the result.",
   {
     postgres_connection_id: z.string().optional(),
+    mysql_connection_id: z.string().uuid().optional(),
     mongo_connection_id: z.string().optional(),
     mongo_db_name: z.string().optional().describe("Overrides the name saved on the connection"),
     mongo_scan_all_databases: z.boolean().optional().describe("Inspect every database on the cluster instead of one"),

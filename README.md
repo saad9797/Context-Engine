@@ -1,5 +1,7 @@
 # Contexa
 
+**New: reusable base packs and task-specific AI context.** Connect your repository, describe a change, and copy complete relevant code contracts, ORM models and enums within an estimated budget. Database records are excluded. See [the context-pack release guide](PRODUCTION.md) for usage, supported stacks, upgrade steps, privacy behavior, verification, and remaining launch gates.
+
 An automated context-extraction platform: connect a codebase, a database, and cloud storage, and get back one distilled, structured JSON context package sized for handing to an AI coding assistant — instead of pasting files by hand or letting an agent re-derive the same facts on every session.
 
 See `problem.md` for the motivating pain point, `Contexa_Project_Proposal.docx` for the full product proposal, and `roadmap.md` for what's being built next.

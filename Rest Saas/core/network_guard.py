@@ -94,9 +94,10 @@ def assert_safe_url(url: str) -> None:
     assert_safe_host(parsed.hostname)
 
 
-def assert_safe_config(*, postgres_url=None, mongo_url=None, storage_config=None) -> None:
+def assert_safe_config(*, postgres_url=None, mysql_url=None, mongo_url=None, storage_config=None) -> None:
     """Run the SSRF guard over every externally-supplied host in one job's config."""
     assert_safe_url(postgres_url)
+    assert_safe_url(mysql_url)
     assert_safe_url(mongo_url)
     if storage_config:
         endpoint = storage_config.get("endpoint")

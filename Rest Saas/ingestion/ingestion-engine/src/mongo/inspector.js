@@ -43,9 +43,9 @@ function analyzeValue(val, depth = 0) {
   if (depth > MAX_DEPTH) return "__max_depth__";
   if (val === null) return "null";
   if (val === undefined) return "undefined";
-  if (isObjectIdLike(val)) return `ObjectId(${val.toString()})`;
-  if (val instanceof Date) return `Date(${val.toISOString()})`;
-  if (Buffer.isBuffer(val)) return `Buffer(${val.length} bytes)`;
+  if (isObjectIdLike(val)) return "ObjectId";
+  if (val instanceof Date) return "Date";
+  if (Buffer.isBuffer(val)) return "Buffer";
 
   if (Array.isArray(val)) {
     if (val.length === 0) return "Array<empty>";
@@ -66,7 +66,7 @@ function analyzeValue(val, depth = 0) {
     return shape;
   }
 
-  return `${typeof val}(${String(val).slice(0, 80)})`;
+  return typeof val;
 }
 
 // Merge shapes across sampled docs so fields present in some-but-not-all docs still show up
@@ -193,6 +193,7 @@ async function inspectOneDatabase(db) {
       return {
         name,
         database: db.databaseName,
+        validator: info.options?.validator || null,
         estimated_documents: estimatedCount,
         storage_size: collStats ? `${(collStats.storageSize / 1024 / 1024).toFixed(2)} MB` : null,
         avg_document_size_bytes: collStats?.avgObjSize ?? null,
@@ -204,7 +205,7 @@ async function inspectOneDatabase(db) {
           ttl_seconds: idx.expireAfterSeconds ?? null,
         })),
         schema_shape: mergedShape,
-        sample_documents: samples.map(redactDoc),
+        // Samples are read only to infer field types and are never retained.
         reference_fields: detectReferenceFields(mergedShape, collectionNames),
         storage_fields: detectStorageFields(mergedShape),
       };

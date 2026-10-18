@@ -39,7 +39,7 @@ def _hash(parts) -> str:
 # ─── Stored fingerprint — from already-extracted ingestion output ──────────
 
 def _stored_postgres(database):
-    if not database:
+    if not database or database.get("dialect") == "mysql":
         return None
     parts = []
     for table in database.get("tables") or []:

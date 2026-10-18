@@ -70,6 +70,9 @@ export default function FreshnessCheck({ contextId }) {
       </Typography>
     );
   }
+  if (result.source_errors) {
+    return <Typography variant="caption">Partial freshness check: {Object.values(result.source_errors).join(" ")}{result.drifted ? " Other checked sources have changed; rebuild the snapshot." : " Rebuild to refresh unchecked sources."}</Typography>;
+  }
   if (result.drifted) {
     const changed = Object.entries(result.details || {})
       .filter(([, v]) => v === true)

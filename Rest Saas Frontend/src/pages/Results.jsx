@@ -110,12 +110,6 @@ export default function Results() {
     );
   }
   const meta = data._meta || {};
-  const rawChars = JSON.stringify(data).length;
-  const distilledChars = JSON.stringify(data.claude_context || {}).length;
-  const rawTokensApprox = Math.round(rawChars / 4);
-  const distilledTokensApprox = Math.round(distilledChars / 4);
-  const reductionPct =
-    rawChars > 0 ? Math.round((1 - distilledChars / rawChars) * 100) : 0;
   const database = data.database;
   const mongo = data.mongo_database;
   const storage = data.object_storage;
@@ -128,7 +122,7 @@ export default function Results() {
     },
     database && {
       id: "postgres",
-      label: "PostgreSQL",
+      label: database.dialect === "mysql" ? "MySQL" : "PostgreSQL",
       n: database.tables?.length,
     },
     mongo && {
@@ -226,13 +220,13 @@ export default function Results() {
             startIcon={<AutoAwesomeIcon fontSize="small" />}
             onClick={() => navigate(`/contexts/${contextId}/claude-context`)}
           >
-            Prepare AI context
+            Prepare AI packs
           </Button>
           {data.claude_context && (
             <Chip
               size="small"
               variant="outlined"
-              label={`~${rawTokensApprox.toLocaleString()} → ~${distilledTokensApprox.toLocaleString()} tokens (${reductionPct}% smaller)`}
+              label="Reusable base + focused task context"
               sx={{
                 fontFamily: (t) => t.tokens.fontMono,
                 fontWeight: 400,

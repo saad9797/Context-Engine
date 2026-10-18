@@ -9,6 +9,11 @@ on:
 jobs:
   backend:
     runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 3s --health-retries 10
     env:
       # Test-only, ephemeral, never used for anything real — regenerated on
       # every run rather than committed as a fixed literal (see the
@@ -21,6 +26,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install ingestion drivers for transport/schema tests
+        working-directory: Rest Saas/ingestion/ingestion-engine
+        run: npm ci
       - name: Install dependencies
         working-directory: Rest Saas
         run: pip install -r requirements-dev.txt
@@ -47,7 +58,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: "22"
           cache: npm
           cache-dependency-path: "Rest Saas Frontend/package-lock.json"
       - name: Install dependencies
@@ -56,6 +67,12 @@ jobs:
       - name: Build
         working-directory: Rest Saas Frontend
         run: npm run build
+      - name: Test user workflows
+        working-directory: Rest Saas Frontend
+        run: npm test
+      - name: Audit production dependencies
+        working-directory: Rest Saas Frontend
+        run: npm audit --omit=dev
 
   ingestion-engine:
     runs-on: ubuntu-latest
@@ -63,7 +80,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: "22"
           cache: npm
           cache-dependency-path: "Rest Saas/ingestion/ingestion-engine/package-lock.json"
       - name: Install dependencies

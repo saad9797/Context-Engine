@@ -13,6 +13,7 @@ from .views import (
     IngestionResultView,
 )
 from .views_crypto import TransitPublicKeyView
+from .views_context_packs import ContextPackView, RebuildSnapshotView
 from .views_github import (
     GitHubInstallationDetailView,
     GitHubInstallationListView,
@@ -26,6 +27,8 @@ from .views_github import (
 )
 
 urlpatterns = [
+    path("api/ingestion/<uuid:pk>/context-pack/", ContextPackView.as_view(), name="context-pack"),
+    path("api/ingestion/<uuid:pk>/rebuild/", RebuildSnapshotView.as_view(), name="snapshot-rebuild"),
     path("api/ingestion/run/", IngestionJobCreateView.as_view(), name="ingestion-run"),
     path("api/ingestion/jobs/<uuid:pk>/", IngestionJobStatusView.as_view(), name="ingestion-job-status"),
     path("api/ingestion/", IngestionListView.as_view(), name="ingestion-list"),

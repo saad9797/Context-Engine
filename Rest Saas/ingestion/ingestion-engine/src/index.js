@@ -11,6 +11,7 @@ const { buildPlainEnglishSummary } = require("./summary-builder");
 function makeProgressEmitter(config) {
   const stages = [];
   if (config.postgresUrl) stages.push("postgres");
+  if (config.mysqlUrl) stages.push("mysql");
   if (config.mongoUrl) stages.push("mongo");
   if (config.storageConfig) stages.push("storage");
   if (config.github) stages.push("github");
@@ -47,6 +48,17 @@ async function runIngestion(config) {
           : e.message;
     }
     emitProgress("postgres");
+  }
+
+  if (config.mysqlUrl) {
+    try {
+      const { inspectMySQL } = require("./mysql/inspector");
+      database = await inspectMySQL(config.mysqlUrl);
+    } catch (e) {
+      errors.database = e.message;
+      console.error("[ingestion] MySQL schema inspection failed:", e.message);
+    }
+    emitProgress("mysql");
   }
 
   let mongoDatabase = null;
@@ -121,6 +133,10 @@ async function runIngestion(config) {
       note: "This field likely stores a reference (URL or key) to an object in the storage bucket.",
     }));
     storageColumnMapping = [...pgCols, ...mongoCols];
+  }
+
+  if (!database && !mongoDatabase && !objectStorage && !codebase) {
+    throw new Error("None of the selected sources could be inspected. Check source access and connection settings before retrying.");
   }
 
   const context = {

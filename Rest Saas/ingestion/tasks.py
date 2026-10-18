@@ -17,6 +17,7 @@ from django.utils import timezone
 from core.network_guard import assert_safe_config
 
 from . import freshness
+from .privacy import safe_snapshot
 from .github_app import mint_installation_token
 from .models import DataSourceConnection, GitHubAppInstallation, IngestionContext, IngestionJob
 
@@ -78,6 +79,7 @@ def _build_runner_config(job: IngestionJob) -> dict:
         cid
         for cid in (
             refs.get("postgres_connection_id"),
+            refs.get("mysql_connection_id"),
             refs.get("mongo_connection_id"),
             refs.get("storage_connection_id"),
         )
@@ -90,6 +92,7 @@ def _build_runner_config(job: IngestionJob) -> dict:
 
     config = {
         "postgresUrl": None,
+        "mysqlUrl": None,
         "mongoUrl": None,
         "mongoDbName": refs.get("mongo_db_name"),
         "storageConfig": None,
@@ -102,6 +105,15 @@ def _build_runner_config(job: IngestionJob) -> dict:
         if conn is None:
             raise ValueError("Postgres connection not found for this user.")
         config["postgresUrl"] = conn.get_config().get("postgres_url")
+        conn.__class__.objects.filter(id=conn.id).update(last_used_at=timezone.now())
+
+    if refs.get("mysql_connection_id"):
+        conn = connections.get(str(refs["mysql_connection_id"]))
+        if conn is None or conn.kind != "mysql":
+            raise ValueError("MySQL connection not found for this user.")
+        config["mysqlUrl"] = conn.get_config().get("mysql_url")
+        if not config["mysqlUrl"]:
+            raise ValueError("MySQL connection URL is missing.")
         conn.__class__.objects.filter(id=conn.id).update(last_used_at=timezone.now())
 
     if refs.get("mongo_connection_id"):
@@ -143,6 +155,7 @@ def _build_runner_config(job: IngestionJob) -> dict:
 def _validate_ssrf(config: dict) -> None:
     assert_safe_config(
         postgres_url=config.get("postgresUrl"),
+        mysql_url=config.get("mysqlUrl"),
         mongo_url=config.get("mongoUrl"),
         storage_config=config.get("storageConfig"),
     )
@@ -218,7 +231,7 @@ def run_ingestion_job(job_id):
             detail = _scrub("".join(stderr_lines))[-2000:]
             raise RuntimeError(detail or "Ingestion runner exited non-zero with no output.")
 
-        context = json.loads(stdout)
+        context = safe_snapshot(json.loads(stdout))
 
         result = IngestionContext.objects.create(
             user_id=job.user_id,

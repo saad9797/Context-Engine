@@ -37,13 +37,13 @@ const SOURCES = [
   {
     stage: "postgres",
     key: "database",
-    name: "PostgreSQL",
+    name: "SQL database",
     label: "Read database schema",
     detail: "Tables, columns & relationships",
     icon: DnsOutlined,
     headline: "Finding the structure in your data.",
     description:
-      "Inspecting tables, columns, keys, and relationships in your PostgreSQL database.",
+      "Inspecting tables, columns, keys, and relationships in your SQL database without reading application records.",
   },
   {
     stage: "mongo",
@@ -338,7 +338,7 @@ export default function IngestionProgress() {
   if (ready) phaseIndex = phases.length;
   else if (job?.stage === "finalizing") phaseIndex = phases.length - 1;
   else if (job?.stage && job.stage !== "starting") {
-    const reported = phases.findIndex((p) => p.stage === job.stage);
+    const reported = phases.findIndex((p) => p.stage === (job.stage === "mysql" ? "postgres" : job.stage));
     phaseIndex = reported >= 0 ? Math.min(reported + 1, phases.length - 1) : 1;
   } else if (job?.status === "running") phaseIndex = 1;
   const phase = phases[Math.min(phaseIndex, phases.length - 1)];

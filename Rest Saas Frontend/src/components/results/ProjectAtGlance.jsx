@@ -19,7 +19,6 @@ export default function ProjectAtGlance({
   onPrepare,
 }) {
   if (!graph && !context) return null;
-  const tokens = context ? Math.round(JSON.stringify(context).length / 4) : 0;
   return (
     <Box
       sx={{
@@ -87,12 +86,12 @@ export default function ProjectAtGlance({
               Start with the context.
             </Typography>
             <Typography variant="body2" sx={{ lineHeight: 1.9, mb: 2 }}>
-              Your project's structure and conventions, distilled into one
-              reusable handoff for Claude, Codex, or your preferred AI tool.
+              Paste your project conventions once. Then send only the models,
+              code, and requirements needed for each task.
             </Typography>
             <Chip
               variant="outlined"
-              label={`~${tokens.toLocaleString()} tokens · estimated`}
+              label="Base pack + task pack"
               size="small"
               sx={{ alignSelf: "flex-start", mb: 3 }}
             />
@@ -102,7 +101,7 @@ export default function ProjectAtGlance({
               onClick={onPrepare}
               sx={{ mt: "auto", alignSelf: "flex-start" }}
             >
-              Prepare AI context
+              Prepare AI packs
             </Button>
             <Typography variant="caption" sx={{ fontSize: 10, mt: 1.5 }}>
               Choose a task and token budget on the next screen.

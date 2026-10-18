@@ -44,6 +44,7 @@ class DataSourceConnection(models.Model):
 
     KIND_CHOICES = [
         ("postgres", "Postgres"),
+        ("mysql", "MySQL"),
         ("mongo", "MongoDB"),
         ("storage", "Object storage"),
     ]

@@ -157,10 +157,10 @@ def build_manifest(app_name: str, base_url: str, state: str) -> dict:
         "url": base_url,
         "hook_attributes": {"url": f"{base_url}/api/integrations/github/webhook/"},
         "redirect_url": f"{base_url}/api/integrations/github/manifest/callback/?state={state}",
-        "callback_urls": [f"{base_url}/api/integrations/github/callback/"],
+        "callback_urls": [f"{base_url}/api/integrations/github/login-callback/"],
         "setup_url": f"{base_url}/api/integrations/github/callback/",
         "setup_on_update": True,
-        "public": False,
+        "public": True,
         "default_permissions": {
             "contents": "read",
             "metadata": "read",

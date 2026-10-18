@@ -15,6 +15,8 @@ const HIGH_VALUE_PATTERNS = [
   /service|repository|repo|store|dao|usecase/i,
   /\.test\.|\.spec\.|__tests__|_test\.go|test_.*\.py/i,
   /database|db|connection|pool/i,
+  /response|exception|error|factory|factories|component|hook|store|context|\.vue$|\.svelte$|\.tsx$|\.jsx$|tsconfig/i,
+  /(^|\/)(types?|interfaces?)\/|\.d\.ts$/i,
   /readme|openapi|swagger|postman/i,
   /package\.json|requirements.*\.txt|pyproject\.toml|go\.mod|gemfile|cargo\.toml|pom\.xml|build\.gradle|composer\.json|.*\.csproj/i,
   /dockerfile|docker-compose|\.github\/workflows/i,
@@ -23,6 +25,9 @@ const HIGH_VALUE_PATTERNS = [
 // Directories/files that never carry useful architectural signal — vendored
 // deps, build output, binaries, IDE/tooling noise, lockfiles.
 const SKIP_PATTERNS = [
+  /(^|\/)\.env(?:\.[^/]*)?$/i,
+  /(^|\/)(credentials[^/]*|secrets?)(\/|\.|$)/i,
+  /\.(pem|key|p12|pfx)$/i,
   /node_modules/i, /\.git\//i, /dist\//i, /build\//i, /__pycache__/i,
   /\.next\//i, /\.nuxt\//i, /coverage\//i, /\.cache\//i,
   /(^|\/)(vendor|venv|\.venv|env)\//i, /target\//i, /bin\//i, /obj\//i,
@@ -47,6 +52,7 @@ function inferFileRole(path) {
   const lower = path.toLowerCase();
   if (/dockerfile|docker-compose/.test(lower)) return "deployment-config";
   if (/\.github\/workflows/.test(lower)) return "ci-config";
+  if (/response|exception|errors?\.|factory|factories|prisma\.config|tsconfig/.test(lower)) return "shared-contract";
   if (/urls?\.py|route|controller|handler/.test(lower)) return "route/controller";
   if (/views?\.py/.test(lower)) return "route/controller";
   if (/wsgi\.py|asgi\.py|manage\.py/.test(lower)) return "entry-point";
@@ -94,6 +100,10 @@ function detectFramework(fileTree, packageJson) {
   if (/laravel/.test(all)) frameworks.push("Laravel");
   if (/symfony/.test(all)) frameworks.push("Symfony");
   if (/next/.test(all)) frameworks.push("Next.js");
+  if (/\breact\b/.test(deps)) frameworks.push("React");
+  if (/\bvue\b/.test(deps)) frameworks.push("Vue");
+  if (/svelte/.test(deps)) frameworks.push("Svelte");
+  if (/fastify/.test(deps)) frameworks.push("Fastify");
   if (/asp\.net|microsoft\.aspnetcore/.test(all)) frameworks.push("ASP.NET Core");
 
   const orms = [];
@@ -135,7 +145,10 @@ async function getFileContent(octokit, owner, repo, path, ref) {
     const { data } = await octokit.repos.getContent({ owner, repo, path, ref });
     if (data.type !== "file") return null;
     const content = Buffer.from(data.content, "base64").toString("utf8");
-    return truncateAtLineBoundary(content, 8192);
+    // Capture whole units for later task selection. Never present fragments as
+    // complete code; oversized files are reported as unavailable instead.
+    if (Buffer.byteLength(content, "utf8") > 128_000) return null;
+    return content;
   } catch {
     return null;
   }
@@ -205,7 +218,7 @@ function buildNestedTree(files) {
 }
 
 const ROLE_PRIORITY = {
-  "entry-point": 0, "route/controller": 1, "data-model": 2,
+  "shared-contract": 0, "data-model": 1, "entry-point": 2, "route/controller": 3,
   "middleware": 3, "auth/authz": 3, "service": 4, "repository": 4,
   "orm-config": 5, "database-config": 5, "dto/validator": 6,
   "configuration": 7, "dependency-manifest": 8, "deployment-config": 8,
@@ -230,73 +243,95 @@ async function inspectGitHub({ token, owner, repo, branch }) {
   )].slice(0, 200);
 
   let packageJson = null;
-  const pkgFile = rawTree.find((f) => f.path === "package.json");
+  const pkgFile = allFiles.filter((f) => /(^|\/)package\.json$/.test(f.path)).sort((a, b) => a.path.length - b.path.length)[0];
   if (pkgFile) {
-    const content = await getFileContent(octokit, owner, repo, "package.json", defaultBranch);
+    const content = await getFileContent(octokit, owner, repo, pkgFile.path, commitSha);
     try { packageJson = JSON.parse(content); } catch { /* ignore */ }
   }
 
   let requirementsTxt = null;
   const reqFile = rawTree.find((f) => /requirements([-_]?\w*)\.txt$/.test(f.path));
   if (reqFile) {
-    requirementsTxt = await getFileContent(octokit, owner, repo, reqFile.path, defaultBranch);
+    requirementsTxt = await getFileContent(octokit, owner, repo, reqFile.path, commitSha);
   }
 
   let pyprojectToml = null;
   const pyprojectFile = rawTree.find((f) => f.path === "pyproject.toml");
   if (pyprojectFile) {
-    pyprojectToml = await getFileContent(octokit, owner, repo, "pyproject.toml", defaultBranch);
+    pyprojectToml = await getFileContent(octokit, owner, repo, "pyproject.toml", commitSha);
   }
 
   let goMod = null;
   const goModFile = rawTree.find((f) => f.path === "go.mod");
   if (goModFile) {
-    goMod = await getFileContent(octokit, owner, repo, "go.mod", defaultBranch);
+    goMod = await getFileContent(octokit, owner, repo, "go.mod", commitSha);
   }
 
   let gemfile = null;
   const gemfileFile = rawTree.find((f) => /^gemfile$/i.test(f.path));
   if (gemfileFile) {
-    gemfile = await getFileContent(octokit, owner, repo, gemfileFile.path, defaultBranch);
+    gemfile = await getFileContent(octokit, owner, repo, gemfileFile.path, commitSha);
   }
 
   const stackInfo = detectFramework(allFiles, packageJson);
+  const pythonDependencies = [requirementsTxt, pyprojectToml].filter(Boolean).join(" ").toLowerCase();
+  for (const [pattern, name] of [[/django/, "Django"], [/djangorestframework/, "Django REST Framework"], [/fastapi/, "FastAPI"], [/flask/, "Flask"]]) {
+    if (pattern.test(pythonDependencies) && !stackInfo.frameworks.includes(name)) stackInfo.frameworks.push(name);
+  }
+  if (/sqlalchemy/.test(pythonDependencies)) stackInfo.orms.push("SQLAlchemy");
+  if (/django/.test(pythonDependencies)) stackInfo.orms.push("Django ORM");
 
-  const highValueFiles = allFiles
+  const candidates = allFiles
     .filter((f) => isHighValue(f.path))
     .sort((a, b) => {
       const priority = (p) => ROLE_PRIORITY[inferFileRole(p)] ?? 99;
       return priority(a.path) - priority(b.path);
     })
-    .slice(0, 60);
+    ;
+  // Reserve coverage across roles rather than spending the entire capture
+  // budget on the first directory of a large repository.
+  const captureCandidates = candidates.filter((file) => {
+    if (/\.d\.ts$/.test(file.path) && allFiles.some((other) => other.path === file.path.replace(/\.d\.ts$/, ".ts"))) return false;
+    if (/\.js$/.test(file.path) && allFiles.some((other) => other.path === file.path.replace(/\.js$/, ".ts"))) return false;
+    return true;
+  });
+  const roleCounts = {};
+  const highValueFiles = captureCandidates.filter((file) => {
+    const role = inferFileRole(file.path);
+    const group = role === "route/controller" ? (/routes?\//i.test(file.path) ? "routes" : "controllers") : role;
+    roleCounts[group] = (roleCounts[group] || 0) + 1;
+    return roleCounts[group] <= (group === "controllers" ? 100 : 60);
+  }).slice(0, 220);
 
   // Hard budget across ALL file content combined, not just a per-file cap.
   // Files are already priority-sorted (entry points → routes → models →
   // ... → tests/docs), so hitting the budget drops the least important
   // files first rather than truncating arbitrarily. This is what keeps a
   // huge repo from blowing past what's useful to hand to Claude in one go.
-  const MAX_TOTAL_CONTENT_BYTES = 150_000;
+  const MAX_TOTAL_CONTENT_BYTES = 2_000_000;
   const BATCH = 10;
   const fileContents = [];
   let totalBytes = 0;
   let budgetExhausted = false;
+  const omittedFiles = [];
 
-  outer:
   for (let i = 0; i < highValueFiles.length; i += BATCH) {
     const batch = highValueFiles.slice(i, i + BATCH);
     const results = await Promise.all(
       batch.map(async (f) => {
-        const content = await getFileContent(octokit, owner, repo, f.path, defaultBranch);
-        return { path: f.path, role: inferFileRole(f.path), size_bytes: f.size, content: content || null };
+        const content = f.size > 128_000 ? null : await getFileContent(octokit, owner, repo, f.path, commitSha);
+        return { path: f.path, role: inferFileRole(f.path), size_bytes: f.size, sha: f.sha, content: content ?? null };
       })
     );
     for (const r of results) {
-      if (r.content === null) continue;
-      if (totalBytes + r.content.length > MAX_TOTAL_CONTENT_BYTES) {
+      if (r.content === null) { omittedFiles.push({ path: r.path, reason: "unavailable or exceeds 128 KB source limit" }); continue; }
+      const size = Buffer.byteLength(r.content, "utf8");
+      if (totalBytes + size > MAX_TOTAL_CONTENT_BYTES) {
         budgetExhausted = true;
-        break outer;
+        omittedFiles.push({ path: r.path, reason: "total capture budget" });
+        continue;
       }
-      totalBytes += r.content.length;
+      totalBytes += size;
       fileContents.push(r);
     }
   }
@@ -326,13 +361,13 @@ async function inspectGitHub({ token, owner, repo, branch }) {
   const filesByRole = {};
   for (const f of fileContents) {
     if (!filesByRole[f.role]) filesByRole[f.role] = [];
-    filesByRole[f.role].push({ path: f.path, size_bytes: f.size_bytes, content: f.content });
+    filesByRole[f.role].push({ path: f.path, size_bytes: f.size_bytes, sha: f.sha, content: f.content, truncated: false });
   }
 
   return {
     repository: {
       owner, name: repo, full_name: repoData.full_name, description: repoData.description,
-      default_branch: defaultBranch, language: repoData.language,
+      default_branch: defaultBranch, commit_sha: commitSha, language: repoData.language,
       stars: repoData.stargazers_count, open_issues: repoData.open_issues_count,
       created_at: repoData.created_at, updated_at: repoData.updated_at, topics: repoData.topics,
     },
@@ -352,7 +387,8 @@ async function inspectGitHub({ token, owner, repo, branch }) {
     readme,
     env_vars: envVars,
     key_files_by_role: filesByRole,
-    key_files_truncated: budgetExhausted, // true = more high-value files existed than the byte budget allowed
+    key_files_truncated: budgetExhausted || highValueFiles.length < captureCandidates.length || omittedFiles.length > 0,
+    capture: { complete_files: fileContents.length, candidate_files: captureCandidates.length, content_bytes: totalBytes, omitted_files: omittedFiles, max_file_bytes: 128_000, max_total_bytes: MAX_TOTAL_CONTENT_BYTES },
     recent_commits: recentCommits,
   };
 }

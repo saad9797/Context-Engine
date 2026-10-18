@@ -44,3 +44,6 @@ It's a thin wrapper: every tool here is a direct call to the existing Contexa RE
 - `CONTEXA_API_URL` defaults to `http://localhost:8000` if unset.
 - `CONTEXA_API_TOKEN` is required — every tool call fails immediately with a clear message if it's missing.
 - Not yet published to npm — run it via a local path (`node .../src/index.js`) as shown above. `npx contexa-mcp` is the target once published (see `roadmap.md` P1).
+# Task-focused context packs
+
+Prefer `get_context_packs` for code generation. Load `pack: "base"` once per conversation, then request `pack: "task"` with `task`, `endpoints`, `access`, `rules`, `response_shape`, optional `include_paths`, and `max_tokens`. Match `base_id` and check the coverage report. MySQL connections can be selected with `mysql_connection_id` when starting ingestion. `get_context` remains a legacy overview export. See [the release guide](../PRODUCTION.md).

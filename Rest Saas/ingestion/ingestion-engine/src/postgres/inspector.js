@@ -364,33 +364,7 @@ async function inspectPostgres(connectionString) {
       }
     }
 
-    // Sample rows — run with bounded concurrency via the pool (not the single
-    // metadata `client`, so these queries can actually run in parallel; a
-    // single Client can only run one query at a time regardless of await
-    // ordering).
-    await mapWithConcurrency(Object.values(tableMap), SAMPLE_CONCURRENCY, async (tbl) => {
-      try {
-        const { rows: samples } = await pool.query(
-          `SELECT * FROM "${tbl.schema}"."${tbl.name}" LIMIT ${SAMPLE_LIMIT}`
-        );
-        tbl.sample_rows = samples.map(redactRow);
-        const shapes = samples.map((r) => {
-          const shape = {};
-          for (const [k, v] of Object.entries(r)) shape[k] = describeValue(v);
-          return shape;
-        });
-        tbl.row_shape = shapes.reduce((acc, s) => {
-          const merged = { ...acc };
-          for (const k of Object.keys(s)) {
-            if (!(k in merged)) merged[k] = s[k];
-          }
-          return merged;
-        }, {});
-      } catch {
-        tbl.sample_rows = [];
-        tbl.row_shape = {};
-      }
-    });
+    // Schema-only inspection: application rows are never queried or retained.
 
     const relationshipGraph = [];
     for (const tbl of Object.values(tableMap)) {

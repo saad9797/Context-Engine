@@ -37,11 +37,13 @@ import {
 } from "../api/transitCrypto";
 import EmptyState from "../components/EmptyState";
 const KIND_ICON = {
+  mysql: DnsOutlinedIcon,
   postgres: DnsOutlinedIcon,
   mongo: StorageOutlinedIcon,
   storage: CloudQueueOutlinedIcon,
 };
 const KIND_LABEL = {
+  mysql: "MySQL",
   postgres: "PostgreSQL",
   mongo: "MongoDB",
   storage: "Object storage",
@@ -89,6 +91,8 @@ function ConnectionFormDialog({ kind, open, onClose, onSaved }) {
       config = {
         postgres_url: fields.postgres_url,
       };
+    } else if (kind === "mysql") {
+      config = { mysql_url: fields.mysql_url };
     } else if (kind === "mongo") {
       config = {
         mongo_url: fields.mongo_url,
@@ -190,6 +194,7 @@ function ConnectionFormDialog({ kind, open, onClose, onSaved }) {
             />
           )}
 
+          {kind === "mysql" && <TextField label="Connection string" type="password" placeholder="mysql://user:password@host:3306/database" value={fields.mysql_url || ""} onChange={(e) => set({ mysql_url: e.target.value })} fullWidth required helperText="Use a schema-read-only database account. Remote connections require verified TLS." />}
           {kind === "mongo" && (
             <>
               <TextField
@@ -620,7 +625,11 @@ export default function Connections() {
             size="small"
             variant="outlined"
             startIcon={<StorageOutlinedIcon fontSize="small" />}
-            onClick={() => setFormKind("mongo")}
+            onClick={() => setFormKind("mysql")}
+          >
+            MySQL
+          </Button>
+          <Button size="small" variant="outlined" startIcon={<StorageOutlinedIcon fontSize="small" />} onClick={() => setFormKind("mongo")}
           >
             MongoDB
           </Button>

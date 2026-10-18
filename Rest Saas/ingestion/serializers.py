@@ -69,6 +69,7 @@ class GitHubAppInstallationSerializer(serializers.ModelSerializer):
 
 
 class IngestionJobCreateSerializer(serializers.Serializer):
+    mysql_connection_id = serializers.UUIDField(required=False, allow_null=True)
     postgres_connection_id = serializers.UUIDField(required=False, allow_null=True)
     mongo_connection_id = serializers.UUIDField(required=False, allow_null=True)
     mongo_db_name = serializers.CharField(required=False, allow_blank=True)
@@ -83,13 +84,15 @@ class IngestionJobCreateSerializer(serializers.Serializer):
     def validate(self, attrs):
         has_source = any(
             attrs.get(k)
-            for k in ("postgres_connection_id", "mongo_connection_id", "github_installation_id")
+            for k in ("postgres_connection_id", "mysql_connection_id", "mongo_connection_id", "github_installation_id")
         )
         if not has_source:
             raise serializers.ValidationError(
                 "At least one of postgres_connection_id, mongo_connection_id, "
                 "or github_installation_id is required."
             )
+        if attrs.get("postgres_connection_id") and attrs.get("mysql_connection_id"):
+            raise serializers.ValidationError("Choose one SQL database per snapshot: PostgreSQL or MySQL.")
         if attrs.get("github_installation_id") and not (attrs.get("github_owner") and attrs.get("github_repo")):
             raise serializers.ValidationError(
                 "github_owner and github_repo are required when github_installation_id is set."

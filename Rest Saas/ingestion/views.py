@@ -34,6 +34,7 @@ from .serializers import (
     IngestionJobSerializer,
 )
 from .tasks import run_ingestion_job
+from .privacy import safe_snapshot
 
 
 class IngestionJobCreateView(APIView):
@@ -60,7 +61,7 @@ class IngestionJobCreateView(APIView):
         serializer = IngestionJobCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         refs = dict(serializer.validated_data)
-        for key in ("postgres_connection_id", "mongo_connection_id", "storage_connection_id"):
+        for key in ("postgres_connection_id", "mysql_connection_id", "mongo_connection_id", "storage_connection_id"):
             if refs.get(key):
                 refs[key] = str(refs[key])
 
@@ -68,6 +69,7 @@ class IngestionJobCreateView(APIView):
         # fast beats enqueueing a job that's guaranteed to error in the worker.
         for field, kind in (
             ("postgres_connection_id", "postgres"),
+            ("mysql_connection_id", "mysql"),
             ("mongo_connection_id", "mongo"),
             ("storage_connection_id", "storage"),
         ):
@@ -133,7 +135,7 @@ class IngestionResultView(APIView):
         )
         if data is None:
             return Response({"error": "Not found."}, status=status.HTTP_404_NOT_FOUND)
-        return Response(data)
+        return Response(safe_snapshot(data))
 
 
 class IngestionClaudeContextView(APIView):
@@ -229,7 +231,7 @@ class IngestionClaudeContextView(APIView):
         if scoping_info is not None:
             result = dict(result)
             result["_scoping"] = scoping_info
-        return Response(result)
+        return Response(safe_snapshot(result))
 
 
 class IngestionFreshnessView(APIView):
@@ -275,9 +277,12 @@ class IngestionFreshnessView(APIView):
             return Response({**base, "checked_live": False, "check_error": str(e)})
 
         details = freshness.compare_fingerprints(context.schema_fingerprint, live)
+        if (job.connection_refs or {}).get("mysql_connection_id"):
+            source_errors["mysql"] = "Live MySQL drift checks are not supported yet. Rebuild the snapshot after schema changes."
         return Response({
             **base,
-            "checked_live": True,
+            "checked_live": any(v is not None for v in details.values()),
+            "note": "Some sources could not be checked. " + "; ".join(source_errors.values()) if source_errors else "Live sources checked.",
             "drifted": any(v is True for v in details.values()),
             "details": details,
             "source_errors": source_errors or None,

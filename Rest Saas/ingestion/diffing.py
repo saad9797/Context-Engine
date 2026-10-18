@@ -27,6 +27,8 @@ def _project_identity(connection_refs: dict):
         return ("github", owner.lower(), repo.lower())
     if connection_refs.get("postgres_connection_id"):
         return ("postgres", connection_refs["postgres_connection_id"])
+    if connection_refs.get("mysql_connection_id"):
+        return ("mysql", connection_refs["mysql_connection_id"])
     if connection_refs.get("mongo_connection_id"):
         return ("mongo", connection_refs["mongo_connection_id"])
     return None

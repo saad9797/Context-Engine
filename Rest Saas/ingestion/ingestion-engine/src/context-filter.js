@@ -28,6 +28,7 @@ function filterColumn(col) {
   const out = {
     name: col.name,
     type: col.type,
+    udt: col.udt,
     nullable: col.nullable,
   };
   if (col.default) out.default = col.default;
@@ -57,7 +58,6 @@ function filterPostgresTable(table) {
       .filter((c) => !/_not_null$/.test(c.name)) // NOT NULL is already in `nullable`
       .map((c) => c.clause),
     estimated_rows: table.estimated_rows,
-    sample_rows: (table.sample_rows || []).slice(0, MAX_SAMPLE_ROWS),
   };
 }
 
@@ -78,11 +78,12 @@ function filterPostgresFunctions(functions) {
 function filterDatabase(database) {
   if (!database) return null;
   return {
-    dialect: "postgres",
+    dialect: database.dialect || "postgres",
     database_name: database.metadata.database_name,
     server_version: database.metadata.server_version?.split(" ")[0],
     schemas: database.metadata.schemas,
     extensions: (database.metadata.extensions || []).map((e) => e.extname),
+    enums: database.enums || [],
     tables: database.tables.map(filterPostgresTable),
     views: database.views,
     functions: filterPostgresFunctions(database.functions),

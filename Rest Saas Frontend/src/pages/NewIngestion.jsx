@@ -192,7 +192,7 @@ export default function NewIngestion() {
       ...patch,
     }));
   const byKind = (kind) =>
-    connections === null ? null : connections.filter((c) => c.kind === kind);
+    connections === null ? null : connections.filter((c) => kind === "sql" ? ["postgres", "mysql"].includes(c.kind) : c.kind === kind);
   const hasSource = form.usePostgres || form.useMongo || form.useGithub;
   const canSubmit =
     hasSource &&
@@ -207,7 +207,7 @@ export default function NewIngestion() {
     setValidationError(null);
     if (!hasSource) {
       setValidationError(
-        "Add at least one of Postgres, MongoDB, or a GitHub repo — the engine needs somewhere to read from.",
+        "Add a SQL database, MongoDB, or a GitHub repository to build a snapshot.",
       );
       return;
     }
@@ -225,8 +225,10 @@ export default function NewIngestion() {
         description: form.description,
       },
     };
-    if (form.usePostgres)
-      body.postgres_connection_id = form.postgres_connection_id;
+    if (form.usePostgres) {
+      const kind = connections.find((c) => c.id === form.postgres_connection_id)?.kind;
+      body[kind === "mysql" ? "mysql_connection_id" : "postgres_connection_id"] = form.postgres_connection_id;
+    }
     if (form.useMongo) {
       body.mongo_connection_id = form.mongo_connection_id;
       if (form.mongo_scan_all_databases) body.mongo_scan_all_databases = true;
@@ -262,7 +264,7 @@ export default function NewIngestion() {
     }
   };
   const selectedSources = [
-    form.usePostgres && "PostgreSQL",
+    form.usePostgres && "SQL database",
     form.useMongo && "MongoDB",
     form.useStorage && "Object storage",
     form.useGithub && "GitHub repository",
@@ -409,8 +411,8 @@ export default function NewIngestion() {
 
       <SourceCard
         icon={DnsOutlinedIcon}
-        title="PostgreSQL"
-        desc="Tables, columns, keys, indexes, functions, sample rows."
+        title="PostgreSQL or MySQL"
+        desc="Schema only: tables, columns, keys, relations, and enum definitions. No application rows are collected."
         enabled={form.usePostgres}
         onToggle={(v) =>
           set({
@@ -419,14 +421,14 @@ export default function NewIngestion() {
         }
       >
         <ConnectionPicker
-          connections={byKind("postgres")}
+          connections={byKind("sql")}
           value={form.postgres_connection_id}
           onChange={(v) =>
             set({
               postgres_connection_id: v,
             })
           }
-          kindLabel="Postgres"
+          kindLabel="SQL database"
         />
       </SourceCard>
 

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
@@ -8,414 +8,132 @@ import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Stack from "@mui/material/Stack";
 import Alert from "@mui/material/Alert";
-import Skeleton from "@mui/material/Skeleton";
-import ToggleButton from "@mui/material/ToggleButton";
-import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
+import Chip from "@mui/material/Chip";
 import CircularProgress from "@mui/material/CircularProgress";
-import Divider from "@mui/material/Divider";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
-import CloseIcon from "@mui/icons-material/Close";
-import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
-import CheckIcon from "@mui/icons-material/Check";
+import MenuItem from "@mui/material/MenuItem";
+import Tabs from "@mui/material/Tabs";
+import Tab from "@mui/material/Tab";
+import ArrowBack from "@mui/icons-material/ArrowBack";
+import ContentCopy from "@mui/icons-material/ContentCopyOutlined";
 import { useAuth } from "../context/AuthContext";
-import { approxTokens, copyToClipboard } from "../lib/format";
-import JsonViewer from "../components/results/JsonTree";
+import { copyToClipboard } from "../lib/format";
 import { useToast } from "../components/ToastProvider";
 import PageHeader from "../components/PageHeader";
-const BUDGET_OPTIONS = [
-  {
-    value: "",
-    label: "No limit",
-  },
-  {
-    value: "8000",
-    label: "8,000 tokens",
-  },
-  {
-    value: "4000",
-    label: "4,000 tokens",
-  },
-  {
-    value: "2000",
-    label: "2,000 tokens",
-  },
+
+const emptyTask = { task: "", endpoints: "", access: "", rules: "", response_shape: "", paths: "" };
+const fields = [
+  ["task", "What do you want to build?", "Add interview scheduling for an applicant"],
+  ["endpoints", "Endpoints or interfaces", "POST /interviews; GET /interviews/:id"],
+  ["access", "Who can use it?", "Recruiters can schedule; applicants can view their own interviews"],
+  ["rules", "Business rules and edge cases", "Reject overlapping times; validate timezone; use existing notification service"],
+  ["response_shape", "Expected response", "Use the existing response helper and pagination shape"],
 ];
+
 export default function ClaudeContext() {
   const { contextId } = useParams();
   const { request } = useAuth();
   const navigate = useNavigate();
-  const showToast = useToast();
-  const [data, setData] = useState(null);
-  const [error, setError] = useState(null);
-  const [promptCopied, setPromptCopied] = useState(false);
-  const [jsonCopied, setJsonCopied] = useState(false);
-  const [taskInput, setTaskInput] = useState("");
-  const [appliedTask, setAppliedTask] = useState("");
-  const [budget, setBudget] = useState("");
+  const toast = useToast();
+  const [form, setForm] = useState(emptyTask);
+  const [budget, setBudget] = useState(4000);
+  const [packType, setPackType] = useState("base");
+  const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
-  const load = useCallback(
-    (task, maxTokens) => {
-      setLoading(true);
-      setError(null);
-      const params = new URLSearchParams();
-      if (task) params.set("task", task);
-      if (maxTokens) params.set("max_tokens", maxTokens);
-      const qs = params.toString();
-      request(
-        `/api/ingestion/${contextId}/claude-context/${qs ? `?${qs}` : ""}`,
-      )
-        .then((res) => setData(res))
-        .catch((e) => setError(e))
-        .finally(() => setLoading(false));
-    },
-    [request, contextId],
-  );
+  const [error, setError] = useState("");
+  const [dirty, setDirty] = useState(false);
+  const [rebuilding, setRebuilding] = useState(false);
+  const generation = useRef(0);
+
+  async function generate(values, size) {
+    const current = ++generation.current;
+    setLoading(true); setError("");
+    try {
+      const { paths, ...task } = values;
+      const output = await request(`/api/ingestion/${contextId}/context-pack/`, {
+        method: "POST",
+        body: { ...task, max_tokens: size, include_paths: paths.split("\n").map((s) => s.trim()).filter(Boolean) },
+      });
+      if (current === generation.current) { setResult(output); setDirty(false); }
+    } catch (e) {
+      if (current === generation.current) { setError(e.message); setResult(null); }
+    } finally {
+      if (current === generation.current) setLoading(false);
+    }
+  }
   useEffect(() => {
-    setData(null);
-    setTaskInput("");
-    setAppliedTask("");
-    setBudget("");
-    load("", "");
+    setForm(emptyTask); setPackType("base"); setResult(null); setBudget(4000); setDirty(false);
+    generate(emptyTask, 4000);
+    return () => { generation.current += 1; };
+    // A snapshot change must never reuse the previous project's response.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [contextId]);
-  const applyTask = () => {
-    const trimmed = taskInput.trim();
-    setAppliedTask(trimmed);
-    load(trimmed, budget);
-  };
-  const clearTask = () => {
-    setTaskInput("");
-    setAppliedTask("");
-    load("", budget);
-  };
-  const changeBudget = (_e, value) => {
-    if (value === null) return;
-    setBudget(value);
-    load(appliedTask, value);
-  };
-  const copyPrompt = async () => {
-    const prompt = `Here is my project's schema and codebase context, distilled for code generation:\n\n${JSON.stringify(data, null, 2)}\n\nTask: ${appliedTask || "Help me with my next task using the architecture and conventions in this context. Ask what I want to build before proposing changes."}`;
-    const ok = await copyToClipboard(prompt);
-    setPromptCopied(ok);
-    if (!ok)
-      showToast(
-        "Could not copy. Select the context from the preview and copy it manually.",
-        "error",
-      );
-    setTimeout(() => setPromptCopied(false), 1600);
-  };
-  const copyJson = async () => {
-    const ok = await copyToClipboard(JSON.stringify(data, null, 2));
-    setJsonCopied(ok);
-    if (!ok)
-      showToast(
-        "Could not copy. Select the context from the preview and copy it manually.",
-        "error",
-      );
-    setTimeout(() => setJsonCopied(false), 1600);
-  };
-  const info = data?._scoping;
-  const currentTokens = data ? approxTokens(data) : null;
-  return (
-    <Box>
-      <Button
-        startIcon={<ArrowBackIcon fontSize="small" />}
-        onClick={() => navigate(`/contexts/${contextId}`)}
-        sx={{
-          mb: 1,
-          ml: -1,
-        }}
-      >
-        Back to project
-      </Button>
-      <PageHeader
-        title="Context for your next prompt"
-        description="Choose a task and a token budget. Copy focused project context into Claude, Codex, or the AI tool you already use."
-      />
+  }, [contextId, request]);
 
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: {
-            xs: "1fr",
-            md: "300px 1fr",
-          },
-          gap: 3,
-          alignItems: "flex-start",
-        }}
-      >
-        {/* Controls */}
-        <Card
-          variant="outlined"
-          sx={{
-            position: {
-              md: "sticky",
-            },
-            top: {
-              md: 24,
-            },
-          }}
-        >
-          <CardContent>
-            <Typography
-              variant="subtitle2"
-              sx={{
-                mb: 1,
-              }}
-            >
-              Task
-            </Typography>
-            <TextField
-              label="What are you working on?"
-              fullWidth
-              multiline
-              minRows={2}
-              placeholder='What are you building? e.g. "add an endpoint for applicant job applications"'
-              value={taskInput}
-              onChange={(e) => setTaskInput(e.target.value)}
-              sx={{
-                mb: 1,
-              }}
-            />
-            <Typography
-              variant="caption"
-              sx={{
-                display: "block",
-                mb: 1.5,
-              }}
-            >
-              Trims the context down to what's relevant — leave blank for
-              everything.
-            </Typography>
-            <Stack direction="row" spacing={1}>
-              <Button
-                variant="contained"
-                size="small"
-                fullWidth
-                startIcon={
-                  loading ? (
-                    <CircularProgress size={13} color="inherit" />
-                  ) : (
-                    <AutoAwesomeIcon fontSize="small" />
-                  )
-                }
-                onClick={applyTask}
-                disabled={loading || !taskInput.trim()}
-              >
-                Scope to task
-              </Button>
-              {appliedTask && (
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={clearTask}
-                  disabled={loading}
-                  aria-label="Clear task scope"
-                >
-                  <CloseIcon fontSize="small" />
-                </Button>
-              )}
-            </Stack>
-
-            <Divider
-              sx={{
-                my: 2.5,
-              }}
-            />
-
-            <Typography
-              variant="subtitle2"
-              sx={{
-                mb: 1,
-              }}
-            >
-              Token budget
-            </Typography>
-            <ToggleButtonGroup
-              orientation="vertical"
-              size="small"
-              exclusive
-              value={budget}
-              onChange={changeBudget}
-              disabled={loading}
-              fullWidth
-            >
-              {BUDGET_OPTIONS.map((o) => (
-                <ToggleButton
-                  key={o.value}
-                  value={o.value}
-                  sx={{
-                    justifyContent: "flex-start",
-                    px: 1.5,
-                    fontFamily: (t) => t.tokens.fontMono,
-                    fontWeight: 400,
-                  }}
-                >
-                  {o.label}
-                </ToggleButton>
-              ))}
-            </ToggleButtonGroup>
-
-            <Divider
-              sx={{
-                my: 2.5,
-              }}
-            />
-
-            <Stack
-              direction="row"
-              sx={{
-                justifyContent: "space-between",
-              }}
-            >
-              <Typography variant="body2">Current size</Typography>
-              <Typography
-                variant="body2"
-                sx={{
-                  fontFamily: (t) => t.tokens.fontMono,
-                  fontWeight: 500,
-                }}
-              >
-                {currentTokens !== null
-                  ? `~${currentTokens.toLocaleString()} tokens`
-                  : "—"}
-              </Typography>
-            </Stack>
-          </CardContent>
-        </Card>
-
-        {/* Preview */}
-        <Box
-          sx={{
-            minWidth: 0,
-          }}
-        >
-          {info && info.matched === true && (
-            <Alert
-              severity="info"
-              sx={{
-                mb: 2,
-              }}
-            >
-              Scoped to "{info.task}": ~
-              {info.approx_tokens_full?.toLocaleString()} → ~
-              {info.approx_tokens_scoped?.toLocaleString()} tokens (
-              {info.reduction_pct}% smaller). Keyword/heuristic matching, not
-              semantic search.
-            </Alert>
-          )}
-          {info && info.matched === false && (
-            <Alert
-              severity="warning"
-              sx={{
-                mb: 2,
-              }}
-            >
-              Nothing matched "{info.task}" closely enough, so the full context
-              is shown instead of an empty or misleading scope.
-            </Alert>
-          )}
-          {info && info.budget_applied && (
-            <Alert
-              severity="warning"
-              sx={{
-                mb: 2,
-              }}
-            >
-              Trimmed to fit a {Number(info.max_tokens).toLocaleString()}-token
-              budget: ~{info.approx_tokens_before_budget?.toLocaleString()} → ~
-              {info.approx_tokens_after_budget?.toLocaleString()} tokens.
-            </Alert>
-          )}
-          {error && (
-            <Alert
-              severity="error"
-              sx={{
-                mb: 2,
-              }}
-            >
-              {error.message}
-              {error.status === 404 && (
-                <Box
-                  sx={{
-                    mt: 0.75,
-                  }}
-                >
-                  This context may have been saved before claude_context existed
-                  — re-run the ingestion to regenerate it.
-                </Box>
-              )}
-            </Alert>
-          )}
-
-          {!data && !error && (
-            <Stack spacing={1.5}>
-              <Skeleton
-                variant="rounded"
-                sx={{
-                  height: 44,
-                }}
-              />
-              <Skeleton
-                variant="rounded"
-                sx={{
-                  height: 400,
-                }}
-              />
-            </Stack>
-          )}
-
-          {data && (
-            <>
-              <Stack
-                direction="row"
-                spacing={1}
-                sx={{
-                  justifyContent: "flex-end",
-                  mb: 1.5,
-                }}
-              >
-                <Button
-                  variant="outlined"
-                  size="small"
-                  startIcon={
-                    jsonCopied ? (
-                      <CheckIcon fontSize="small" />
-                    ) : (
-                      <ContentCopyOutlinedIcon fontSize="small" />
-                    )
-                  }
-                  onClick={copyJson}
-                  disabled={loading}
-                >
-                  {jsonCopied ? "Copied" : "Copy JSON"}
-                </Button>
-                <Button
-                  variant="contained"
-                  size="small"
-                  startIcon={
-                    promptCopied ? (
-                      <CheckIcon fontSize="small" />
-                    ) : (
-                      <ContentCopyOutlinedIcon fontSize="small" />
-                    )
-                  }
-                  onClick={copyPrompt}
-                  disabled={loading}
-                >
-                  {promptCopied ? "Prompt copied" : "Copy ready-to-use prompt"}
-                </Button>
-              </Stack>
-              <JsonViewer
-                data={data}
-                filename={`project-context-${contextId}.json`}
-                hideCopy
-              />
-            </>
-          )}
-        </Box>
+  function edit(key, value) { setForm((old) => ({ ...old, [key]: value })); setDirty(true); }
+  const pack = result?.[packType];
+  const report = result?.report;
+  const stale = loading || dirty || !!error;
+  async function copy(asPrompt) {
+    if (!pack || stale) return;
+    const preface = packType === "base"
+      ? "Keep this project base pack as reference for this conversation. I will send a task pack next. Do not generate code yet."
+      : "Use this task pack with the matching base_id from this conversation. If that base pack or an essential contract is missing, ask for it before generating code. Follow exact ORM fields, enums, imports and access rules. Return complete changed files and commands to validate them.";
+    const ok = await copyToClipboard(`${asPrompt ? preface + "\n\n" : ""}${JSON.stringify(pack)}`);
+    toast(ok ? `${packType === "base" ? "Base" : "Task"} pack copied.` : "Copy unavailable. Select and copy the preview text.", ok ? "success" : "error");
+  }
+  const count = packType === "base" ? report?.base_size : report?.task_size;
+  async function rebuild() {
+    setRebuilding(true); setError("");
+    try {
+      const job = await request(`/api/ingestion/${contextId}/rebuild/`, { method: "POST", body: {} });
+      navigate(`/ingest/${job.job_id}/progress`);
+    } catch (e) { setError(e.message); }
+    finally { setRebuilding(false); }
+  }
+  return <Box>
+    <Button startIcon={<ArrowBack />} onClick={() => navigate(`/contexts/${contextId}`)} sx={{ mb: 1 }}>Back to project</Button>
+    <PageHeader title="Give your AI just what it needs" description="Paste the base pack once in a conversation. Then send a small task pack for each change. Works with any AI chat that accepts text." />
+    <Alert severity="info" sx={{ mb: 3 }}>Connect your repository for exact ORM models, auth contracts, and complete code examples. Database schemas alone cannot tell an AI your application’s names and conventions.</Alert>
+    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "350px 1fr" }, gap: 3, alignItems: "start" }}>
+      <Card variant="outlined"><CardContent>
+        <Stack spacing={2}>
+          <Typography variant="h6">Describe the change</Typography>
+          {fields.map(([key, label, placeholder]) => <TextField key={key} label={label} placeholder={placeholder} multiline minRows={key === "task" || key === "rules" ? 2 : 1} fullWidth value={form[key]} onChange={(e) => edit(key, e.target.value)} disabled={loading} />)}
+          <TextField label="Files to include (optional)" multiline minRows={2} helperText="One repository-relative path per line. Use this when automatic matching misses a file." placeholder={"src/controllers/interviewController.ts\nsrc/routes/interviewRoutes.ts"} value={form.paths} onChange={(e) => edit("paths", e.target.value)} disabled={loading} />
+          <TextField select label="Estimated token budget per pack" value={budget} onChange={(e) => { setBudget(Number(e.target.value)); setDirty(true); }} disabled={loading}>
+            {[2000, 3000, 4000, 8000, 16000].map((size) => <MenuItem key={size} value={size}>{size.toLocaleString()} tokens</MenuItem>)}
+          </TextField>
+          <Typography variant="caption" color="text.secondary">Source code stays complete. If a file cannot fit, it is omitted and listed for review. Token counts are estimates; your AI provider’s usage limits vary.</Typography>
+          <Button variant="contained" disabled={loading} startIcon={loading ? <CircularProgress size={16} color="inherit" /> : null} onClick={() => { if (form.task.trim()) setPackType("task"); generate(form, budget); }}>{loading ? "Preparing packs…" : "Prepare context packs"}</Button>
+        </Stack>
+      </CardContent></Card>
+      <Box sx={{ minWidth: 0 }}>
+        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        {dirty && <Alert severity="info" sx={{ mb: 2 }}>Your requirements changed. Prepare the packs again before copying.</Alert>}
+        <Card variant="outlined"><CardContent>
+          <Tabs value={packType} onChange={(_, value) => setPackType(value)} aria-label="Context pack type" sx={{ mb: 2 }}>
+            <Tab value="base" label="1. Base pack" /><Tab value="task" label="2. Task pack" />
+          </Tabs>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>{packType === "base" ? "Paste once at the start of a new conversation: runtime stack, shared plumbing, and one complete implementation example. Recopy after a new snapshot." : "Paste for each new request: your requirements, relevant models and enums, and code selected by task names and local imports."}</Typography>
+          <Stack direction="row" sx={{ mb: 2, gap: 1, flexWrap: "wrap", alignItems: "center" }}>
+            <Chip size="small" label={count == null ? "Preparing…" : `~${count.toLocaleString()} tokens`} />
+            {result?.base.base_id && <Chip size="small" variant="outlined" label={`Base ${result.base.base_id.slice(0, 8)}`} />}
+            <Button size="small" startIcon={<ContentCopy />} onClick={() => copy(false)} disabled={!pack || stale || (packType === "task" && !pack.request.task)}>Copy JSON</Button>
+            <Button size="small" variant="contained" onClick={() => copy(true)} disabled={!pack || stale || (packType === "task" && !pack.request.task)}>Copy for AI chat</Button>
+          </Stack>
+          {loading && <CircularProgress size={24} sx={{ my: 2 }} />}
+          {pack && <Box component="pre" tabIndex={0} aria-label={`${packType} pack preview`} sx={{ fontSize: 12, lineHeight: 1.7, maxHeight: 620, overflow: "auto", whiteSpace: "pre-wrap", overflowWrap: "anywhere", p: 2, bgcolor: "action.hover", borderRadius: 1, opacity: stale ? .5 : 1 }}>{JSON.stringify(pack, null, 2)}</Box>}
+        </CardContent></Card>
+        {report && <Stack spacing={2} sx={{ mt: 2 }}>
+          <Alert severity="info">{report.privacy}</Alert>
+          {!!report.missing.length && <Alert severity="warning"><strong>Context gaps to review</strong><Box component="ul" sx={{ pl: 2, mb: 0 }}>{report.missing.map((item) => <li key={item}>{item}</li>)}</Box><Button size="small" disabled={rebuilding || loading} onClick={rebuild}>{rebuilding ? "Starting rebuild…" : "Rebuild from connected sources"}</Button></Alert>}
+          <Card variant="outlined"><CardContent>
+            <Typography variant="subtitle2">Why these files?</Typography>
+            <Typography variant="caption" color="text.secondary">{report.selection}</Typography>
+            <Box component="ul" sx={{ pl: 2, fontSize: 12 }}>{report.included.map((item, index) => <li key={index}><strong>{item.path}</strong> — {item.reason} ({item.pack})</li>)}</Box>
+            {!!report.omitted.length && <Box component="details"><summary>{report.omitted.length} files or blocks omitted</summary><Box component="ul" sx={{ pl: 2, fontSize: 12 }}>{report.omitted.map((item, index) => <li key={index}>{item.path} — {item.reason}</li>)}</Box></Box>}
+          </CardContent></Card>
+        </Stack>}
       </Box>
     </Box>
-  );
+  </Box>;
 }
