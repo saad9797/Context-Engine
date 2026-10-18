@@ -18,14 +18,19 @@ export function ToastProvider({ children }) {
       {children}
       <Snackbar
         key={toast?.key}
-        open={!!toast}
+        open={!!toast && toast.open !== false}
         autoHideDuration={4000}
         onClose={close}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        TransitionProps={{ timeout: 180 }}
+        slotProps={{ transition: { timeout: 180 } }}
       >
         {toast ? (
-          <Alert onClose={close} severity={toast.severity} variant="standard" sx={{ minWidth: 280 }}>
+          <Alert
+            onClose={close}
+            severity={toast.severity}
+            variant="standard"
+            sx={{ minWidth: 280 }}
+          >
             {toast.message}
           </Alert>
         ) : undefined}

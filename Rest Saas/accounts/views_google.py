@@ -13,6 +13,8 @@ GET /api/auth/google/callback/   — Google redirects here with ?code=&state=
                                     ingestion/views_github.py)
 """
 
+from urllib.parse import urlsplit
+
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core import signing
@@ -33,7 +35,25 @@ STATE_SALT = "google-login"
 
 
 def _redirect_uri():
-    return f"{settings.BACKEND_BASE_URL.rstrip('/')}/api/auth/google/callback/"
+    base = (settings.BACKEND_BASE_URL or "").strip() or settings.GITHUB_APP_BASE_URL.strip()
+    try:
+        parsed = urlsplit(base)
+        valid = (
+            parsed.scheme in {"http", "https"} and parsed.hostname
+            and not parsed.username and not parsed.password
+            and not parsed.query and not parsed.fragment
+            and (parsed.scheme == "https" or parsed.hostname in {"localhost", "127.0.0.1", "::1"})
+        )
+        parsed.port  # Reject malformed ports before sending the browser to Google.
+    except ValueError:
+        valid = False
+    if not valid:
+        raise google_oauth.GoogleOAuthError(
+            "Google sign-in requires BACKEND_BASE_URL to be an absolute HTTPS URL "
+            "(HTTP is allowed for localhost development). Register that URL followed by "
+            "/api/auth/google/callback/ in your Google Web application OAuth client."
+        )
+    return f"{base.rstrip('/')}/api/auth/google/callback/"
 
 
 def _redirect_to_frontend_with_token(user):
@@ -46,13 +66,17 @@ class GoogleLoginStartView(APIView):
     throttle_classes = []
 
     def get(self, request):
-        if not settings.GOOGLE_CLIENT_ID:
+        if not settings.GOOGLE_CLIENT_ID or not settings.GOOGLE_CLIENT_SECRET:
             return Response(
                 {"error": "Google sign-in is not configured yet. An operator must set GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET."},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
+        try:
+            callback = _redirect_uri()
+        except google_oauth.GoogleOAuthError as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
         state = signing.dumps({}, salt=STATE_SALT)
-        return Response({"login_url": google_oauth.build_authorize_url(_redirect_uri(), state)})
+        return Response({"login_url": google_oauth.build_authorize_url(callback, state)})
 
 
 class GoogleLoginCallbackView(APIView):

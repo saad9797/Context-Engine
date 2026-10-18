@@ -184,7 +184,7 @@ GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
 # Kept as a separate var from GITHUB_APP_BASE_URL (whose name ties it
 # conceptually to the GitHub App) even though they're normally the same
 # value — falls back to it so most deployments don't need to set both.
-BACKEND_BASE_URL = os.getenv("BACKEND_BASE_URL", GITHUB_APP_BASE_URL)
+BACKEND_BASE_URL = os.getenv("BACKEND_BASE_URL", "").strip() or GITHUB_APP_BASE_URL
 
 # Where to send the browser back to after "Continue with GitHub"/"Continue
 # with Google" completes — the provider redirects to *us* first (to exchange

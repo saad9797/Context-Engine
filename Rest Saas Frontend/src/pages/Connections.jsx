@@ -18,7 +18,6 @@ import TextField from "@mui/material/TextField";
 import MenuItem from "@mui/material/MenuItem";
 import CircularProgress from "@mui/material/CircularProgress";
 import Divider from "@mui/material/Divider";
-
 import StorageOutlinedIcon from "@mui/icons-material/StorageOutlined";
 import DnsOutlinedIcon from "@mui/icons-material/DnsOutlined";
 import CloudQueueOutlinedIcon from "@mui/icons-material/CloudQueueOutlined";
@@ -26,19 +25,27 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import AddIcon from "@mui/icons-material/Add";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-
 import { useAuth } from "../context/AuthContext";
 import { GitHubIcon } from "../components/BrandIcons";
 import { formatDate } from "../lib/format";
 import PageHeader from "../components/PageHeader";
 import ConfirmDialog from "../components/ConfirmDialog";
 import { useToast } from "../components/ToastProvider";
-import { encryptForTransit, isTransitEncryptionSupported } from "../api/transitCrypto";
+import {
+  encryptForTransit,
+  isTransitEncryptionSupported,
+} from "../api/transitCrypto";
 import EmptyState from "../components/EmptyState";
-
-const KIND_ICON = { postgres: DnsOutlinedIcon, mongo: StorageOutlinedIcon, storage: CloudQueueOutlinedIcon };
-const KIND_LABEL = { postgres: "PostgreSQL", mongo: "MongoDB", storage: "Object storage" };
-
+const KIND_ICON = {
+  postgres: DnsOutlinedIcon,
+  mongo: StorageOutlinedIcon,
+  storage: CloudQueueOutlinedIcon,
+};
+const KIND_LABEL = {
+  postgres: "PostgreSQL",
+  mongo: "MongoDB",
+  storage: "Object storage",
+};
 function submitGithubManifest(githubUrl, manifest) {
   const form = document.createElement("form");
   form.method = "post";
@@ -51,7 +58,6 @@ function submitGithubManifest(githubUrl, manifest) {
   document.body.appendChild(form);
   form.submit();
 }
-
 function ConnectionFormDialog({ kind, open, onClose, onSaved }) {
   const { request } = useAuth();
   const [name, setName] = useState("");
@@ -59,38 +65,58 @@ function ConnectionFormDialog({ kind, open, onClose, onSaved }) {
   const [fields, setFields] = useState({});
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
-
   useEffect(() => {
-    if (open) { setName(""); setFields({}); setStorageType("s3"); setError(null); }
+    if (open) {
+      setName("");
+      setFields({});
+      setStorageType("s3");
+      setError(null);
+    }
   }, [open, kind]);
-
-  const set = (patch) => setFields((f) => ({ ...f, ...patch }));
-
+  const set = (patch) =>
+    setFields((f) => ({
+      ...f,
+      ...patch,
+    }));
   const submit = async () => {
     setError(null);
-    if (!name.trim()) { setError("Give this connection a name."); return; }
-
+    if (!name.trim()) {
+      setError("Give this connection a name.");
+      return;
+    }
     let config;
     if (kind === "postgres") {
-      config = { postgres_url: fields.postgres_url };
+      config = {
+        postgres_url: fields.postgres_url,
+      };
     } else if (kind === "mongo") {
-      config = { mongo_url: fields.mongo_url, mongo_db_name: fields.mongo_db_name || undefined };
+      config = {
+        mongo_url: fields.mongo_url,
+        mongo_db_name: fields.mongo_db_name || undefined,
+      };
     } else {
-      config = storageType === "azure"
-        ? { type: "azure", connection_string: fields.connection_string }
-        : {
-            type: storageType,
-            access_key_id: fields.access_key_id,
-            secret_access_key: fields.secret_access_key,
-            region: fields.region || "us-east-1",
-            endpoint: storageType === "s3-compatible" ? fields.endpoint : undefined,
-            bucket: fields.bucket || undefined,
-          };
+      config =
+        storageType === "azure"
+          ? {
+              type: "azure",
+              connection_string: fields.connection_string,
+            }
+          : {
+              type: storageType,
+              access_key_id: fields.access_key_id,
+              secret_access_key: fields.secret_access_key,
+              region: fields.region || "us-east-1",
+              endpoint:
+                storageType === "s3-compatible" ? fields.endpoint : undefined,
+              bucket: fields.bucket || undefined,
+            };
     }
-
     setSaving(true);
     try {
-      const body = { name, kind };
+      const body = {
+        name,
+        kind,
+      };
       if (isTransitEncryptionSupported()) {
         // Encrypted in the browser (AES-256-GCM, key wrapped with the
         // server's RSA-OAEP public key) before it's ever sent — see
@@ -101,7 +127,10 @@ function ConnectionFormDialog({ kind, open, onClose, onSaved }) {
       } else {
         body.config = config;
       }
-      await request("/api/connections/", { method: "POST", body });
+      await request("/api/connections/", {
+        method: "POST",
+        body,
+      });
       onSaved(name);
     } catch (e) {
       setError(e.message);
@@ -109,15 +138,25 @@ function ConnectionFormDialog({ kind, open, onClose, onSaved }) {
       setSaving(false);
     }
   };
-
   if (!kind) return null;
-
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
       <DialogTitle>New {KIND_LABEL[kind]} connection</DialogTitle>
       <DialogContent>
-        <Stack direction="row" spacing={0.75} alignItems="center" sx={{ mb: 2 }}>
-          <LockOutlinedIcon sx={{ fontSize: 14, color: "text.secondary" }} />
+        <Stack
+          direction="row"
+          spacing={0.75}
+          sx={{
+            alignItems: "center",
+            mb: 2,
+          }}
+        >
+          <LockOutlinedIcon
+            sx={{
+              fontSize: 14,
+              color: "text.secondary",
+            }}
+          />
           <Typography variant="caption">
             {isTransitEncryptionSupported()
               ? "Encrypted in your browser before it's sent, then re-encrypted at rest."
@@ -126,36 +165,144 @@ function ConnectionFormDialog({ kind, open, onClose, onSaved }) {
         </Stack>
         <Stack spacing={2}>
           {error && <Alert severity="error">{error}</Alert>}
-          <TextField label="Name" placeholder="prod-db" value={name} onChange={(e) => setName(e.target.value)} fullWidth required autoFocus />
+          <TextField
+            label="Name"
+            placeholder="prod-db"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            fullWidth
+            required
+            autoFocus
+          />
 
           {kind === "postgres" && (
-            <TextField label="Connection string" placeholder="postgresql://user:pass@host:5432/dbname" value={fields.postgres_url || ""} onChange={(e) => set({ postgres_url: e.target.value })} fullWidth required />
+            <TextField
+              label="Connection string"
+              placeholder="postgresql://user:pass@host:5432/dbname"
+              value={fields.postgres_url || ""}
+              onChange={(e) =>
+                set({
+                  postgres_url: e.target.value,
+                })
+              }
+              fullWidth
+              required
+            />
           )}
 
           {kind === "mongo" && (
             <>
-              <TextField label="Connection string" placeholder="mongodb+srv://user:pass@cluster.mongodb.net" value={fields.mongo_url || ""} onChange={(e) => set({ mongo_url: e.target.value })} fullWidth required />
-              <TextField label="Database name" helperText="Required if not present in the connection string path." value={fields.mongo_db_name || ""} onChange={(e) => set({ mongo_db_name: e.target.value })} fullWidth />
+              <TextField
+                label="Connection string"
+                placeholder="mongodb+srv://user:pass@cluster.mongodb.net"
+                value={fields.mongo_url || ""}
+                onChange={(e) =>
+                  set({
+                    mongo_url: e.target.value,
+                  })
+                }
+                fullWidth
+                required
+              />
+              <TextField
+                label="Database name"
+                helperText="Required if not present in the connection string path."
+                value={fields.mongo_db_name || ""}
+                onChange={(e) =>
+                  set({
+                    mongo_db_name: e.target.value,
+                  })
+                }
+                fullWidth
+              />
             </>
           )}
 
           {kind === "storage" && (
             <>
-              <TextField select label="Provider" value={storageType} onChange={(e) => setStorageType(e.target.value)} fullWidth>
+              <TextField
+                select
+                label="Provider"
+                value={storageType}
+                onChange={(e) => setStorageType(e.target.value)}
+                fullWidth
+              >
                 <MenuItem value="s3">Amazon S3</MenuItem>
                 <MenuItem value="s3-compatible">S3-compatible</MenuItem>
                 <MenuItem value="azure">Azure Blob Storage</MenuItem>
               </TextField>
               {storageType === "azure" ? (
-                <TextField label="Connection string" placeholder="DefaultEndpointsProtocol=https;AccountName=..." value={fields.connection_string || ""} onChange={(e) => set({ connection_string: e.target.value })} fullWidth required />
+                <TextField
+                  label="Connection string"
+                  placeholder="DefaultEndpointsProtocol=https;AccountName=..."
+                  value={fields.connection_string || ""}
+                  onChange={(e) =>
+                    set({
+                      connection_string: e.target.value,
+                    })
+                  }
+                  fullWidth
+                  required
+                />
               ) : (
                 <>
-                  <TextField label="Access key ID" value={fields.access_key_id || ""} onChange={(e) => set({ access_key_id: e.target.value })} fullWidth required />
-                  <TextField label="Secret access key" type="password" value={fields.secret_access_key || ""} onChange={(e) => set({ secret_access_key: e.target.value })} fullWidth required />
-                  <TextField label="Bucket" helperText="Leave blank to scan all accessible buckets." value={fields.bucket || ""} onChange={(e) => set({ bucket: e.target.value })} fullWidth />
-                  <TextField label="Region" value={fields.region || "us-east-1"} onChange={(e) => set({ region: e.target.value })} fullWidth />
+                  <TextField
+                    label="Access key ID"
+                    value={fields.access_key_id || ""}
+                    onChange={(e) =>
+                      set({
+                        access_key_id: e.target.value,
+                      })
+                    }
+                    fullWidth
+                    required
+                  />
+                  <TextField
+                    label="Secret access key"
+                    type="password"
+                    value={fields.secret_access_key || ""}
+                    onChange={(e) =>
+                      set({
+                        secret_access_key: e.target.value,
+                      })
+                    }
+                    fullWidth
+                    required
+                  />
+                  <TextField
+                    label="Bucket"
+                    helperText="Leave blank to scan all accessible buckets."
+                    value={fields.bucket || ""}
+                    onChange={(e) =>
+                      set({
+                        bucket: e.target.value,
+                      })
+                    }
+                    fullWidth
+                  />
+                  <TextField
+                    label="Region"
+                    value={fields.region || "us-east-1"}
+                    onChange={(e) =>
+                      set({
+                        region: e.target.value,
+                      })
+                    }
+                    fullWidth
+                  />
                   {storageType === "s3-compatible" && (
-                    <TextField label="Endpoint" placeholder="https://..." value={fields.endpoint || ""} onChange={(e) => set({ endpoint: e.target.value })} fullWidth required />
+                    <TextField
+                      label="Endpoint"
+                      placeholder="https://..."
+                      value={fields.endpoint || ""}
+                      onChange={(e) =>
+                        set({
+                          endpoint: e.target.value,
+                        })
+                      }
+                      fullWidth
+                      required
+                    />
                   )}
                 </>
               )}
@@ -163,8 +310,15 @@ function ConnectionFormDialog({ kind, open, onClose, onSaved }) {
           )}
         </Stack>
       </DialogContent>
-      <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={onClose} disabled={saving}>Cancel</Button>
+      <DialogActions
+        sx={{
+          px: 3,
+          pb: 2,
+        }}
+      >
+        <Button onClick={onClose} disabled={saving}>
+          Cancel
+        </Button>
         <Button variant="contained" onClick={submit} disabled={saving}>
           {saving ? <CircularProgress size={16} color="inherit" /> : "Save"}
         </Button>
@@ -172,7 +326,6 @@ function ConnectionFormDialog({ kind, open, onClose, onSaved }) {
     </Dialog>
   );
 }
-
 export default function Connections() {
   const { request } = useAuth();
   const showToast = useToast();
@@ -185,29 +338,39 @@ export default function Connections() {
   // { kind: "connection" | "installation", id, label } | null
   const [confirmTarget, setConfirmTarget] = useState(null);
   const [confirmBusy, setConfirmBusy] = useState(false);
-
   const reload = useCallback(() => {
-    request("/api/connections/").then(setConnections).catch((e) => setError(e.message));
-    request("/api/integrations/github/installations/").then(setInstallations).catch(() => setInstallations([]));
+    request("/api/connections/")
+      .then(setConnections)
+      .catch((e) => setError(e.message));
+    request("/api/integrations/github/installations/")
+      .then(setInstallations)
+      .catch(() => setInstallations([]));
   }, [request]);
-
-  useEffect(() => { reload(); }, [reload]);
-
+  useEffect(() => {
+    reload();
+  }, [reload]);
   useEffect(() => {
     const onFocus = () => reload();
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
   }, [reload]);
-
   const confirmDelete = async () => {
     if (!confirmTarget) return;
     setConfirmBusy(true);
     try {
-      const path = confirmTarget.kind === "connection"
-        ? `/api/connections/${confirmTarget.id}/`
-        : `/api/integrations/github/installations/${confirmTarget.id}/`;
-      await request(path, { method: "DELETE" });
-      showToast(confirmTarget.kind === "connection" ? "Connection deleted." : "Installation revoked.", "success");
+      const path =
+        confirmTarget.kind === "connection"
+          ? `/api/connections/${confirmTarget.id}/`
+          : `/api/integrations/github/installations/${confirmTarget.id}/`;
+      await request(path, {
+        method: "DELETE",
+      });
+      showToast(
+        confirmTarget.kind === "connection"
+          ? "Connection deleted."
+          : "Installation revoked.",
+        "success",
+      );
       reload();
     } catch (e) {
       showToast(e.message, "error");
@@ -216,7 +379,6 @@ export default function Connections() {
       setConfirmTarget(null);
     }
   };
-
   const connectGithub = async () => {
     setError(null);
     setGithubAppMissing(false);
@@ -228,7 +390,6 @@ export default function Connections() {
       else setError(e.message);
     }
   };
-
   const setUpGithubApp = async () => {
     setError(null);
     setSettingUpApp(true);
@@ -240,88 +401,252 @@ export default function Connections() {
       setSettingUpApp(false);
     }
   };
-
   return (
     <Box>
       <PageHeader
-        title="Connections"
-        description="Credentials are encrypted at rest and never sent back to this browser after creation. Set these up once, then pick them by name from New ingestion."
+        title="Connected sources"
+        description="Bring your stack together. Connect once, then choose these sources whenever you build a project snapshot."
       />
 
-      {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+      {error && (
+        <Alert
+          severity="error"
+          sx={{
+            mb: 3,
+          }}
+        >
+          {error}
+        </Alert>
+      )}
 
-      <Typography variant="subtitle2" sx={{ mb: 1.5 }}>GitHub App</Typography>
-      <Card variant="outlined" sx={{ mb: 4 }}>
+      <Typography
+        variant="subtitle2"
+        sx={{
+          mb: 1.5,
+        }}
+      >
+        Your codebase
+      </Typography>
+      <Card
+        variant="outlined"
+        sx={{
+          mb: 4,
+        }}
+      >
         <CardContent>
           {githubAppMissing && (
-            <Alert severity="info" sx={{ mb: 2 }}>
-              This is a one-time, per-deployment setup step — someone needs to create the App on
-              GitHub before anyone can install it. Requires a staff/admin account on this server.
-              <Box sx={{ mt: 1.5 }}>
-                <Button size="small" variant="contained" startIcon={settingUpApp ? <CircularProgress size={14} color="inherit" /> : <GitHubIcon />} onClick={setUpGithubApp} disabled={settingUpApp}>
+            <Alert
+              severity="info"
+              sx={{
+                mb: 2,
+              }}
+            >
+              This is a one-time, per-deployment setup step — someone needs to
+              create the App on GitHub before anyone can install it. Requires a
+              staff/admin account on this server.
+              <Box
+                sx={{
+                  mt: 1.5,
+                }}
+              >
+                <Button
+                  size="small"
+                  variant="contained"
+                  startIcon={
+                    settingUpApp ? (
+                      <CircularProgress size={14} color="inherit" />
+                    ) : (
+                      <GitHubIcon />
+                    )
+                  }
+                  onClick={setUpGithubApp}
+                  disabled={settingUpApp}
+                >
                   Create GitHub App
                 </Button>
               </Box>
             </Alert>
           )}
           {installations === null ? (
-            <Skeleton variant="rounded" height={44} />
+            <Skeleton
+              variant="rounded"
+              sx={{
+                height: 44,
+              }}
+            />
           ) : installations.length === 0 ? (
-            <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ sm: "center" }} justifyContent="space-between">
-              <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 480 }}>
-                No installations yet. Installing scopes access to exactly the repos you pick on
-                github.com — a short-lived token is minted fresh for each run, and access is
-                revocable instantly from either side.
+            <Stack
+              direction={{
+                xs: "column",
+                sm: "row",
+              }}
+              spacing={2}
+              sx={{
+                alignItems: {
+                  sm: "center",
+                },
+                justifyContent: "space-between",
+              }}
+            >
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{
+                  maxWidth: 480,
+                }}
+              >
+                Connect GitHub and choose the repositories you want Contexa to
+                inspect on github.com — a short-lived token is minted fresh for
+                each run, and access is revocable instantly from either side.
               </Typography>
-              <Button variant="contained" startIcon={<GitHubIcon />} onClick={connectGithub} sx={{ flexShrink: 0 }}>
+              <Button
+                variant="contained"
+                startIcon={<GitHubIcon />}
+                onClick={connectGithub}
+                sx={{
+                  flexShrink: 0,
+                }}
+              >
                 Connect GitHub
               </Button>
             </Stack>
           ) : (
             <Stack spacing={1.5} divider={<Divider />}>
               {installations.map((i) => (
-                <Stack key={i.id} direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
-                  <Stack direction="row" alignItems="center" spacing={1.5}>
+                <Stack
+                  key={i.id}
+                  direction={{ xs: "column", sm: "row" }}
+                  spacing={2}
+                  sx={{
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Stack
+                    direction="row"
+                    spacing={1.5}
+                    sx={{
+                      alignItems: "center",
+                    }}
+                  >
                     <GitHubIcon />
                     <Box>
-                      <Typography variant="body2" fontWeight={600}>{i.account_login}</Typography>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontWeight: 600,
+                        }}
+                      >
+                        {i.account_login}
+                      </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        installation {i.installation_id} · connected {formatDate(i.created_at)}
+                        installation {i.installation_id} · connected{" "}
+                        {formatDate(i.created_at)}
                       </Typography>
                     </Box>
                   </Stack>
-                  <Stack direction="row" spacing={1}>
-                    <Button size="small" variant="outlined" endIcon={<OpenInNewIcon fontSize="small" />} href={`https://github.com/settings/installations/${i.installation_id}`} target="_blank" rel="noopener noreferrer">
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    useFlexGap
+                    sx={{ flexWrap: "wrap", maxWidth: "100%" }}
+                  >
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      endIcon={<OpenInNewIcon fontSize="small" />}
+                      href={`https://github.com/settings/installations/${i.installation_id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
                       Manage on GitHub
                     </Button>
-                    <Button size="small" color="error" variant="outlined" onClick={() => setConfirmTarget({ kind: "installation", id: i.id, label: i.account_login })}>Revoke</Button>
+                    <Button
+                      size="small"
+                      color="error"
+                      variant="outlined"
+                      onClick={() =>
+                        setConfirmTarget({
+                          kind: "installation",
+                          id: i.id,
+                          label: i.account_login,
+                        })
+                      }
+                    >
+                      Revoke
+                    </Button>
                   </Stack>
                 </Stack>
               ))}
               <Box>
-                <Button size="small" startIcon={<AddIcon fontSize="small" />} onClick={connectGithub}>Add another installation</Button>
+                <Button
+                  size="small"
+                  startIcon={<AddIcon fontSize="small" />}
+                  onClick={connectGithub}
+                >
+                  Connect another GitHub account
+                </Button>
               </Box>
             </Stack>
           )}
         </CardContent>
       </Card>
 
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
+      <Stack
+        direction={{ xs: "column", sm: "row" }}
+        spacing={1.5}
+        sx={{
+          alignItems: { xs: "flex-start", sm: "center" },
+          justifyContent: "space-between",
+          mb: 1.5,
+        }}
+      >
         <Typography variant="subtitle2">Data-source connections</Typography>
-        <Stack direction="row" spacing={1}>
-          <Button size="small" variant="outlined" startIcon={<DnsOutlinedIcon fontSize="small" />} onClick={() => setFormKind("postgres")}>Postgres</Button>
-          <Button size="small" variant="outlined" startIcon={<StorageOutlinedIcon fontSize="small" />} onClick={() => setFormKind("mongo")}>MongoDB</Button>
-          <Button size="small" variant="outlined" startIcon={<CloudQueueOutlinedIcon fontSize="small" />} onClick={() => setFormKind("storage")}>Storage</Button>
+        <Stack
+          direction="row"
+          spacing={1}
+          useFlexGap
+          sx={{ flexWrap: "wrap", maxWidth: "100%" }}
+        >
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<DnsOutlinedIcon fontSize="small" />}
+            onClick={() => setFormKind("postgres")}
+          >
+            Postgres
+          </Button>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<StorageOutlinedIcon fontSize="small" />}
+            onClick={() => setFormKind("mongo")}
+          >
+            MongoDB
+          </Button>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<CloudQueueOutlinedIcon fontSize="small" />}
+            onClick={() => setFormKind("storage")}
+          >
+            Storage
+          </Button>
         </Stack>
       </Stack>
 
       {connections === null ? (
-        <Skeleton variant="rounded" height={60} />
+        <Skeleton
+          variant="rounded"
+          sx={{
+            height: 60,
+          }}
+        />
       ) : connections.length === 0 ? (
         <EmptyState
           icon={StorageOutlinedIcon}
           title="No connections yet"
-          description="Add a Postgres, MongoDB, or storage connection above to reuse across ingestion runs."
+          description="Add a Postgres, MongoDB, or storage connection above to reuse across project snapshots."
         />
       ) : (
         <Stack spacing={1.25}>
@@ -329,23 +654,76 @@ export default function Connections() {
             const KindIcon = KIND_ICON[c.kind] || StorageOutlinedIcon;
             return (
               <Card variant="outlined" key={c.id}>
-                <CardContent sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2, "&:last-child": { pb: 2 } }}>
-                  <Stack direction="row" alignItems="center" spacing={1.5}>
-                    <Box sx={{ width: 34, height: 34, borderRadius: 1.5, bgcolor: "action.hover", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <CardContent
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 2,
+                    "&:last-child": {
+                      pb: 2,
+                    },
+                  }}
+                >
+                  <Stack
+                    direction="row"
+                    spacing={1.5}
+                    sx={{
+                      alignItems: "center",
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: 34,
+                        height: 34,
+                        borderRadius: 1.5,
+                        bgcolor: "action.hover",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
                       <KindIcon fontSize="small" />
                     </Box>
                     <Box>
-                      <Stack direction="row" spacing={1} alignItems="center">
-                        <Typography variant="body2" fontWeight={600}>{c.name}</Typography>
+                      <Stack
+                        direction="row"
+                        spacing={1}
+                        sx={{
+                          alignItems: "center",
+                        }}
+                      >
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontWeight: 600,
+                          }}
+                        >
+                          {c.name}
+                        </Typography>
                         <Chip size="small" label={c.kind} variant="outlined" />
                       </Stack>
                       <Typography variant="caption" color="text.secondary">
-                        added {formatDate(c.created_at)}{c.last_used_at ? ` · last used ${formatDate(c.last_used_at)}` : " · never used"}
+                        added {formatDate(c.created_at)}
+                        {c.last_used_at
+                          ? ` · last used ${formatDate(c.last_used_at)}`
+                          : " · never used"}
                       </Typography>
                     </Box>
                   </Stack>
                   <Tooltip title="Delete connection">
-                    <IconButton color="error" size="small" onClick={() => setConfirmTarget({ kind: "connection", id: c.id, label: c.name })} aria-label={`Delete ${c.name}`}>
+                    <IconButton
+                      color="error"
+                      size="small"
+                      onClick={() =>
+                        setConfirmTarget({
+                          kind: "connection",
+                          id: c.id,
+                          label: c.name,
+                        })
+                      }
+                      aria-label={`Delete ${c.name}`}
+                    >
                       <DeleteOutlineIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
@@ -360,18 +738,28 @@ export default function Connections() {
         kind={formKind}
         open={!!formKind}
         onClose={() => setFormKind(null)}
-        onSaved={(name) => { setFormKind(null); reload(); showToast(`Connection "${name}" saved.`, "success"); }}
+        onSaved={(name) => {
+          setFormKind(null);
+          reload();
+          showToast(`Connection "${name}" saved.`, "success");
+        }}
       />
 
       <ConfirmDialog
         open={!!confirmTarget}
-        title={confirmTarget?.kind === "connection" ? "Delete connection?" : "Revoke installation?"}
+        title={
+          confirmTarget?.kind === "connection"
+            ? "Delete connection?"
+            : "Revoke installation?"
+        }
         description={
           confirmTarget?.kind === "connection"
             ? `Delete "${confirmTarget?.label}"? Any ingestion still referencing it will fail to run.`
             : `Revoke access for "${confirmTarget?.label}"? This also removes the App's access on GitHub's side immediately.`
         }
-        confirmLabel={confirmTarget?.kind === "connection" ? "Delete" : "Revoke"}
+        confirmLabel={
+          confirmTarget?.kind === "connection" ? "Delete" : "Revoke"
+        }
         destructive
         loading={confirmBusy}
         onConfirm={confirmDelete}

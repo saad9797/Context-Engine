@@ -46,7 +46,11 @@ async function main() {
 
   try {
     const context = await runIngestion(config);
-    process.stdout.write(JSON.stringify(context, null, 2));
+    // Wait for the pipe to drain before exiting: large repository snapshots
+    // exceed the pipe buffer and must be fully delivered to the Python worker.
+    await new Promise((resolve, reject) => {
+      process.stdout.write(JSON.stringify(context), (error) => error ? reject(error) : resolve());
+    });
     process.exit(0);
   } catch (e) {
     process.stderr.write(`Ingestion error: ${e.message}\n${e.stack}\n`);

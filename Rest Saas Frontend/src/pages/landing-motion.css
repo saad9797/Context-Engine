@@ -1,0 +1,120 @@
+.landing .reading-progress {
+  position: fixed;
+  inset: 0 0 auto;
+  height: 3px;
+  background: linear-gradient(90deg, #234635, #a3bf85);
+  transform: scaleX(0);
+  transform-origin: left;
+  z-index: 30;
+  pointer-events: none;
+}
+.landing .hero { position: relative; isolation: isolate; }
+.hero-atmosphere {
+  position: absolute;
+  inset: 0 -15px auto;
+  height: 580px;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: -1;
+  mask-image: linear-gradient(#000, #000 55%, transparent);
+  background-image: radial-gradient(#7b956d26 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+.hero-atmosphere span {
+  position: absolute;
+  width: 360px;
+  height: 360px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #dce9cbb3, transparent 70%);
+}
+.hero-atmosphere span:nth-child(1) { top: -130px; left: -100px; }
+.hero-atmosphere span:nth-child(2) { top: 60px; right: -100px; }
+.hero-atmosphere span:nth-child(3) { width: 500px; left: 30%; top: 180px; opacity: .5; }
+.landing .hero-preview { perspective: 1400px; }
+.preview-depth { transform-style: preserve-3d; }
+.landing .feature-card, .landing .final-cta {
+  position: relative;
+  isolation: isolate;
+}
+.landing .feature-card::after, .landing .final-cta::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(320px circle at var(--pointer-x, 50%) var(--pointer-y, 50%), #b6d28b2e, transparent 75%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .4s;
+  z-index: -1;
+}
+.landing .button svg, .landing .text-link svg, .landing .announcement svg {
+  transition: transform .35s cubic-bezier(.2,.7,.2,1);
+}
+.landing .preview-tabs button {
+  transition: color .25s, background .25s, border-color .25s;
+}
+.landing #preview-panel { animation: context-panel-in .35s ease both; }
+.landing .faq-list summary span { transition: transform .3s ease; }
+.landing .faq-list details[open] p { animation: context-panel-in .35s ease both; }
+@keyframes context-panel-in {
+  from { opacity: .2; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: no-preference) and (hover: hover) {
+  .landing .feature-card { transition: border-color .35s, box-shadow .35s; }
+  .landing .feature-card:hover { border-color: #a9bc96; box-shadow: 0 16px 40px #2346350c; }
+  .landing .feature-card:hover::after, .landing .final-cta:hover::after { opacity: 1; }
+  .landing .button:hover svg, .landing .text-link:hover svg, .landing .announcement:hover svg { transform: translateX(4px); }
+  .landing .map-chip, .landing .map-core, .landing .handoff-file, .landing .handoff-tools span {
+    transition: transform .5s cubic-bezier(.2,.7,.2,1), box-shadow .5s;
+  }
+  .landing .feature-card:hover .map-core { transform: scale(1.08); box-shadow: 0 0 0 8px #a5bd851a; }
+  .landing .feature-card:hover .map-chip { transform: translateY(-4px); }
+  .landing .feature-card:hover .handoff-file { transform: translateY(-5px); }
+  .landing .feature-card:hover .handoff-tools span { transform: translateY(3px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing .reading-progress { display: none; }
+}
+
+.context-walkthrough { padding-block: 55px 80px; }
+.context-walkthrough .section-heading > p { max-width: 650px; margin-inline: auto; }
+.context-journey {
+  display: grid;
+  grid-template-columns: .8fr 1.2fr;
+  border: 1px solid #dfe6d7;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #fff;
+}
+.journey-input, .journey-output { padding: 32px; min-width: 0; }
+.journey-input { background: #f0f4e9; border-right: 1px solid #dfe6d7; }
+.context-journey h3 { font-size: 20px; letter-spacing: -.6px; line-height: 1.4; margin: 14px 0 24px; }
+.source-example { display: flex; gap: 12px; align-items: center; padding: 16px; background: #ffffffb3; border: 1px solid #dfe6d7; border-radius: 9px; margin-block: 12px; font-size: 14px; font-weight: 600; }
+.source-example svg { color: #547548; }
+.source-example small { display: block; font-size: 12px; font-weight: 400; color: #5e6b55; margin-top: 5px; }
+.journey-input > p, .copy-status, .walkthrough-note { font-size: 12px; line-height: 1.8; color: #5e6b55; }
+.journey-result { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; line-height: 1.7; margin-top: 28px; }
+.journey-result svg { width: 18px; flex-shrink: 0; margin-top: 2px; }
+.task-options { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 20px; }
+.task-options button { border: 1px solid #dfe6d7; border-radius: 6px; background: #fff; color: #52634b; padding: 8px 10px; font-size: 12px; transition: background .2s, color .2s; }
+.task-options button[aria-pressed="true"] { background: #234635; color: white; border-color: #234635; }
+.prompt-example { border: 1px solid #dfe6d7; border-radius: 9px; background: #fafbf7; padding: 20px; min-height: 255px; animation: context-panel-in .35s ease both; }
+.prompt-example-heading { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; }
+.prompt-example-heading svg { font-size: 18px; }
+.prompt-example ul { padding-left: 18px; font-size: 13px; line-height: 1.8; color: #52634b; margin-block: 16px; }
+.prompt-task { border-top: 1px solid #dfe6d7; padding-top: 14px; font-size: 13px; line-height: 1.7; }
+.prompt-task span { display: block; font-size: 9px; letter-spacing: 1.4px; color: #66755c; margin-bottom: 5px; }
+.journey-handoff { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
+.journey-handoff > span { font-size: 9px; letter-spacing: 1px; color: #66755c; }
+.journey-handoff .preview-copy { font-size: 12px; }
+.copy-status { min-height: 22px; margin-bottom: 0; }
+.walkthrough-note { text-align: center; margin: 18px auto 0; max-width: 700px; }
+@media (max-width: 760px) {
+  .context-walkthrough { padding-block: 30px 50px; }
+  .context-journey { grid-template-columns: 1fr; }
+  .journey-input { border-right: 0; border-bottom: 1px solid #dfe6d7; }
+  .journey-input, .journey-output { padding: 23px; }
+  .context-journey h3 { font-size: 18px; }
+  .prompt-example { min-height: 0; padding: 16px; }
+}

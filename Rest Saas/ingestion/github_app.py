@@ -159,6 +159,7 @@ def build_manifest(app_name: str, base_url: str, state: str) -> dict:
         "redirect_url": f"{base_url}/api/integrations/github/manifest/callback/?state={state}",
         "callback_urls": [f"{base_url}/api/integrations/github/callback/"],
         "setup_url": f"{base_url}/api/integrations/github/callback/",
+        "setup_on_update": True,
         "public": False,
         "default_permissions": {
             "contents": "read",

@@ -7,15 +7,34 @@ import SearchIcon from "@mui/icons-material/Search";
 // filterable (Dashboard, Audit log). Deliberately plain — no debounce, no
 // server round-trip — since every current use case filters an already-
 // fetched, bounded list.
-export default function SearchField({ value, onChange, placeholder = "Search…", sx }) {
+export default function SearchField({
+  value,
+  onChange,
+  placeholder = "Search…",
+  sx,
+}) {
   return (
     <TextField
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
       size="small"
-      sx={{ maxWidth: 320, ...sx }}
-      InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }}
+      sx={{
+        maxWidth: 320,
+        ...sx,
+      }}
+      slotProps={{
+        htmlInput: {
+          "aria-label": placeholder || "Search",
+        },
+        input: {
+          startAdornment: (
+            <InputAdornment position={"start"}>
+              <SearchIcon fontSize="small" />
+            </InputAdornment>
+          ),
+        },
+      }}
     />
   );
 }

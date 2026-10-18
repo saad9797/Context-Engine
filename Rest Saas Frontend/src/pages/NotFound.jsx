@@ -15,15 +15,33 @@ import { useAuth } from "../context/AuthContext";
 export default function NotFound() {
   const { isAuthenticated } = useAuth();
   return (
-    <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", px: 3 }}>
-      <SearchOffOutlinedIcon sx={{ fontSize: 40, color: "text.secondary", mb: 2 }} />
-      <Typography variant="h4" sx={{ mb: 1 }}>Page not found</Typography>
-      <Typography color="text.secondary" sx={{ mb: 3, maxWidth: 420 }}>
-        The page you're looking for doesn't exist, or you don't have access to it — links to another
-        account's data always look like this rather than confirming whether something exists.
+    <Box
+      sx={{
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        textAlign: "center",
+        px: 3,
+      }}
+    >
+      <SearchOffOutlinedIcon
+        sx={{ fontSize: 40, color: "text.secondary", mb: 2 }}
+      />
+      <Typography variant="h4" sx={{ mb: 1 }}>
+        Page not found
       </Typography>
-      <Button variant="contained" component={RouterLink} to={isAuthenticated ? "/dashboard" : "/"}>
-        {isAuthenticated ? "Back to dashboard" : "Back home"}
+      <Typography color="text.secondary" sx={{ mb: 3, maxWidth: 420 }}>
+        This page may have moved, or the project may no longer be available.
+        Let's get you back to your workspace.
+      </Typography>
+      <Button
+        variant="contained"
+        component={RouterLink}
+        to={isAuthenticated ? "/dashboard" : "/"}
+      >
+        {isAuthenticated ? "Back to project library" : "Back home"}
       </Button>
     </Box>
   );

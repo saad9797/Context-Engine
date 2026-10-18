@@ -171,6 +171,12 @@ class GitHubInstallCallbackView(APIView):
         installation_id = request.query_params.get("installation_id")
         setup_action = request.query_params.get("setup_action")
 
+        # Updates started on GitHub's settings page have no Contexa state.
+        # Return to the SPA's existing session; never issue a token or attach
+        # an installation based solely on an installation_id from the URL.
+        if setup_action == "update" and not state:
+            return redirect(f"{settings.FRONTEND_URL.rstrip('/')}/connections")
+
         try:
             payload = signing.loads(state, salt=INSTALL_STATE_SALT, max_age=600)
         except signing.BadSignature:

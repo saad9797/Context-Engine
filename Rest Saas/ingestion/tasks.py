@@ -165,6 +165,8 @@ def run_ingestion_job(job_id):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
+            encoding="utf-8",
+            errors="replace",
         )
 
         stderr_lines = []
