@@ -12,14 +12,17 @@ vi.mock("../lib/format", () => ({ copyToClipboard: clipboard }));
 const result = {
   base: { base_id: "base1234", kind: "base", contracts: [{ path: "response.ts", content: "export const sendSuccess = 1;" }] },
   task: { base_id: "base1234", kind: "task", request: { task: "Add interviews" }, models: [] },
-  report: { base_size: 1200, task_size: 500, privacy: "Database records excluded.", missing: [], omitted: [], included: [], selection: "Names and imports" },
+  handoff: { kind: "handoff", request: { task: "Add interviews" }, code: [{ path: "interview.ts", content: "export function scheduleInterview() {}" }], status: "review", context_gaps: [] },
+  report: { base_size: 1200, task_size: 500, handoff_size: 900, privacy: "Database records excluded.", missing: [], omitted: [], included: [], selection: "Names and imports" },
 };
 beforeEach(() => { vi.clearAllMocks(); request.mockResolvedValue(result); clipboard.mockResolvedValue(true); });
-function open() { render(<MemoryRouter initialEntries={["/contexts/example/claude-context"]}><Routes><Route path="/contexts/:contextId/claude-context" element={<ClaudeContext />} /></Routes></MemoryRouter>); }
+function open() { render(<MemoryRouter initialEntries={["/contexts/example/claude-context"]}><Routes><Route path="/contexts/:contextId/claude-context" element={<ClaudeContext />} /><Route path="/ingest/:jobId/progress" element={<div>Build queued</div>} /></Routes></MemoryRouter>); }
 
 describe("AI context pack workflow", () => {
   it("copies one compact base pack and blocks stale copies after requirements change", async () => {
     open();
+    await screen.findByRole("tab", { name: "Reusable base" });
+    fireEvent.click(screen.getByRole("tab", { name: "Reusable base" }));
     await waitFor(() => expect(screen.getByRole("button", { name: "Copy JSON" })).toBeEnabled());
     fireEvent.click(screen.getByRole("button", { name: "Copy JSON" }));
     await waitFor(() => expect(clipboard).toHaveBeenCalled());
@@ -34,7 +37,33 @@ describe("AI context pack workflow", () => {
     await waitFor(() => expect(screen.getByRole("button", { name: "Copy JSON" })).toBeEnabled());
     fireEvent.click(screen.getByRole("button", { name: "Copy JSON" }));
     await waitFor(() => expect(clipboard).toHaveBeenCalledTimes(2));
-    expect(JSON.parse(clipboard.mock.calls[1][0])).toEqual(result.task);
+    expect(JSON.parse(clipboard.mock.calls[1][0])).toEqual(result.handoff);
+  });
+
+  it("copies a self-contained handoff and sends exact follow-up symbols", async () => {
+    open();
+    await waitFor(() => expect(screen.getByRole("button", { name: "Copy JSON" })).toBeEnabled());
+    expect(screen.getByRole("tab", { name: "Complete handoff" })).toHaveAttribute("aria-selected", "true");
+    fireEvent.change(screen.getByLabelText("Additional symbols (optional)"), { target: { value: "validateInterview\nsrc/types/session.ts#SessionUser" } });
+    expect(screen.getByRole("button", { name: "Download JSON" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Prepare context packs" }));
+    await waitFor(() => expect(request).toHaveBeenCalledTimes(2));
+    expect(request.mock.calls[1][1].body.include_symbols).toEqual(["validateInterview", "src/types/session.ts#SessionUser"]);
+    await waitFor(() => expect(screen.getByRole("button", { name: "Copy JSON" })).toBeEnabled());
+    fireEvent.click(screen.getByRole("button", { name: "Copy JSON" }));
+    await waitFor(() => expect(clipboard).toHaveBeenCalled());
+    expect(JSON.parse(clipboard.mock.calls[0][0])).toEqual(result.handoff);
+  });
+
+  it("shows missing contracts and the specific source outside the copy budget", async () => {
+    request.mockResolvedValueOnce({ ...result, handoff: { ...result.handoff, status: "incomplete" }, report: { ...result.report,
+      handoff_omitted: [{ path: "src/auth.ts", symbols: ["requireRecruiter"] }],
+      dependency_gaps: [{ path: "interview.ts", module: "./missing-types", reason: "local import not captured" }],
+    } });
+    open();
+    await screen.findByText(/This handoff has missing contracts/);
+    expect(screen.getByText("src/auth.ts: requireRecruiter")).toBeInTheDocument();
+    expect(screen.getByText(/interview.ts → .\/missing-types/)).toBeInTheDocument();
   });
 
   it("does not allow copying an old pack after generation fails", async () => {
@@ -44,5 +73,28 @@ describe("AI context pack workflow", () => {
     fireEvent.click(screen.getByRole("button", { name: "Prepare context packs" }));
     await screen.findByText("Source unavailable");
     expect(screen.getByRole("button", { name: "Copy JSON" })).toBeDisabled();
+  });
+
+  it("retries with the suggested single-copy budget and preserves the task", async () => {
+    request.mockResolvedValueOnce({ ...result, handoff: { ...result.handoff, status: "incomplete" },
+      report: { ...result.report, suggested_handoff_budget: 10000 } }).mockResolvedValueOnce(result);
+    open();
+    await screen.findByRole("button", { name: "Try 10,000 token budget" });
+    fireEvent.change(screen.getByLabelText("What do you want to build?"), { target: { value: "Add interviews" } });
+    fireEvent.click(screen.getByRole("button", { name: "Try 10,000 token budget" }));
+    await waitFor(() => expect(request).toHaveBeenCalledTimes(2));
+    expect(request.mock.calls[1][1].body).toMatchObject({ task: "Add interviews", max_tokens: 10000 });
+    await waitFor(() => expect(screen.getByRole("button", { name: "Copy JSON" })).toBeEnabled());
+  });
+
+  it("prioritizes pinned missing files when rebuilding connected sources", async () => {
+    request.mockResolvedValueOnce({ ...result, handoff: { ...result.handoff, context_gaps: ["Requested file unavailable: src/utils/helper.ts"] },
+      report: { ...result.report, missing: ["Requested file unavailable: src/utils/helper.ts"] } }).mockResolvedValueOnce({ job_id: "new-build" });
+    open();
+    await screen.findByRole("button", { name: "Rebuild from connected sources" });
+    fireEvent.change(screen.getByLabelText("Files to include (optional)"), { target: { value: "src/utils/helper.ts" } });
+    fireEvent.click(screen.getByRole("button", { name: "Rebuild from connected sources" }));
+    await screen.findByText("Build queued");
+    expect(request.mock.calls[1]).toEqual(["/api/ingestion/example/rebuild/", { method: "POST", body: { include_paths: ["src/utils/helper.ts"] } }]);
   });
 });

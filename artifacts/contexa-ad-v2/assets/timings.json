@@ -1,0 +1,58 @@
+[
+  {
+    "start": 0.15,
+    "end": 3.078,
+    "text": "Still struggling to give Claude the right context?",
+    "original_duration": 2.928,
+    "tempo": 1
+  },
+  {
+    "start": 4.65,
+    "end": 8.154,
+    "text": "Contexa's got you. Your context engine for AI.",
+    "original_duration": 3.504,
+    "tempo": 1
+  },
+  {
+    "start": 9.0,
+    "end": 13.008,
+    "text": "Connect your repo. See your whole project in one interface.",
+    "original_duration": 4.008,
+    "tempo": 1
+  },
+  {
+    "start": 14.65,
+    "end": 18.274,
+    "text": "Describe your change. Like adding role-based access.",
+    "original_duration": 3.624,
+    "tempo": 1
+  },
+  {
+    "start": 20.1,
+    "end": 25.14,
+    "text": "Contexa prepares relevant source and contracts in a focused task pack.",
+    "original_duration": 5.04,
+    "tempo": 1
+  },
+  {
+    "start": 26.15,
+    "end": 30.061999999999998,
+    "text": "Set your budget. Review the pack. Copy it into Claude.",
+    "original_duration": 3.912,
+    "tempo": 1
+  },
+  {
+    "start": 31.25,
+    "end": 35.138,
+    "text": "Reuse the base. Change the task. Get back to building.",
+    "original_duration": 3.888,
+    "tempo": 1
+  },
+  {
+    "start": 36.0,
+    "end": 39.576,
+    "text": "Try Contexa. Your repo. One real task.",
+    "original_duration": 3.576,
+    "tempo": 1
+  }
+]

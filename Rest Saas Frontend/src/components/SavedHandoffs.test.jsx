@@ -1,0 +1,31 @@
+import React from 'react';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { beforeEach, expect, it, vi } from 'vitest';
+import SavedHandoffs from './SavedHandoffs';
+const { request } = vi.hoisted(() => ({ request: vi.fn() }));
+vi.mock('../context/AuthContext', () => ({ useAuth: () => ({ request }) }));
+const saved = { id: 'saved', title: 'Add invoice', created_at: '2026-10-19T10:00:00Z', digest: 'abcdef123456', request: { task: 'Add invoice' }, output: { handoff: { code: [] } }, outcome: 'unreviewed', feedback: '' };
+beforeEach(() => vi.clearAllMocks());
+it('saves the request without overwriting edits and records a user-reported result', async () => {
+  const restore = vi.fn();
+  request.mockResolvedValueOnce(saved).mockResolvedValueOnce({ outcome: 'unreviewed' });
+  render(<SavedHandoffs contextId="project" values={saved.request} onRestore={restore} />);
+  expect(request).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Save handoff' }));
+  await screen.findByText('Handoff saved.');
+  expect(restore).not.toHaveBeenCalled();
+  fireEvent.change(screen.getByLabelText('Missing context or result (optional)'), { target: { value: 'Missing enum' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Save result' }));
+  await screen.findByText('Your result was saved.');
+  expect(request).toHaveBeenLastCalledWith('/api/ingestion/project/handoffs/saved/', { method: 'PATCH', body: { outcome: 'unreviewed', feedback: 'Missing enum' } });
+});
+it('loads saved exports only when requested', async () => {
+  const restore = vi.fn();
+  request.mockResolvedValueOnce([saved]).mockResolvedValueOnce(saved);
+  render(<SavedHandoffs contextId="project" values={{}} onRestore={restore} disabled />);
+  expect(screen.getByRole('button', { name: 'Save handoff' })).toBeDisabled();
+  fireEvent.click(screen.getByRole('button', { name: 'Browse saved handoffs' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Add invoice' }));
+  await screen.findByLabelText('Missing context or result (optional)');
+  expect(restore).toHaveBeenCalledWith(saved);
+});

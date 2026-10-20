@@ -1,0 +1,102 @@
+{
+  "scope": "Agent-authored regression checks informed implementation. Not blind evaluation, generated-code success or complete-context ground truth.",
+  "public_source_executed": false,
+  "results": [
+    {
+      "repository": "fastapi/full-stack-fastapi-template",
+      "commit": "b1125d8839482cb7bbae603ddc6d0081bf87532e",
+      "fixture_sha256": "8fba16077db30938fabe74e056a60dab79fa4802dabefbd781d51c58eb3c5820",
+      "budget": 4000,
+      "estimated_copy_tokens": 3689,
+      "checked_contracts": 10,
+      "missing": [
+        "backend/app/models.py: class ItemBase(",
+        "backend/app/core/db.py: engine =",
+        "backend/app/core/security.py: ALGORITHM ="
+      ],
+      "forbidden_present": [],
+      "status": "incomplete",
+      "context_gaps": [
+        "13 required/selected source units do not fit this copy. Increase the budget or request a narrower task/follow-up; do not invent the missing contracts.",
+        "backend/app/api/deps.py: Python syntax could not be parsed; complete-file and conservative import fallback used. Review dependencies."
+      ],
+      "selected_units": 14
+    },
+    {
+      "repository": "fastapi/full-stack-fastapi-template",
+      "commit": "b1125d8839482cb7bbae603ddc6d0081bf87532e",
+      "fixture_sha256": "8fba16077db30938fabe74e056a60dab79fa4802dabefbd781d51c58eb3c5820",
+      "budget": 10000,
+      "estimated_copy_tokens": 6721,
+      "checked_contracts": 10,
+      "missing": [],
+      "forbidden_present": [],
+      "status": "incomplete",
+      "context_gaps": [
+        "backend/app/api/deps.py: Python syntax could not be parsed; complete-file and conservative import fallback used. Review dependencies."
+      ],
+      "selected_units": 27
+    },
+    {
+      "repository": "fastapi/full-stack-fastapi-template",
+      "commit": "b1125d8839482cb7bbae603ddc6d0081bf87532e",
+      "fixture_sha256": "8fba16077db30938fabe74e056a60dab79fa4802dabefbd781d51c58eb3c5820",
+      "budget": 16000,
+      "estimated_copy_tokens": 6721,
+      "checked_contracts": 10,
+      "missing": [],
+      "forbidden_present": [],
+      "status": "incomplete",
+      "context_gaps": [
+        "backend/app/api/deps.py: Python syntax could not be parsed; complete-file and conservative import fallback used. Review dependencies."
+      ],
+      "selected_units": 27
+    },
+    {
+      "repository": "jimleestone/next-real-world",
+      "commit": "ed60a30ce642a4544ffdcb5898ef80ee67147f1d",
+      "fixture_sha256": "3f597f60180d01cfc6423d46c3875a2b9a2a24f00d9ca1e92075e4621860d875",
+      "budget": 4000,
+      "estimated_copy_tokens": 3627,
+      "checked_contracts": 6,
+      "missing": [],
+      "forbidden_present": [],
+      "status": "incomplete",
+      "context_gaps": [
+        "4 required/selected source units do not fit this copy. Increase the budget or request a narrower task/follow-up; do not invent the missing contracts.",
+        "Endpoints or interfaces not specified; the AI should ask when relevant."
+      ],
+      "selected_units": 9
+    },
+    {
+      "repository": "jimleestone/next-real-world",
+      "commit": "ed60a30ce642a4544ffdcb5898ef80ee67147f1d",
+      "fixture_sha256": "3f597f60180d01cfc6423d46c3875a2b9a2a24f00d9ca1e92075e4621860d875",
+      "budget": 10000,
+      "estimated_copy_tokens": 3810,
+      "checked_contracts": 6,
+      "missing": [],
+      "forbidden_present": [],
+      "status": "review",
+      "context_gaps": [
+        "Endpoints or interfaces not specified; the AI should ask when relevant."
+      ],
+      "selected_units": 13
+    },
+    {
+      "repository": "jimleestone/next-real-world",
+      "commit": "ed60a30ce642a4544ffdcb5898ef80ee67147f1d",
+      "fixture_sha256": "3f597f60180d01cfc6423d46c3875a2b9a2a24f00d9ca1e92075e4621860d875",
+      "budget": 16000,
+      "estimated_copy_tokens": 3810,
+      "checked_contracts": 6,
+      "missing": [],
+      "forbidden_present": [],
+      "status": "review",
+      "context_gaps": [
+        "Endpoints or interfaces not specified; the AI should ask when relevant."
+      ],
+      "selected_units": 13
+    }
+  ]
+}

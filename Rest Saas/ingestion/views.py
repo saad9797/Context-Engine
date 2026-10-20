@@ -26,6 +26,7 @@ from rest_framework.views import APIView
 
 from . import diffing, freshness, scoping
 from .audit import log_action
+from .limits import reserve_job
 from .models import AuditLogEntry, DataSourceConnection, IngestionContext, IngestionJob
 from .serializers import (
     AuditLogEntrySerializer,
@@ -91,8 +92,17 @@ class IngestionJobCreateView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        job = IngestionJob.objects.create(user=request.user, connection_refs=refs)
-        rq_job = django_rq.get_queue("ingestion").enqueue(run_ingestion_job, str(job.id))
+        try:
+            job = reserve_job(request.user, refs)
+        except ValueError as exc:
+            return Response({"error": str(exc)}, status=409)
+        try:
+            rq_job = django_rq.get_queue("ingestion").enqueue(run_ingestion_job, str(job.id))
+        except Exception:
+            job.status = "failed"
+            job.error = "Could not queue the snapshot. Try again when the worker service is available."
+            job.save(update_fields=["status", "error"])
+            return Response({"error": job.error}, status=503)
         job.rq_job_id = rq_job.id
         job.save(update_fields=["rq_job_id"])
 
@@ -136,6 +146,13 @@ class IngestionResultView(APIView):
         if data is None:
             return Response({"error": "Not found."}, status=status.HTTP_404_NOT_FOUND)
         return Response(safe_snapshot(data))
+
+    def delete(self, request, pk):
+        snapshot = IngestionContext.objects.filter(id=pk, user=request.user).first()
+        if snapshot is None:
+            return Response({"error": "Not found."}, status=404)
+        snapshot.delete()
+        return Response(status=204)
 
 
 class IngestionClaudeContextView(APIView):
@@ -336,7 +353,8 @@ class IngestionListView(APIView):
         contexts = (
             IngestionContext.objects.filter(user=request.user)
             .order_by("-created_at")
-            .values("id", "project_name", "data", "created_at")
+            .values("id", "project_name", "created_at", "data___meta", "data__database__metadata",
+                    "data__mongo_database__metadata", "data__object_storage__containers", "data__codebase__repository")
         )
         return Response([_summarise(context) for context in contexts])
 
@@ -401,7 +419,14 @@ def _parse_max_tokens(raw):
 
 def _summarise(context_row):
     """Reduce one saved context row to list-view-safe summary fields."""
-    data = context_row["data"] or {}
+    # JSON key projection keeps repository source out of library queries.
+    # Reading 100 full snapshots previously materialized up to 200 MB merely
+    # to render project names and counts.
+    data = {"_meta": context_row.get("data___meta") or {},
+            "database": {"metadata": context_row.get("data__database__metadata") or {}},
+            "mongo_database": {"metadata": context_row.get("data__mongo_database__metadata") or {}},
+            "object_storage": {"containers": context_row["data__object_storage__containers"]} if context_row.get("data__object_storage__containers") is not None else None,
+            "codebase": {"repository": context_row.get("data__codebase__repository") or {}}}
     meta = data.get("_meta", {})
     database = data.get("database") or {}
     mongo_database = data.get("mongo_database") or {}

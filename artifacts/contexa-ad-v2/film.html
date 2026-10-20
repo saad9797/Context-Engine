@@ -1,0 +1,152 @@
+<!doctype html><meta charset="utf-8">
+<style>
+@font-face{font-family:Inter;src:url('assets/Inter.ttf');font-weight:100 900}
+@font-face{font-family:Manrope;src:url('assets/Manrope.ttf');font-weight:200 800}
+*{box-sizing:border-box}body{margin:0;background:#fff;overflow:hidden}canvas{display:block;width:1920px;height:1080px}
+</style><canvas id="film" width="1920" height="1080"></canvas>
+<script>
+const cv=document.querySelector('canvas'),c=cv.getContext('2d');
+const W=1280,H=720,INK='#182a22',GREEN='#31543b',MUTE='#7c877f',LIME='#dcf7ad',LINE='#e5eae3';
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)),lerp=(a,b,p)=>a+(b-a)*p;
+const ease=x=>1-Math.pow(1-clamp(x),3),smooth=x=>{x=clamp(x);return x*x*(3-2*x)};
+const imgs={}; const load=async()=>{for(const n of ['product-base','product-task-input','product-task-result','product-form','product-pack']){imgs[n]=new Image();imgs[n].src='assets/'+n+'.png';await imgs[n].decode()}await document.fonts.ready;await document.fonts.load('800 80px Manrope');await document.fonts.load('500 24px Inter');};
+function rr(x,y,w,h,r=16,fill='#fff',stroke=null){c.beginPath();c.roundRect(x,y,w,h,r);if(fill){c.fillStyle=fill;c.fill()}if(stroke){c.strokeStyle=stroke;c.lineWidth=1;c.stroke()}}
+function text(s,x,y,size=24,weight=500,color=INK,align='left',family='Inter') {c.font=`${weight} ${size}px ${family}`;c.fillStyle=color;c.textAlign=align;c.textBaseline='alphabetic';c.fillText(s,x,y)}
+function line(x1,y1,x2,y2,col=LINE,width=1){c.strokeStyle=col;c.lineWidth=width;c.lineCap='round';c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke()}
+function shadow(fn,blur=40,alpha=.09){c.save();c.shadowColor=`rgba(27,56,36,${alpha})`;c.shadowBlur=blur;c.shadowOffsetY=12;fn();c.restore()}
+function withA(a,fn){c.save();c.globalAlpha*=clamp(a);fn();c.restore()}
+function rise(t,at,fn,dy=30){let p=ease((t-at)/.65);c.save();c.globalAlpha*=p;c.translate(0,(1-p)*dy);fn(p);c.restore()}
+function icon(x,y,size=44,col=GREEN,bg=GREEN){c.save();c.translate(x,y);c.scale(size/44,size/44);rr(0,0,44,44,12,bg);c.strokeStyle=bg===col?'#fff':col;c.lineWidth=1.7;c.lineJoin='round';c.beginPath();c.moveTo(14,14);c.lineTo(23,9);c.lineTo(32,14);c.lineTo(32,24);c.lineTo(23,29);c.lineTo(14,24);c.closePath();c.moveTo(14,14);c.lineTo(23,19);c.lineTo(32,14);c.moveTo(23,19);c.lineTo(23,29);c.moveTo(14,22);c.lineTo(8,26);c.lineTo(8,35);c.lineTo(17,40);c.lineTo(26,35);c.lineTo(26,29);c.moveTo(8,26);c.lineTo(17,31);c.lineTo(17,40);c.stroke();c.restore()}
+function brand(x=60,y=43,size=25){icon(x,y,32);text('contexa.',x+43,y+25,size,800,INK,'left','Manrope')}
+function tag(s,x,y,w=130,fill='#f0f4ec',color=GREEN){rr(x,y,w,31,15,fill);text(s,x+w/2,y+21,12,600,color,'center')}
+function arrow(x,y,size=22,color=GREEN){line(x-size/2,y,x+size/2,y,color,2);line(x+size/2-6,y-6,x+size/2,y,color,2);line(x+size/2-6,y+6,x+size/2,y,color,2)}
+function check(x,y,color=GREEN){line(x,y,x+5,y+5,color,2);line(x+5,y+5,x+13,y-5,color,2)}
+function cursor(x,y,t=0,click=false){c.save();c.translate(x,y);c.shadowColor='#0003';c.shadowBlur=5;c.fillStyle=INK;c.strokeStyle='#fff';c.lineWidth=1.7;c.beginPath();c.moveTo(0,0);c.lineTo(0,24);c.lineTo(6,18);c.lineTo(12,29);c.lineTo(18,26);c.lineTo(12,15);c.lineTo(22,14);c.closePath();c.fill();c.stroke();if(click){c.shadowBlur=0;c.strokeStyle='#31543b55';c.lineWidth=2;c.beginPath();c.arc(7,10,12+20*(t%1),0,Math.PI*2);c.stroke()}c.restore()}
+function miniFile(x,y,name,type='TS',active=false,w=230){shadow(()=>rr(x,y,w,72,14,'#fff',active?'#87ac61':LINE),20,.05);rr(x+14,y+16,38,40,8,active?LIME:'#f2f5f0');text(type,x+33,y+42,12,750,active?GREEN:MUTE,'center');text(name,x+66,y+41,15,550,INK);if(active)check(x+w-28,y+34)}
+function bg(t){c.fillStyle='#fff';c.fillRect(0,0,W,H);let g=c.createRadialGradient(1100+50*Math.sin(t*.2),650,0,1050,660,700);g.addColorStop(0,'#f3f8ed');g.addColorStop(1,'#ffffff00');c.fillStyle=g;c.fillRect(0,0,W,H)}
+function footerDemo(){text('Contexa product demo · sample project',1220,682,11,450,'#98a197','right')}
+function chrome(x,y,w,h,label){shadow(()=>rr(x,y,w,h,18,'#fff',LINE),46,.10);rr(x,y,w,43,18,'#f8faf7');c.fillStyle='#f8faf7';c.fillRect(x,y+22,w,21);for(let i=0;i<3;i++){c.fillStyle=['#d7dfd4','#e0e5dc','#e7eae4'][i];c.beginPath();c.arc(x+20+i*15,y+21,4,0,7);c.fill()}text(label,x+w/2,y+27,11,500,MUTE,'center');line(x,y+43,x+w,y+43,LINE)}
+function headline(a,b,t,x=64,y=220,size=70){rise(t,.05,()=>text(a,x,y,size,750,INK,'left','Manrope'));rise(t,.19,()=>text(b,x,y+size*1.12,size,750,GREEN,'left','Manrope'))}
+function caption(s,t){if(!window.withCaptions)return;const w=(c.font='500 17px Inter',c.measureText(s).width)+42;rr((W-w)/2,663,w,36,12,'#ffffffed',LINE);text(s,W/2,687,17,500,INK,'center')}
+// 0–4.5: the actual pain, stated immediately. Cards orbit instead of sitting still.
+function hook(t){
+ brand();tag('FOR AI-POWERED DEVELOPERS',930,45,290);
+ rise(t,0,()=>text('Still struggling to give',640,210,66,750,INK,'center','Manrope'));
+ rise(t,.12,()=>text('Claude the right context?',640,291,66,750,INK,'center','Manrope'));
+ const cards=[['project.ts','TS',104,388,-.07],['schema.prisma','DB',875,364,.06],['auth.ts','TS',195,512,.05],['routes.ts','TS',881,493,-.04]];
+ cards.forEach(([s,k,x,y,r],j)=>{rise(t,.35+j*.09,()=>{c.save();c.translate(x,y+Math.sin(t*1.5+j)*8);c.rotate(r);miniFile(0,0,s,k,false,230);c.restore()})});
+ rise(t,.65,()=>{shadow(()=>rr(427,398,425,128,20,'#fbfaf7',LINE));text('Claude',452,430,14,650,'#b57554');text('Can you share the auth rules',452,467,21,500);text('and the model definitions?',452,496,21,500)});
+ let p=ease((t-3.5)/.6);withA(p,()=>{line(410,571,870,571,'#d8e7c7',30);text('There’s a better way.',640,580,24,650,GREEN,'center')});
+ caption('Still struggling to give Claude the right context?',t);
+}
+// 4.5–8.8: one purposeful brand reveal, with source cards converging into the mark.
+function reveal(t){
+ const collapse=ease(t/.9);
+ for(let j=0;j<8;j++){let a=j*Math.PI/4+t*.14,r=lerp(500,105,collapse);withA((1-collapse)*.6,()=>{c.save();c.translate(640+Math.cos(a)*r,300+Math.sin(a)*r*.6);c.rotate(a*.13);miniFile(-90,-30,['routes.ts','schema','auth.ts','models.py'][j%4],'{}',false,190);c.restore()})}
+ rise(t,.1,()=>{icon(588,123,104);},55);
+ rise(t,.38,()=>text('Contexa’s got you.',640,344,81,750,INK,'center','Manrope'));
+ rise(t,.73,()=>text('Your context engine for AI.',640,414,36,450,GREEN,'center'));
+ let p=ease((t-1.2)/.9);withA(p,()=>{tag('CONNECT',364,493,150);arrow(553,509);tag('UNDERSTAND',580,493,160);arrow(777,509);tag('PREPARE',806,493,150)});
+ caption('Contexa’s got you. Your context engine for AI.',t);
+}
+// 8.8–14.5: the ingestion and mapping engine, visibly processing sources.
+function engine(t){
+ brand();tag('01 / CONNECT YOUR PROJECT',927,45,293);
+ rise(t,0,()=>text('Your whole project. One interface.',640,164,52,750,INK,'center','Manrope'));
+ const files=[['routes.ts','TS'],['schema.prisma','DB'],['auth.ts','TS']];
+ files.forEach(([s,k],j)=>rise(t,.15+j*.11,()=>miniFile(95,258+j*98,s,k,t>1+j*.55,260)));
+ rise(t,.3,()=>{shadow(()=>rr(514,278,252,234,30,'#fff',LINE));icon(606,315,68);text('Context engine',640,421,23,700,INK,'center');text(t<2.6?'Inspecting your project…':'Snapshot ready',640,458,14,500,MUTE,'center')});
+ for(let j=0;j<3;j++){
+   const y=294+j*98;c.strokeStyle='#dce8d2';c.lineWidth=2;c.beginPath();c.moveTo(355,y);c.bezierCurveTo(435,y,440,394,514,394);c.stroke();
+   let p=((t*.6+j*.27)%1);let x=355+(514-355)*p,yy=lerp(y,394,smooth(p));c.fillStyle=GREEN;c.beginPath();c.arc(x,yy,3.5,0,7);c.fill();
+ }
+ line(766,394,863,394,'#dce8d2',2);let pulse=(t*.65)%1;c.fillStyle=GREEN;c.beginPath();c.arc(766+97*pulse,394,3.5,0,7);c.fill();
+ const outs=[['Code & routes','Source contracts'],['Models & relations','ORM definitions'],['Architecture','How it fits together']];
+ outs.forEach(([a,b],j)=>rise(t,.8+j*.4,()=>{let y=244+j*105;rr(864,y,325,88,16,t>3.2? '#f2f8e9':'#fafcf9',LINE);text(a,887,y+33,20,650);text(b,887,y+61,14,450,MUTE);if(t>2+j*.35)check(1154,y+43)}));
+ rise(t,1.2,()=>{text('Explore your code, models, and architecture together.',640,616,22,450,MUTE,'center')});
+ footerDemo();caption('See your whole project in one interface.',t);
+}
+// 14.5–20: real product UI, with a readable camera move to the task input.
+function task(t){
+ brand();tag('02 / DESCRIBE THE CHANGE',930,45,290);
+ headline('What are you','building next?',t,64,233,60);
+ rise(t,.45,()=>{text('Start with one real task.',67,411,24,500,MUTE);tag('ROLE-BASED ACCESS',67,453,227,LIME)});
+ const x=662,y=121,w=512,h=519;
+ let enter=ease(t/.8);c.save();c.translate((1-enter)*180,0);withA(enter,()=>{
+  chrome(x,y,w,h,'contexa / prepare AI packs');
+  c.save();c.beginPath();c.roundRect(x+1,y+44,w-2,h-45,0);c.clip();
+  // Crop from the real product page; camera tracks the task requirements.
+  c.drawImage(imgs['product-form'],0,0,616,670,x+46,y+54,420,457);
+  c.restore();
+  const p=clamp((t-.7)/1.8);rr(x+48,y+150,416,98,7,'#fff');
+  const s='Add role-based access to',s2='project endpoints';text(s.slice(0,Math.floor(p*43)),x+80,y+188,19,450);if(p>.58)text(s2.slice(0,Math.floor((p-.58)*43)),x+80,y+215,19,450);
+  withA(t>.5?1:0,()=>{c.strokeStyle='#8caf6c';c.lineWidth=2;c.beginPath();c.roundRect(x+45,y+148,422,102,10);c.stroke()});
+ });c.restore();
+ if(t>1.2)cursor(1129-34*smooth((t-1.2)/2.5),360+34*smooth((t-1.2)/2.5),t,false);
+ footerDemo();caption('Describe your change. Like adding role-based access.',t);
+}
+// 20–26: selection engine preserves relevant contracts while unrelated files move away.
+function select(t){
+ brand();tag('03 / PREPARE TASK CONTEXT',927,45,293);
+ rise(t,0,()=>text('The right pieces. In one pack.',640,161,53,750,INK,'center','Manrope'));
+ const names=[['projects.ts','Relevant route'],['auth.ts','Access contract'],['schema.prisma','Models & enums']];
+ names.forEach(([s,reason],j)=>{
+  let p=ease((t-.3-j*.24)/1.0),xx=lerp(72,129,p),y=238+j*111;
+  rise(t,.1+j*.13,()=>{miniFile(xx,y,s,j===2?'DB':'TS',p>.7,310);text(reason,xx+66,y+60,11,450,MUTE)})
+ });
+ withA(1-ease((t-1)/1.2),()=>{c.save();c.translate(-t*45,t*15);miniFile(100,583,'marketing.css','CSS',false,260);c.restore()});
+ for(let j=0;j<3;j++){c.strokeStyle='#d7e6cc';c.lineWidth=2;c.beginPath();c.moveTo(439,274+j*111);c.bezierCurveTo(515,274+j*111,510,389,575,389);c.stroke();let p=((t*.7+j*.3)%1);c.fillStyle=GREEN;c.beginPath();c.arc(439+136*p,lerp(274+j*111,389,smooth(p)),3,0,7);c.fill()}
+ rise(t,.5,()=>{icon(575,348,82);});arrow(702,389,42);
+ const p=ease((t-1.2)/1);rise(t,1.2,()=>{
+  shadow(()=>rr(779,224,403,339,22,'#fff','#ccdec0'));
+  rr(802,246,357,39,9,'#edf6e5');text('Task pack',822,272,19,700,GREEN);text('orbit / access-control',802,316,14,450,MUTE);
+  ['Your requirements','Relevant source code','Models, enums & contracts'].forEach((s,j)=>{check(805,357+j*45);text(s,829,363+j*45,18,500)});
+  line(802,486,1157,486,LINE);text('Review coverage before sharing',802,522,14,450,GREEN)
+ });
+ rise(t,3,()=>{tag('TASK-FOCUSED',510,540,230,LIME);text('Built around your change.',640,613,21,450,MUTE,'center')});
+ footerDemo();caption('Relevant source and contracts, in a focused task pack.',t);
+}
+// 26–31: readable real output and a copy action, then handoff to Claude.
+function handoff(t){
+ brand();tag('04 / COPY INTO YOUR WORKFLOW',885,45,335);
+ rise(t,0,()=>text('Ready for Claude.',64,175,57,750,INK,'left','Manrope'));
+ rise(t,.2,()=>tag('BUDGET: 4,000 TOKENS',905,147,300));
+ const z=ease(t/.7),x=64,y=219,w=761,h=362;
+ rise(t,.1,()=>{
+  chrome(x,y,w,h,'contexa / task pack');c.save();c.beginPath();c.rect(x+1,y+44,w-2,h-45);c.clip();
+  c.drawImage(imgs['product-task-result'],1216,92,1654,1148,x+14,y+51,w-28,508);
+  c.restore();
+ });
+ rise(t,.4,()=>{rr(900,218,310,363,22,'#faf9f6','#e8e5df');text('Claude',928,263,21,650,'#b57554');text('Start a new conversation',928,297,15,450,MUTE);rr(922,328,266,181,15,'#fff','#e6e4dd');
+   if(t<2.7){text('Your task + context',942,370,18,500,MUTE);text('go here.',942,398,18,500,MUTE)}else{tag('CONTEXT ATTACHED',940,348,229,'#eaf3e3');text('Add role-based access',941,415,17,550);text('to project endpoints.',941,442,17,550);check(1152,478)}
+ });
+ const click=smooth((t-.9)/.65),move=smooth((t-1.8)/.9);
+ if(t>.5){let xx=lerp(435,1070,move),yy=lerp(382,464,move);cursor(xx,yy,t,t>1.5&&t<1.8)}
+ if(t>1.65&&t<2.7){withA(1,()=>{rr(310,476,261,46,13,GREEN);check(330,497,'#fff');text('Copied for AI chat',354,505,17,600,'#fff')})}
+ rise(t,2.7,()=>{text('Set a budget. Inspect the pack. Keep moving.',64,631,22,450,MUTE)});
+ footerDemo();caption('Set your budget. Review the pack. Copy it into Claude.',t);
+}
+// 31–36: the repeatable workflow is the benefit, not an unverified numerical claim.
+function workflow(t){
+ brand();rise(t,0,()=>text('Less explaining.',640,190,72,750,INK,'center','Manrope'));rise(t,.16,()=>text('More building.',640,276,72,750,GREEN,'center','Manrope'));
+ const cards=[['Base pack','Load once per conversation'],['Task pack','Change with your task'],['Your AI','Keep your workflow']];
+ cards.forEach(([a,b],j)=>rise(t,.5+j*.2,()=>{let x=99+j*392;shadow(()=>rr(x,382,298,137,18,j===1?'#f0f8e8':'#fff',j===1?'#bfd8a7':LINE),24,.05);if(j===0)icon(x+22,405,34);else{rr(x+22,405,34,34,9,j===1?LIME:'#f0f4ed');text(j===1?'{}':'AI',x+39,428,15,700,GREEN,'center')}text(a,x+71,431,23,650);text(b,x+22,479,15,450,MUTE);if(j<2)arrow(x+344,450,27)}));
+ rise(t,1.3,()=>{tag('COPY / PASTE',446,570,180);tag('MCP',655,570,180)});
+ caption('Reuse the base. Change the task. Get back to building.',t);
+}
+// 36–40: leave one uncomplicated action in the viewer's memory.
+function close(t){
+ rise(t,0,()=>icon(600,99,80),25);
+ rise(t,.12,()=>text('Your repo.',640,302,86,750,INK,'center','Manrope'));
+ rise(t,.28,()=>text('One real task.',640,402,86,750,GREEN,'center','Manrope'));
+ rise(t,.55,()=>{shadow(()=>rr(464,465,352,74,19,GREEN),26,.12);text('Try Contexa',625,513,29,650,'#fff','center');arrow(775,501,25,'#fff')});
+ rise(t,.85,()=>text('Give your AI just what it needs.',640,598,24,450,MUTE,'center'));
+ text('contexa.',640,658,22,800,INK,'center','Manrope');
+ caption('Try Contexa. Your repo. One real task.',t);
+}
+const CUTS=[0,4.5,8.8,14.5,20,26,31,36,40],SCENES=[hook,reveal,engine,task,select,handoff,workflow,close];
+window.render=function(time,captions=false){window.withCaptions=captions;c.setTransform(1.5,0,0,1.5,0,0);c.clearRect(0,0,W,H);bg(time);let i=SCENES.length-1;for(let j=0;j<SCENES.length;j++)if(time<CUTS[j+1]){i=j;break}let local=time-CUTS[i];
+ if(local<.42&&i>0){let p=smooth(local/.42);c.save();c.globalAlpha=1-p;c.translate(-p*120,0);SCENES[i-1](CUTS[i]-CUTS[i-1]+local);c.restore();c.save();c.globalAlpha=p;c.translate((1-p)*120,0);SCENES[i](local);c.restore()}else SCENES[i](local);
+};
+window.ready=load().then(()=>{render(0);return true});
+</script>

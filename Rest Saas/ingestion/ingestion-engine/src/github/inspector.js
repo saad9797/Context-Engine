@@ -31,6 +31,7 @@ const SKIP_PATTERNS = [
   /node_modules/i, /\.git\//i, /dist\//i, /build\//i, /__pycache__/i,
   /\.next\//i, /\.nuxt\//i, /coverage\//i, /\.cache\//i,
   /(^|\/)(vendor|venv|\.venv|env)\//i, /target\//i, /bin\//i, /obj\//i,
+  /(^|\/)(staticfiles|coverage|\.pytest_cache)\//i,
   /\.pytest_cache\//i, /\.mypy_cache\//i, /\.terraform\//i,
   /\.egg-info\//i, /Pods\//i, /DerivedData\//i, /\.idea\//i, /\.vscode\//i,
   /\.(min\.js|map|lock|sum)$/i,
@@ -221,11 +222,12 @@ const ROLE_PRIORITY = {
   "shared-contract": 0, "data-model": 1, "entry-point": 2, "route/controller": 3,
   "middleware": 3, "auth/authz": 3, "service": 4, "repository": 4,
   "orm-config": 5, "database-config": 5, "dto/validator": 6,
-  "configuration": 7, "dependency-manifest": 8, "deployment-config": 8,
+  "source": 6, "configuration": 7, "dependency-manifest": 8, "deployment-config": 8,
   "migration": 9, "ci-config": 10, "test": 11, "documentation": 12,
 };
 
-async function inspectGitHub({ token, owner, repo, branch }) {
+async function inspectGitHub({ token, owner, repo, branch, includePaths = [] }) {
+  const requested = new Set(includePaths.filter(p => typeof p === 'string' && !p.startsWith('/') && !p.includes('..') && !p.includes('\\') && !shouldSkip(p)).slice(0, 15));
   const octokit = new Octokit({ auth: token });
 
   const { data: repoData } = await octokit.repos.get({ owner, repo });
@@ -282,9 +284,9 @@ async function inspectGitHub({ token, owner, repo, branch }) {
   if (/django/.test(pythonDependencies)) stackInfo.orms.push("Django ORM");
 
   const candidates = allFiles
-    .filter((f) => isHighValue(f.path))
+    .filter((f) => isHighValue(f.path) || /\.(?:[cm]?[jt]sx?|py|rb|go|java|cs|php|rs|vue|svelte|prisma|graphql|gql)$/i.test(f.path))
     .sort((a, b) => {
-      const priority = (p) => ROLE_PRIORITY[inferFileRole(p)] ?? 99;
+      const priority = (p) => requested.has(p) ? -1 : ROLE_PRIORITY[inferFileRole(p)] ?? 99;
       return priority(a.path) - priority(b.path);
     })
     ;
@@ -300,7 +302,7 @@ async function inspectGitHub({ token, owner, repo, branch }) {
     const role = inferFileRole(file.path);
     const group = role === "route/controller" ? (/routes?\//i.test(file.path) ? "routes" : "controllers") : role;
     roleCounts[group] = (roleCounts[group] || 0) + 1;
-    return roleCounts[group] <= (group === "controllers" ? 100 : 60);
+    return requested.has(file.path) || roleCounts[group] <= (group === "controllers" ? 100 : 60);
   }).slice(0, 220);
 
   // Hard budget across ALL file content combined, not just a per-file cap.
@@ -388,7 +390,7 @@ async function inspectGitHub({ token, owner, repo, branch }) {
     env_vars: envVars,
     key_files_by_role: filesByRole,
     key_files_truncated: budgetExhausted || highValueFiles.length < captureCandidates.length || omittedFiles.length > 0,
-    capture: { complete_files: fileContents.length, candidate_files: captureCandidates.length, content_bytes: totalBytes, omitted_files: omittedFiles, max_file_bytes: 128_000, max_total_bytes: MAX_TOTAL_CONTENT_BYTES },
+    capture: { complete_files: fileContents.length, candidate_files: captureCandidates.length, content_bytes: totalBytes, omitted_files: omittedFiles, requested_paths: [...requested], unavailable_requested_paths: [...requested].filter(p => !fileContents.some(f => f.path === p)), max_file_bytes: 128_000, max_total_bytes: MAX_TOTAL_CONTENT_BYTES },
     recent_commits: recentCommits,
   };
 }

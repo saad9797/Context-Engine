@@ -1,0 +1,31 @@
+1
+00:00:00,150 --> 00:00:03,078
+Still struggling to give Claude the right context?
+
+2
+00:00:04,650 --> 00:00:08,154
+Contexa's got you. Your context engine for AI.
+
+3
+00:00:09,000 --> 00:00:13,008
+Connect your repo. See your whole project in one interface.
+
+4
+00:00:14,650 --> 00:00:18,274
+Describe your change. Like adding role-based access.
+
+5
+00:00:20,100 --> 00:00:25,140
+Contexa prepares relevant source and contracts in a focused task pack.
+
+6
+00:00:26,150 --> 00:00:30,062
+Set your budget. Review the pack. Copy it into Claude.
+
+7
+00:00:31,250 --> 00:00:35,138
+Reuse the base. Change the task. Get back to building.
+
+8
+00:00:36,000 --> 00:00:39,576
+Try Contexa. Your repo. One real task.

@@ -1,5 +1,10 @@
 # Deployment
 
+> For the current production profile, Node 22 image, Linux worker and compose
+> commands, use [RELEASE_CANDIDATE.md](RELEASE_CANDIDATE.md). The historical
+> SimpleWorker commands below are development guidance; production uses
+> `ingestion.workers.ProductionWorker` with `core.production_settings`.
+
 *How to deploy Contexa once you've made the infrastructure decisions in `REMAINING_HUMAN_ACTIONS.md`. This document is a guide with exact commands, not a record of an actual live deployment — none exists yet (see `PRODUCTION_READINESS.md` P0-8). The `Dockerfile`/`docker-compose.yml` referenced here have not been build-tested in this environment (no Docker available) — verify with a real build before depending on them.*
 
 ## What needs to run, and where

@@ -1,0 +1,96 @@
+{
+  "dataset_sha256": "ca6995b6c01c8d1a92eb3854dcd0258cc91605edcfc25b7c54e21af343c5cfbb",
+  "production_recommended": false,
+  "evidence": "Public PR title plus BEFORE source; patch overlap is weak supervision. No downloaded code executed.",
+  "limitations": [
+    "Unchanged units may be necessary dependencies, so label 0 is uncertain.",
+    "Patch overlap does not identify every required context unit.",
+    "Small framework-library pilot; no application/database coverage claim.",
+    "Pretrained model corpus overlap is unknown.",
+    "This keyword baseline is not the full production Contexa selector.",
+    "No generated-code compilation or trained-model comparison has run locally."
+  ],
+  "metric_interpretation": "essential_recall_at_budget = observed changed-unit recall; irrelevant_token_fraction = unchanged-unit token fraction.",
+  "repositories": {
+    "pallets/flask": 14,
+    "django/django": 11,
+    "encode/django-rest-framework": 9,
+    "sequelize/sequelize": 27,
+    "Automattic/mongoose": 25,
+    "vuejs/core": 27
+  },
+  "splits": {
+    "train": {
+      "repositories": [
+        "django/django",
+        "pallets/flask"
+      ],
+      "tasks": 2,
+      "candidates": 25,
+      "keyword_baselines": {
+        "300": {
+          "ndcg_at_5": 0.40240498750197456,
+          "essential_recall_at_budget": 0.125,
+          "irrelevant_token_fraction": 0.7632508833922261,
+          "estimated_selected_tokens": 276.5,
+          "mrr": 0.5454545454545454
+        },
+        "600": {
+          "ndcg_at_5": 0.40240498750197456,
+          "essential_recall_at_budget": 0.75,
+          "irrelevant_token_fraction": 0.6560787114455593,
+          "estimated_selected_tokens": 587.0,
+          "mrr": 0.5454545454545454
+        }
+      }
+    },
+    "validation": {
+      "repositories": [
+        "encode/django-rest-framework",
+        "sequelize/sequelize"
+      ],
+      "tasks": 3,
+      "candidates": 36,
+      "keyword_baselines": {
+        "300": {
+          "ndcg_at_5": 0.516681956937152,
+          "essential_recall_at_budget": 0.3055555555555555,
+          "irrelevant_token_fraction": 0.6736596736596736,
+          "estimated_selected_tokens": 286.3333333333333,
+          "mrr": 0.5
+        },
+        "600": {
+          "ndcg_at_5": 0.516681956937152,
+          "essential_recall_at_budget": 0.8333333333333334,
+          "irrelevant_token_fraction": 0.7143625385808862,
+          "estimated_selected_tokens": 562.3333333333334,
+          "mrr": 0.5
+        }
+      }
+    },
+    "test": {
+      "repositories": [
+        "Automattic/mongoose",
+        "vuejs/core"
+      ],
+      "tasks": 4,
+      "candidates": 52,
+      "keyword_baselines": {
+        "300": {
+          "ndcg_at_5": 0.45382847607328836,
+          "essential_recall_at_budget": 0.4166666666666667,
+          "irrelevant_token_fraction": 0.6065709184908099,
+          "estimated_selected_tokens": 291.0,
+          "mrr": 0.6060606060606061
+        },
+        "600": {
+          "ndcg_at_5": 0.45382847607328836,
+          "essential_recall_at_budget": 0.8333333333333334,
+          "irrelevant_token_fraction": 0.554402706589734,
+          "estimated_selected_tokens": 553.25,
+          "mrr": 0.6060606060606061
+        }
+      }
+    }
+  }
+}

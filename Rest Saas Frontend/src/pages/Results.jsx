@@ -204,7 +204,7 @@ export default function Results() {
               ? `${(meta.ingestion_duration_ms / 1000).toFixed(1)}s`
               : "—"}
           </Typography>
-          <FreshnessCheck contextId={contextId} />
+          {meta.source_kind === 'folder' ? <Typography variant="caption" color="text.secondary">Local snapshot · reimport after code changes</Typography> : <FreshnessCheck contextId={contextId} />}
         </Box>
         <Stack
           spacing={1}

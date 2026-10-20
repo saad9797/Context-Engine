@@ -1,5 +1,11 @@
 # Contexa context-pack release
 
+The current customer flow uses **Complete handoff**: one self-contained JSON
+within one estimated copy budget. See the [current test/deployment guide](docs/RELEASE_CANDIDATE.md)
+and [measured contract checks](docs/benchmarks/README.md). Base/task splitting
+below remains available as an advanced conversation-reuse option. The trained
+pilot model is not integrated; retrieval uses static parsing and dependency tracing.
+
 Contexa's job is to give a coding assistant enough evidence to make a specific change, without making the developer paste an entire project or production database. A schema dump cannot supply ORM relation names, response helpers, authorization contracts, or business requirements. A smaller dump is not enough: selection must preserve those contracts.
 
 ## Customer workflow
@@ -18,9 +24,9 @@ Paste the base again in a new conversation, after rebuilding, or if the conversa
 
 | Layer | Implemented | Limits |
 |---|---|---|
-| JS/TS, Node, Express, React/Next/Vue/Svelte | Runtime dependency detection; complete source selection; relative JS/TS imports, including `.js` imports resolved to `.ts`; shared plumbing and examples | Selection is deterministic, not a full compiler/type checker. Dynamic imports, arbitrary aliases, generated code and monorepo package exports may need pinned files. |
+| JS/TS, Node, Express, React/Next | Babel-parsed complete source units; named/default/namespace import and barrel traversal; nearest captured tsconfig aliases; reverse route mounting and global middleware | Static retrieval, not type checking or semantic understanding. Dynamic loading, inherited behavior, generated code and package exports can require follow-up. Vue/Svelte use a reported whole-file fallback. |
 | Prisma | Balanced extraction of complete `model`, `enum`, and `type` blocks; exact relation fields and mapping attributes; referenced enums and one model-relation hop | No DMMF/type checking; very large schema files beyond capture limits require splitting/pinning or a future retrieval adapter. |
-| Django/DRF, Flask, FastAPI, SQLAlchemy | Python dependency detection; exact model/view/serializer/middleware source; Python import resolution without importing customer code | Whole-file selection, not semantic reconstruction of inherited models or decorator behavior. |
+| Django/DRF, Flask, FastAPI, SQLAlchemy | Python AST declarations with decorators; local imports/constants; complete model/serializer classes; reverse URL references; captured Django auth/user-model configuration | Inherited/runtime behavior is not reconstructed. Large complete classes can require a larger budget. No customer code is imported/executed. |
 | Mongoose and other source-defined models | Complete source files selected by entity name and imports | No execution of schema factories; dynamic runtime fields remain unknown. |
 | PostgreSQL | Metadata, columns, UDT names, enum values, keys/relations and constraints; no application-row queries | Existing drift checks remain available. |
 | MySQL | Encrypted connections, source picker, async schema inspection, columns including ENUM/SET definitions, primary/unique/foreign keys; verified TLS for remote hosts | One SQL database per snapshot. Live MySQL drift checks, views, routines and CHECK constraints are not implemented. UI reports the freshness gap. Tested with a mocked metadata driver; real-server integration validation remains required. |
@@ -42,7 +48,9 @@ Capture currently allows at most 128 KB per file, 2 MB total, 220 files, 100 con
 
 ## Upgrade and operate
 
-Use Node.js 22 for the frontend, engine and CI. React Router was updated to 7.18.4; the production-dependency npm audit passes. The existing Vite/Vitest development toolchain still has audit advisories and needs a separate tested upgrade before exposing development tooling publicly. CI now installs engine drivers for backend transport/schema tests and runs the frontend workflow tests and production dependency audit.
+Use Node.js 22.12+ LTS for the frontend, engine and CI. React Router is 7.18.4; the frontend now uses Vite 8.3.4, Vitest 5.0.5 and React plugin 6.1.2. The full frontend npm audit, including development dependencies, reports no known vulnerabilities. CI installs engine drivers for backend transport/schema tests and checks frontend workflows, the build and the full dependency audit.
+
+The task workspace also supports reviewed folder imports without GitHub or a worker, private immutable saved exports and user-reported outcomes, declared validation scripts, source previews, owner-scoped deletion and bounded storage/build reservations. See [the research and support limits](docs/PRODUCT_RESEARCH.md) before making customer-facing claims. The new `0008_saved_handoffs` migration must be applied.
 
 Backend:
 
@@ -93,7 +101,7 @@ For the existing GitHub App, configure OAuth callback to `/api/integrations/gith
 {"task":"Add interview scheduling","endpoints":"POST /interviews","access":"Recruiters only","rules":"Reject overlaps and use existing validation","response_shape":"Use the shared response helper","include_paths":["src/controllers/interviewController.ts"],"max_tokens":4000}
 ```
 
-Response: `{base, task, report}`. Copy only the relevant pack; the report supports human review. Budget is per pack. A too-small budget for the request metadata is an error rather than silent truncation. `POST /api/ingestion/{snapshot_id}/rebuild/` reuses currently authorized sources and returns a new job id.
+Response: `{handoff, base, task, report}`. Prefer `handoff` for one self-contained copy within `max_tokens`. `include_symbols` accepts exact declaration names or `path#symbol`. Split base/task budgets remain separate. A too-small budget for request metadata returns an error. `POST /api/ingestion/{snapshot_id}/rebuild/` reuses currently authorized sources, accepts optional `include_paths` to prioritize missing files, and returns a new job id. Paths must be safe repository-relative source paths. Capture also considers generic helper filenames; named folders are not required.
 
 ## Release evidence and remaining launch gates
 
@@ -104,6 +112,12 @@ Before a public launch: complete live MySQL integration tests, browser/mobile/ac
 Measure the actual customer outcome: required-symbol/model/enum recall, missing-import rate, input tokens per task, unnecessary-source rate, secret/sample leakage, and generated-code compile/test pass rate. Compare the new packs with the old overview on the same tasks and model, then report measured improvements rather than claiming guaranteed first-try code.
 
 ## Research behind the design
+
+### Public-data reranker pilot
+
+`docs/training/collect_public_data.py` collects public PR titles and complete small units from pinned **before-change** commits, with root license notices and source attribution. The initial pilot contains 113 candidates across nine tasks and six independent Python/JS/TS framework/ORM repositories. Patch-overlap labels are weak supervision: an unchanged function can still be necessary context. Repository-disjoint evaluation prevents splitting snippets from one project across train/test, but cannot establish absence from the pretrained model's unknown corpus.
+
+The Colab notebook embeds this data and notices; no customer labeling or data upload is required. Weak-label and synthetic runs cannot pass its candidate quality gate or enable production deployment. The CPU baseline is explicitly separate from the full Contexa selector; no generated-code compile outcome is claimed. Broader application/database tasks, retrieval coverage, actual trained-model results and runtime measurements remain release gates. This pilot does not establish universal stack support.
 
 - [Anthropic: effective context engineering](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents): prioritize small, relevant, high-signal context; retrieval and context management matter more than simply increasing the window.
 - [Prisma database mapping](https://www.prisma.io/docs/orm/v6/prisma-schema/data-model/database-mapping) and [relations](https://docs.prisma.io/docs/orm/v6/prisma-schema/data-model/relations): source ORM names and relations cannot reliably be reconstructed from physical table names alone.

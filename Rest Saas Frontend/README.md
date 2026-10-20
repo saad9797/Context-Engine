@@ -7,7 +7,7 @@ with a DRF token (`Authorization: Token <key>`).
 
 ## Requirements
 
-- Node.js 18+
+- Node.js 22 LTS (22.12 or later) or 24 LTS. The Vite 8 / Vitest 5 toolchain requires a compatible current runtime.
 - The backend running (see `../Rest Saas/README.md`) — this app has no
   standalone mode; every page calls the API.
 

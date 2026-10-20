@@ -1,5 +1,10 @@
 # Contexa — Production Readiness
 
+> Historical audit from September 2026. Inventory and blocker claims below are
+> preserved as history and are not current release status. See
+> [the current test/deployment guide](RELEASE_CANDIDATE.md),
+> [support matrix](../PRODUCTION.md), and [measured checks](benchmarks/README.md).
+
 *Master implementation document. Created 2026-09-28 from a live repository audit (not from memory of prior sessions) — every claim below was verified by reading the actual code, running the actual check, or reproducing the actual failure, not assumed. This document is updated as implementation progresses; do not let it drift from reality.*
 
 ---

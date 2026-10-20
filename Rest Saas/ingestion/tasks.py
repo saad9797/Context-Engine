@@ -147,6 +147,7 @@ def _build_runner_config(job: IngestionJob) -> dict:
             "owner": refs.get("github_owner"),
             "repo": refs.get("github_repo"),
             "branch": refs.get("github_branch"),
+            "includePaths": refs.get("github_include_paths", []),
         }
 
     return config

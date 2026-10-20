@@ -1,0 +1,492 @@
+{
+  "_meta": {
+    "project": {
+      "project_name": "SeuRonao/realworld-express-prisma"
+    }
+  },
+  "codebase": {
+    "repository": {
+      "commit_sha": "1f5a21ed6eec656410655cab9d5d3c7148b57a93",
+      "url": "https://github.com/SeuRonao/realworld-express-prisma"
+    },
+    "stack": {
+      "package_json": {
+        "name": "realworld-express-prisma-backend",
+        "version": "1.0.2",
+        "description": "A RealWorld Backend API made with express + prisma",
+        "main": "dist/server.js",
+        "scripts": {
+          "build": "dotenv -e .env -- npx tsc",
+          "start": "node dist/server.js",
+          "start:debug": "DEBUG=express:* node dist/server.js",
+          "develop": "DEBUG=express:* dotenv -e .env.development -- npx ts-node-dev --rs --clear --exit-child src/server.ts",
+          "studio:develop": "dotenv -e .env.development -- npx prisma studio",
+          "migrate:develop": "dotenv -e .env.development -- npx prisma db push",
+          "lint": "npx eslint .",
+          "style": "npx prettier --check .",
+          "test": "dotenv -e .env.development -- jest -i",
+          "test:watch": "dotenv -e .env.development -- jest -i --watch --coverage=false"
+        },
+        "repository": {
+          "type": "git",
+          "url": "git+https://github.com/SeuRonao/realworld-express-prisma-backend.git"
+        },
+        "keywords": [
+          "express",
+          "prisma",
+          "RealWorld",
+          "API",
+          "Backend"
+        ],
+        "author": "Ronan Pardo Soares",
+        "license": "MIT",
+        "bugs": {
+          "url": "https://github.com/SeuRonao/realworld-express-prisma-backend/issues"
+        },
+        "homepage": "https://github.com/SeuRonao/realworld-express-prisma-backend#readme",
+        "devDependencies": {
+          "@types/bcrypt": "^5.0.0",
+          "@types/express": "^4.17.14",
+          "@types/jest": "^29.2.0",
+          "@types/node": "^18.11.4",
+          "@typescript-eslint/eslint-plugin": "^5.41.0",
+          "@typescript-eslint/parser": "^5.41.0",
+          "dotenv-cli": "^6.0.0",
+          "eslint": "^8.26.0",
+          "eslint-config-prettier": "^8.5.0",
+          "jest": "^29.2.1",
+          "jest-mock-extended": "^3.0.1",
+          "prettier": "^2.7.1",
+          "prisma": "^4.9.0",
+          "ts-jest": "^29.0.3",
+          "ts-node-dev": "^2.0.0",
+          "typescript": "^4.9.4"
+        },
+        "dependencies": {
+          "@prisma/client": "^4.5.0",
+          "bcrypt": "^5.1.0",
+          "dotenv": "^16.0.3",
+          "express": "^4.18.2",
+          "express-jwt": "^8.3.0",
+          "jsonwebtoken": "^9.0.0",
+          "winston": "^3.8.2"
+        }
+      },
+      "requirements_txt": ""
+    },
+    "key_files_by_role": {
+      "source": [
+        {
+          "path": "jest.config.ts",
+          "content": "/** @type {import('ts-jest').JestConfigWithTsJest} */\nexport default {\n  preset: \"ts-jest\",\n  testEnvironment: \"node\",\n  modulePathIgnorePatterns: [\"<rootDir>/dist/\"],\n};\n",
+          "sha": "751842171e92b47e2fb7e62752c1d0aba1dda2fb957a2c397885097909232a9b"
+        },
+        {
+          "path": "package.json",
+          "content": "{\n  \"name\": \"realworld-express-prisma-backend\",\n  \"version\": \"1.0.2\",\n  \"description\": \"A RealWorld Backend API made with express + prisma\",\n  \"main\": \"dist/server.js\",\n  \"scripts\": {\n    \"build\": \"dotenv -e .env -- npx tsc\",\n    \"start\": \"node dist/server.js\",\n    \"start:debug\": \"DEBUG=express:* node dist/server.js\",\n    \"develop\": \"DEBUG=express:* dotenv -e .env.development -- npx ts-node-dev --rs --clear --exit-child src/server.ts\",\n    \"studio:develop\": \"dotenv -e .env.development -- npx prisma studio\",\n    \"migrate:develop\": \"dotenv -e .env.development -- npx prisma db push\",\n    \"lint\": \"npx eslint .\",\n    \"style\": \"npx prettier --check .\",\n    \"test\": \"dotenv -e .env.development -- jest -i\",\n    \"test:watch\": \"dotenv -e .env.development -- jest -i --watch --coverage=false\"\n  },\n  \"repository\": {\n    \"type\": \"git\",\n    \"url\": \"git+https://github.com/SeuRonao/realworld-express-prisma-backend.git\"\n  },\n  \"keywords\": [\n    \"express\",\n    \"prisma\",\n    \"RealWorld\",\n    \"API\",\n    \"Backend\"\n  ],\n  \"author\": \"Ronan Pardo Soares\",\n  \"license\": \"MIT\",\n  \"bugs\": {\n    \"url\": \"https://github.com/SeuRonao/realworld-express-prisma-backend/issues\"\n  },\n  \"homepage\": \"https://github.com/SeuRonao/realworld-express-prisma-backend#readme\",\n  \"devDependencies\": {\n    \"@types/bcrypt\": \"^5.0.0\",\n    \"@types/express\": \"^4.17.14\",\n    \"@types/jest\": \"^29.2.0\",\n    \"@types/node\": \"^18.11.4\",\n    \"@typescript-eslint/eslint-plugin\": \"^5.41.0\",\n    \"@typescript-eslint/parser\": \"^5.41.0\",\n    \"dotenv-cli\": \"^6.0.0\",\n    \"eslint\": \"^8.26.0\",\n    \"eslint-config-prettier\": \"^8.5.0\",\n    \"jest\": \"^29.2.1\",\n    \"jest-mock-extended\": \"^3.0.1\",\n    \"prettier\": \"^2.7.1\",\n    \"prisma\": \"^4.9.0\",\n    \"ts-jest\": \"^29.0.3\",\n    \"ts-node-dev\": \"^2.0.0\",\n    \"typescript\": \"^4.9.4\"\n  },\n  \"dependencies\": {\n    \"@prisma/client\": \"^4.5.0\",\n    \"bcrypt\": \"^5.1.0\",\n    \"dotenv\": \"^16.0.3\",\n    \"express\": \"^4.18.2\",\n    \"express-jwt\": \"^8.3.0\",\n    \"jsonwebtoken\": \"^9.0.0\",\n    \"winston\": \"^3.8.2\"\n  }\n}",
+          "sha": "c99d2b50bcf89f5ffaccf60249530de53f5769a9087b86f90cf451d0502202ce"
+        },
+        {
+          "path": "prisma/schema.prisma",
+          "content": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\ngenerator client {\n  provider = \"prisma-client-js\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\") /// Format in env file: [REDACTED CONNECTION URL]\n}\n\nmodel User {\n  email      String    @unique /// User email for registering and login use.\n  username   String    @id /// User internal id.\n  password   String /// User password stored in the database.\n  bio        String? /// User biographical information.\n  image      String? /// Link to the user avatar.\n  follows    User[]    @relation(\"UserFollows\") /// List of other users that this one follows.\n  followedBy User[]    @relation(\"UserFollows\") /// List of other users that follows this one.\n  authored   Article[] @relation(\"Author\") /// List of articles this user has written.\n  favorites  Article[] @relation(\"Favorites\") /// List of articles this user has favorited.\n  comment    Comment[] @relation(\"Author\") /// List of comments this user has written.\n}\n\nmodel Article {\n  title          String    @unique\n  slug           String    @id /// Slug is an uri safe string derived from the title.\n  description    String /// Description for SEO of this article.\n  body           String /// The main content of the article.\n  tagList        Tag[] /// List of tags associated with this article.\n  author         User      @relation(\"Author\", fields: [authorUsername], references: [username], onDelete: Cascade) /// User that is the author of this article.\n  authorUsername String /// Username of the author of this article.\n  favoritedBy    User[]    @relation(\"Favorites\") /// List of users that have favorited this article.\n  comments       Comment[] @relation(\"Comments\") /// List of comments of this article.\n  createdAt      DateTime  @default(now())\n  updatedAt      DateTime  @default(now())\n}\n\nmodel Comment {\n  id             Int      @id @default(autoincrement())\n  createdAt      DateTime @default(now())\n  updatedAt      DateTime @default(now())\n  body           String /// The main content of the comment.\n  author         User     @relation(\"Author\", fields: [authorUsername], references: [username], onDelete: Cascade) /// User that is the author of this comment.\n  authorUsername String /// Username of the author of this comment.\n  Article        Article  @relation(\"Comments\", fields: [articleSlug], references: [slug], onDelete: Cascade) /// Article that this comment belongs to.\n  articleSlug    String /// Article slug that this comment belongs to.\n}\n\nmodel Tag {\n  tagName String    @id\n  article Article[] /// List of articles that have this tag.\n}\n",
+          "sha": "6702f23f9897e231e8727ad38ed4c47a72587bdd7e07387924310ec520235b04"
+        },
+        {
+          "path": "src/app.ts",
+          "content": "import express from \"express\";\nimport usersRouter from \"./routes/api/users\";\nimport userRouter from \"./routes/api/user\";\nimport profilesRouter from \"./routes/api/profiles\";\nimport articlesRouter from \"./routes/api/articles\";\nimport tagsRouter from \"./routes/api/tags\";\nimport generalErrorHandler from \"./middleware/errorHandling/generalErrorHandler\";\nimport {\n  authErrorHandler,\n  prismaErrorHandler,\n} from \"./middleware/errorHandling\";\n\nconst app = express();\n\n// Allows parsing of json in the body of the request.\napp.use(express.json());\n\napp.use(\"/api/users\", usersRouter);\n\napp.use(\"/api/user\", userRouter);\n\napp.use(\"/api/profiles\", profilesRouter);\n\napp.use(\"/api/articles\", articlesRouter);\n\napp.use(\"/api/tags\", tagsRouter);\n\napp.get(\"/\", function (_req, res) {\n  return res.send(\"This is just the backend for RealWorld\");\n});\n\napp.use(authErrorHandler, prismaErrorHandler, generalErrorHandler);\n\nexport default app;\n",
+          "sha": "797de32906a6c07ba86d737a23b6a99767c6f38a470db5aa33c41185ff54bdb1"
+        },
+        {
+          "path": "src/controllers/articlesController/articlesCreate.ts",
+          "content": "import { Tag } from \"@prisma/client\";\nimport { NextFunction, Response } from \"express\";\nimport { Request } from \"express-jwt\";\nimport articleCreatePrisma from \"../../utils/db/article/articleCreatePrisma\";\nimport tagsCreatePrisma from \"../../utils/db/tag/tagsCreatePrisma\";\nimport userGetPrisma from \"../../utils/db/user/userGetPrisma\";\nimport articleViewer from \"../../view/articleViewer\";\n\ninterface Article {\n  title: string;\n  description: string;\n  body: string;\n  tagList?: Array<string>;\n}\n\n/**\n * Article controller that must receive a request with an authenticated user.\n * The body of the request must have the article object that is an @interface Article.\n * @param req Request with a jwt token verified\n * @param res Response\n * @param next NextFunction\n * @returns void\n */\nexport default async function articlesCreate(\n  req: Request,\n  res: Response,\n  next: NextFunction\n) {\n  const { title, description, body, tagList }: Article = req.body.article;\n  const userName = req.auth?.user?.username;\n\n  try {\n    // Get current user\n    const currentUser = await userGetPrisma(userName);\n    if (!currentUser) return res.sendStatus(401);\n\n    // Create list of tags\n    let tags: Tag[] = [];\n    if (tagList && tagList.length > 0) {\n      tags = await tagsCreatePrisma(tagList);\n    }\n\n    // Create the article\n    const article = await articleCreatePrisma(\n      { title, description, body },\n      tags,\n      currentUser.username\n    );\n\n    // Create article view\n    const articleView = articleViewer(article, currentUser);\n    return res.status(201).json({ article: articleView });\n  } catch (error) {\n    return next(error);\n  }\n}\n",
+          "sha": "c688d114fc1f7b5f7440fa9c3c313296fdd7ee14afb01274b5c00616ec190156"
+        },
+        {
+          "path": "src/controllers/articlesController/articlesDelete.ts",
+          "content": "import { NextFunction, Response } from \"express\";\nimport { Request } from \"express-jwt\";\nimport articleDeletePrisma from \"../../utils/db/article/articleDeletePrisma\";\nimport userGetPrisma from \"../../utils/db/user/userGetPrisma\";\nimport articleViewer from \"../../view/articleViewer\";\n\n/**\n * Article controller that must receive a request with an authenticated user.\n * The parameters of the request must have a slug.\n * @param req Request with a jwt token verified\n * @param res Response\n * @param next NextFunction\n * @returns void\n */\nexport default async function articlesDelete(\n  req: Request,\n  res: Response,\n  next: NextFunction\n) {\n  const slug = req.params.slug;\n  const userName = req.auth?.user?.username;\n\n  try {\n    // Get current user\n    const currentUser = await userGetPrisma(userName);\n    if (!currentUser) return res.sendStatus(401);\n\n    // Delete the article\n    const article = await articleDeletePrisma(slug);\n\n    // Create the deleted article view\n    const articleView = articleViewer(article, currentUser);\n    return res.status(200).json({ article: articleView });\n  } catch (error) {\n    return next(error);\n  }\n}\n",
+          "sha": "8d43c3fecce47eae814465218efd5daa516716a7aeee22ce7534fdecf630ff91"
+        },
+        {
+          "path": "src/controllers/articlesController/articlesFavorite.ts",
+          "content": "import { NextFunction, Response } from \"express\";\nimport { Request } from \"express-jwt\";\nimport articleFavoritePrisma from \"../../utils/db/article/articleFavoritePrisma\";\nimport userGetPrisma from \"../../utils/db/user/userGetPrisma\";\nimport articleViewer from \"../../view/articleViewer\";\n\n/**\n * Article controller that must receive a request with an authenticated user.\n * The parameters of the request must have a slug.\n * @param req Request with a jwt token verified\n * @param res Response\n * @param next NextFunction\n * @returns void\n */\nexport default async function articlesFavorite(\n  req: Request,\n  res: Response,\n  next: NextFunction\n) {\n  const slug = req.params.slug;\n  const username = req.auth?.user.username;\n\n  try {\n    // Get current user\n    let currentUser = await userGetPrisma(username);\n    if (!currentUser) return res.sendStatus(401);\n\n    // Favorite the article\n    const article = await articleFavoritePrisma(currentUser, slug);\n    if (!article) return res.sendStatus(404);\n\n    // Retrieve current user after update of its favorited articles\n    currentUser = await userGetPrisma(username);\n    if (!currentUser) return res.sendStatus(500); // The user should not have disappeared after having favorited an article\n\n    // Create article view\n    const articleView = articleViewer(article, currentUser);\n    return res.json({ article: articleView });\n  } catch (error) {\n    next(error);\n  }\n}\n",
+          "sha": "e866c074612c16c9d1f7a12d3faa7ccfbd42a4c5ea56b56862d5b083ffb13450"
+        },
+        {
+          "path": "src/controllers/articlesController/articlesFeed.ts",
+          "content": "import { NextFunction, Response } from \"express\";\nimport { Request } from \"express-jwt\";\nimport { ParsedQs } from \"qs\";\nimport articleFeedPrisma from \"../../utils/db/article/articleFeedPrisma\";\nimport userGetPrisma from \"../../utils/db/user/userGetPrisma\";\nimport articleViewer from \"../../view/articleViewer\";\n\nfunction parseQuery(query: ParsedQs) {\n  const { limit, offset } = query;\n  const limitNumber = limit ? parseInt(limit as string) : undefined;\n  const offsetNumber = offset ? parseInt(offset as string) : undefined;\n  return { limit: limitNumber, offset: offsetNumber };\n}\n\n/**\n * Article controller that must receive a request with an authenticated user.\n * @param req Request with a jwt token verified\n * @param res Response\n * @param next NextFunction\n * @returns void\n */\nexport default async function articlesFeed(\n  req: Request,\n  res: Response,\n  next: NextFunction\n) {\n  const { limit, offset } = parseQuery(req.query);\n  const username = req.auth?.user?.username;\n\n  try {\n    // Get current user\n    const currentUser = await userGetPrisma(username);\n    if (!currentUser) return res.sendStatus(401);\n\n    // Get articles feed\n    const articles = await articleFeedPrisma(currentUser, limit, offset);\n\n    // Create articles feed view\n    const articlesFeedView = articles.map((article) =>\n      currentUser ? articleViewer(article, currentUser) : articleViewer(article)\n    );\n\n    return res.json({\n      articles: articlesFeedView,\n      articlesCount: articlesFeedView.length,\n    });\n  } catch (error) {\n    return next(error);\n  }\n}\n",
+          "sha": "16c2e6b1dd995808dec7e0020f11296b3ca478dd34aa9d9b54553b5690022071"
+        },
+        {
+          "path": "src/controllers/articlesController/articlesGet.ts",
+          "content": "import { NextFunction, Response } from \"express\";\nimport { Request } from \"express-jwt\";\nimport articleGetPrisma from \"../../utils/db/article/articleGetPrisma\";\nimport userGetPrisma from \"../../utils/db/user/userGetPrisma\";\nimport articleViewer from \"../../view/articleViewer\";\n\n/**\n * Article controller that must receive a request.\n * The parameters of the request must have a slug.\n * @param req Request with a an optional jwt token verified\n * @param res Response\n * @param next NextFunction\n * @returns void\n */\nexport default async function articlesGet(\n  req: Request,\n  res: Response,\n  next: NextFunction\n) {\n  const slug = req.params.slug;\n  const username = req.auth?.user?.username;\n\n  try {\n    // Get current user\n    const currentUser = await userGetPrisma(username);\n\n    // Get the article\n    const article = await articleGetPrisma(slug);\n    if (!article) return res.sendStatus(404);\n\n    // Create the article view\n    const articleView = currentUser\n      ? articleViewer(article, currentUser)\n      : articleViewer(article);\n    return res.status(200).json({ article: articleView });\n  } catch (error) {\n    return next(error);\n  }\n}\n",
+          "sha": "01b3b8629bf19306bd5d2200e6e7f6dc30a8ba5c6e4663104e48a8e8a76abf8b"
+        },
+        {
+          "path": "src/controllers/articlesController/articlesList.ts",
+          "content": "import { NextFunction, Response } from \"express\";\nimport { Request } from \"express-jwt\";\nimport { ParsedQs } from \"qs\";\nimport articlesListPrisma from \"../../utils/db/article/articleListPrisma\";\nimport userGetPrisma from \"../../utils/db/user/userGetPrisma\";\nimport articleViewer from \"../../view/articleViewer\";\n\nfunction parseArticleListQuery(query: ParsedQs) {\n  let { tag, author, favorited } = query;\n  const { limit, offset } = query;\n  tag = tag ? (tag as string) : undefined;\n  author = author ? (author as string) : undefined;\n  favorited = favorited ? (favorited as string) : undefined;\n  const limitNumber = limit ? parseInt(limit as string) : undefined;\n  const offsetNumber = offset ? parseInt(offset as string) : undefined;\n  return { tag, author, favorited, limit: limitNumber, offset: offsetNumber };\n}\n\n/**\n * Article controller that must receive a request.\n * @param req Request with an optional jwt token verified\n * @param res Response\n * @param next NextFunction\n * @returns void\n */\nexport default async function articlesList(\n  req: Request,\n  res: Response,\n  next: NextFunction\n) {\n  const { tag, author, favorited, limit, offset } = parseArticleListQuery(\n    req.query\n  );\n  const username = req.auth?.user?.username;\n\n  try {\n    // Get current user\n    const currentUser = await userGetPrisma(username);\n\n    // Get the articles\n    const articles = await articlesListPrisma(\n      tag,\n      author,\n      favorited,\n      limit,\n      offset\n    );\n\n    // Create articles view\n    const articlesListView = articles.map((article) =>\n      currentUser ? articleViewer(article, currentUser) : articleViewer(article)\n    );\n\n    return res.json({\n      articles: articlesListView,\n      articlesCount: articlesListView.length,\n    });\n  } catch (error) {\n    return next(error);\n  }\n}\n",
+          "sha": "919895a50dd26f5e58f4f886f0b70ac8c451b5bb104e374579839bcd57dda22d"
+        },
+        {
+          "path": "src/controllers/articlesController/articlesUnFavorite.ts",
+          "content": "import { NextFunction, Response } from \"express\";\nimport { Request } from \"express-jwt\";\nimport articleUnFavoritePrisma from \"../../utils/db/article/articleUnFavoritePrisma\";\nimport userGetPrisma from \"../../utils/db/user/userGetPrisma\";\nimport articleViewer from \"../../view/articleViewer\";\n\n/**\n * Article controller that must receive a request with an authenticated user.\n * The parameters of the request must have a slug.\n * @param req Request with a jwt token verified\n * @param res Response\n * @param next NextFunction\n * @returns void\n */\nexport default async function articlesUnFavorite(\n  req: Request,\n  res: Response,\n  next: NextFunction\n) {\n  const slug = req.params.slug;\n  const username = req.auth?.user?.username;\n\n  try {\n    // Get current user\n    let currentUser = await userGetPrisma(username);\n    if (!currentUser) return res.sendStatus(401);\n\n    // UnFavorite the article\n    const article = await articleUnFavoritePrisma(currentUser, slug);\n    if (!article) return res.sendStatus(404);\n\n    // Retrieve current user after update of its favorited articles\n    currentUser = await userGetPrisma(username);\n    if (!currentUser) return res.sendStatus(500); // The user should not have disappeared after having un-favorited an article\n\n    // Create article view\n    const articleView = articleViewer(article, currentUser);\n    return res.json({ article: articleView });\n  } catch (error) {\n    next(error);\n  }\n}\n",
+          "sha": "fb15dc27d518cd69f97ed0e52f5bd86924113b54034074d58857bca5797b9251"
+        },
+        {
+          "path": "src/controllers/articlesController/articlesUpdate.ts",
+          "content": "import { NextFunction, Response } from \"express\";\nimport { Request } from \"express-jwt\";\nimport articleUpdatePrisma from \"../../utils/db/article/articleUpdatePrisma\";\nimport userGetPrisma from \"../../utils/db/user/userGetPrisma\";\nimport articleViewer from \"../../view/articleViewer\";\n\n/**\n * Article controller that must receive a request with an authenticated user.\n * The parameters of the request must have a slug.\n * The body of the request must have an article object with title, description and body.\n * @param req Request with a jwt token verified\n * @param res Response\n * @param next NextFunction\n * @returns void\n */\nexport default async function articlesUpdate(\n  req: Request,\n  res: Response,\n  next: NextFunction\n) {\n  const slug = req.params.slug;\n  const { title, description, body } = req.body.article;\n  const userName = req.auth?.user?.username;\n\n  try {\n    // Get current user\n    const currentUser = await userGetPrisma(userName);\n    if (!currentUser) return res.sendStatus(401);\n\n    // Update the article\n    const article = await articleUpdatePrisma(slug, {\n      title,\n      description,\n      body,\n    });\n\n    // Create the article view\n    const articleView = articleViewer(article, currentUser);\n    return res.status(200).json({ article: articleView });\n  } catch (error) {\n    return next(error);\n  }\n}\n",
+          "sha": "cb11693439dcefe35652c6fad4b3618e4c0e50ebe64a7ca4d727c2b50e465363"
+        },
+        {
+          "path": "src/controllers/articlesController/index.ts",
+          "content": "export { default as articlesCreate } from \"./articlesCreate\";\nexport { default as articlesGet } from \"./articlesGet\";\nexport { default as articlesList } from \"./articlesList\";\nexport { default as articlesUpdate } from \"./articlesUpdate\";\nexport { default as articlesDelete } from \"./articlesDelete\";\nexport { default as articlesFeed } from \"./articlesFeed\";\nexport { default as articlesFavorite } from \"./articlesFavorite\";\nexport { default as articlesUnFavorite } from \"./articlesUnFavorite\";\n",
+          "sha": "6bf18b5d005573b8d460da7ded837dcb92edf6f934313535536f7892bf4811f8"
+        },
+        {
+          "path": "src/controllers/commentsController/createComment.ts",
+          "content": "import { NextFunction, Response } from \"express\";\nimport { Request } from \"express-jwt\";\nimport commentCreatePrisma from \"../../utils/db/comment/commentCreatePrisma\";\nimport userGetPrisma from \"../../utils/db/user/userGetPrisma\";\nimport commentViewer from \"../../view/commentViewer\";\n\n/**\n * Comment controller that must receive a request with an authenticated user.\n * The parameters of the request must have a slug to the article the comment belongs to.\n * The body of the request must have an comment object with a body string.\n * @param req Request with a jwt token verified\n * @param res Response\n * @param next NextFunction\n * @returns void\n */\nexport default async function createComment(\n  req: Request,\n  res: Response,\n  next: NextFunction\n) {\n  const slug = req.params.slug;\n  const { body: commentContent } = req.body.comment;\n  const username = req.auth?.user?.username;\n\n  try {\n    // Get currentUser\n    const currentUser = await userGetPrisma(username);\n    if (!currentUser) return res.sendStatus(401);\n\n    // Add comment to database\n    const comment = await commentCreatePrisma(\n      slug,\n      commentContent,\n      currentUser\n    );\n\n    // Create comment view\n    const commentView = commentViewer(comment, currentUser);\n    return res.status(201).json({ comment: commentView });\n  } catch (error) {\n    return next(error);\n  }\n}\n",
+          "sha": "2f13b8a2e284331327adaf7ee3897609ca9a630a6af2499543a92d226d3c5869"
+        },
+        {
+          "path": "src/controllers/commentsController/deleteComment.ts",
+          "content": "import { NextFunction, Response } from \"express\";\nimport { Request } from \"express-jwt\";\nimport commentDeletePrisma from \"../../utils/db/comment/commentDeletePrisma\";\nimport userGetPrisma from \"../../utils/db/user/userGetPrisma\";\nimport commentViewer from \"../../view/commentViewer\";\n\n/**\n * Comment controller that must receive a request with an authenticated user.\n * The parameters of the request must have a slug to the article the comment belongs to and the id of the comments that will be removed.\n * @param req Request with a jwt token verified\n * @param res Response\n * @param next NextFunction\n * @returns void\n */\nexport default async function deleteComment(\n  req: Request,\n  res: Response,\n  next: NextFunction\n) {\n  const slug = req.params.slug;\n  const id = parseInt(req.params.id);\n  const username = req.auth?.user?.username;\n\n  try {\n    // Get currentUser\n    const currentUser = await userGetPrisma(username);\n    if (!currentUser) return res.sendStatus(401);\n\n    // Remove comment from database\n    const comment = await commentDeletePrisma(slug, id, currentUser);\n    if (!comment) return res.sendStatus(500);\n\n    // Create comment view\n    const commentView = commentViewer(comment, currentUser);\n    return res.json({ comment: commentView });\n  } catch (error) {\n    return next(error);\n  }\n}\n",
+          "sha": "999e91d8b241570204ac891e5743dc79b98f5390e4ecbc0839c7e0496ed86da3"
+        },
+        {
+          "path": "src/controllers/commentsController/getComments.ts",
+          "content": "import { NextFunction, Response } from \"express\";\nimport { Request } from \"express-jwt\";\nimport commentsGetPrisma from \"../../utils/db/comment/commentsGetPrisma\";\nimport userGetPrisma from \"../../utils/db/user/userGetPrisma\";\nimport commentViewer from \"../../view/commentViewer\";\n\n/**\n * Comment controller that must receive a request with an optionally authenticated user.\n * The parameters of the request must have a slug to the article the comment belongs to.\n * @param req Request with an optionally jwt token verified\n * @param res Response\n * @param next NextFunction\n * @returns void\n */\nexport default async function getComments(\n  req: Request,\n  res: Response,\n  next: NextFunction\n) {\n  const slug = req.params.slug;\n  const username = req.auth?.user?.username;\n\n  try {\n    // Get current user from database\n    const currentUser = await userGetPrisma(username);\n\n    // Get comments from database\n    const comments = currentUser\n      ? await commentsGetPrisma(slug, currentUser)\n      : await commentsGetPrisma(slug);\n\n    // Create comment view\n    const commentsView = comments.map((comment) =>\n      currentUser ? commentViewer(comment, currentUser) : commentViewer(comment)\n    );\n\n    return res.json({ comments: commentsView });\n  } catch (error) {\n    return next(error);\n  }\n}\n",
+          "sha": "42646e03d84af3134350fce53f331707caea065ebbe4a76f3678e38e4b994ec5"
+        },
+        {
+          "path": "src/controllers/commentsController/index.ts",
+          "content": "export { default as createComment } from \"./createComment\";\nexport { default as deleteComment } from \"./deleteComment\";\nexport { default as getComments } from \"./getComments\";\n",
+          "sha": "eec6ffdb3c9b413f6dd6619f00d7c904a4cf0ec04e67582f76f1e3f6c1c0b074"
+        },
+        {
+          "path": "src/controllers/profileController/followProfile.ts",
+          "content": "import { NextFunction, Response } from \"express\";\nimport { Request } from \"express-jwt\";\nimport userFollowProfilePrisma from \"../../utils/db/user/userFollowProfilePrisma\";\nimport userGetPrisma from \"../../utils/db/user/userGetPrisma\";\nimport profileViewer from \"../../view/profileViewer\";\n\n/**\n * Profile controller that adds the username in the parameters to the current user followers list.\n * The parameters of the request must contain the username that will be followed by the authenticated user.\n * @param req Request with authenticated user in the auth property.\n * @param res Response\n * @param next NextFunction\n * @returns void\n */\nexport default async function followProfile(\n  req: Request,\n  res: Response,\n  next: NextFunction\n) {\n  const username = req.params.username;\n  const currentUsername = req.auth?.user?.username;\n  try {\n    // Get current user\n    const currentUser = await userGetPrisma(currentUsername);\n    if (!currentUser) return res.sendStatus(401);\n\n    // Get the user profile to follow\n    const profile = await userFollowProfilePrisma(currentUser, username);\n\n    // Create the profile view.\n    const profileView = profileViewer(profile, currentUser);\n\n    return res.json({ profile: profileView });\n  } catch (error) {\n    return next(error);\n  }\n}\n",
+          "sha": "7a01307065a1e8612e8e5186c874f651e7e92ca059c1f38ebda7f7b254c7ec46"
+        },
+        {
+          "path": "src/controllers/profileController/getProfile.ts",
+          "content": "import { NextFunction, Response } from \"express\";\nimport { Request as JWTRequest } from \"express-jwt\";\nimport userGetPrisma from \"../../utils/db/user/userGetPrisma\";\nimport profileViewer from \"../../view/profileViewer\";\n\n/**\n * Profile controller that takes the username in the parameters and returns its profile.\n * With an optional authenticated user.\n * @param req Request with an optional authenticated user.\n * @param res Response\n * @param next NextFunction\n * @returns void\n */\nexport default async function getProfile(\n  req: JWTRequest,\n  res: Response,\n  next: NextFunction\n) {\n  const { username } = req.params;\n  const currentUsername = req.auth?.user?.username; // The current user's username\n\n  try {\n    // Get current user from database\n    const currentUser = await userGetPrisma(currentUsername);\n\n    // Get the desired profile\n    const profile = await userGetPrisma(username);\n    if (!profile) return res.sendStatus(404);\n\n    // Create the profile view\n    const profileView = currentUser\n      ? profileViewer(profile, currentUser)\n      : profileViewer(profile);\n\n    return res.json({ profile: profileView });\n  } catch (error) {\n    return next(error);\n  }\n}\n",
+          "sha": "272cf4cc11b931b78415fab7ba51f280cf8a684adec9e1108c2daa07ba4a3f2c"
+        },
+        {
+          "path": "src/controllers/profileController/index.ts",
+          "content": "export { default as getProfile } from \"./getProfile\";\nexport { default as followProfile } from \"./followProfile\";\nexport { default as unFollowProfile } from \"./unFollowProfile\";\n",
+          "sha": "c786c32930957a51b4bfab04937db5b8e53b5086a39595c89d574a79f6630733"
+        },
+        {
+          "path": "src/controllers/profileController/unFollowProfile.ts",
+          "content": "import { NextFunction, Response } from \"express\";\nimport { Request } from \"express-jwt\";\nimport userGetPrisma from \"../../utils/db/user/userGetPrisma\";\nimport userUnFollowProfilePrisma from \"../../utils/db/user/userUnFollowProfilePrisma\";\nimport profileViewer from \"../../view/profileViewer\";\n\n/**\n * Profile controller that removes the username in the parameters to the current user followers list.\n * @param req Request with an authenticated user in the auth property\n * @param res Response\n * @param next NextFunction\n * @returns\n */\nexport default async function unFollowProfile(\n  req: Request,\n  res: Response,\n  next: NextFunction\n) {\n  const username = req.params.username;\n  const currentUsername = req.auth?.user?.username;\n\n  try {\n    // Get current user\n    const currentUser = await userGetPrisma(currentUsername);\n    if (!currentUser) return res.sendStatus(401);\n\n    // Get the desired profile\n    const profile = await userUnFollowProfilePrisma(currentUser, username);\n\n    // Create the profile view\n    const profileView = profileViewer(profile, currentUser);\n    return res.json({ profile: profileView });\n  } catch (error) {\n    return next(error);\n  }\n}\n",
+          "sha": "8a57240ba3b0e9568bb4bca5db3c142a024996cc148e656664a10e021900d5d2"
+        },
+        {
+          "path": "src/controllers/tagsController/getTags.ts",
+          "content": "import { Request, Response } from \"express\";\nimport prisma from \"../../utils/db/prisma\";\nimport tagViewer from \"../../view/tagViewer\";\n\n/**\n * Tags controller that responds with a list of all the tags on the system.\n * @param _req\n * @param res\n * @returns\n */\nexport default async function getTags(_req: Request, res: Response) {\n  // Get all the tags\n  const tags = await prisma.tag.findMany();\n\n  // Create the tags view\n  const tagsView = tags.map((tag) => tagViewer(tag));\n\n  return res.json({ tags: tagsView });\n}\n",
+          "sha": "4be1f54387f2112eadc8ebcb048fa9de2c5e0a93a669f98980c305366b257dcc"
+        },
+        {
+          "path": "src/controllers/tagsController/index.ts",
+          "content": "export { default as getTags } from \"./getTags\";\n",
+          "sha": "ef8d63f4ed3dcea9574674f0f10c789c3f49c9c79c27c1e2831e41dea8433359"
+        },
+        {
+          "path": "src/controllers/userController/index.ts",
+          "content": "export { default as userGet } from \"./userGet\";\nexport { default as userUpdate } from \"./userUpdate\";\n",
+          "sha": "d8addb91273a570bdfaf9545bb2e282fbb0087c6b0d31cea758bb7560d859ea5"
+        },
+        {
+          "path": "src/controllers/userController/userGet.ts",
+          "content": "import { NextFunction, Response } from \"express\";\nimport { Request } from \"express-jwt\";\nimport createUserToken from \"../../utils/auth/createUserToken\";\nimport userGetPrisma from \"../../utils/db/user/userGetPrisma\";\nimport userViewer from \"../../view/userViewer\";\n\n/**\n * User controller that gets the current user based on the JWT given.\n * @param req Request with an authenticated user on the auth property.\n * @param res Response\n * @param next NextFunction\n * @returns void\n */\nexport default async function userGet(\n  req: Request,\n  res: Response,\n  next: NextFunction\n) {\n  const username = req.auth?.user?.username;\n  try {\n    // Get current user\n    const currentUser = await userGetPrisma(username);\n    if (!currentUser) return res.sendStatus(404);\n\n    // Create the authentication token\n    const token = createUserToken(currentUser);\n\n    // Create the user view with the authentication token\n    const response = userViewer(currentUser, token);\n\n    return res.json(response);\n  } catch (error) {\n    return next(error);\n  }\n}\n",
+          "sha": "f7b61037f2eb941762dc8ebe003c7b69961547709c34951eeb8e18067b1ebb75"
+        },
+        {
+          "path": "src/controllers/userController/userUpdate.ts",
+          "content": "import { NextFunction, Response } from \"express\";\nimport { Request } from \"express-jwt\";\nimport createUserToken from \"../../utils/auth/createUserToken\";\nimport userUpdatePrisma from \"../../utils/db/user/userUpdatePrisma\";\nimport userViewer from \"../../view/userViewer\";\n\n/**\n * User controller that updates the current user with info given on the body of the request.\n * @param req Request with authenticated user in the auth property and new information on the body of the request\n * @param res Response\n * @param next NextFunction\n * @returns\n */\nexport default async function userUpdate(\n  req: Request,\n  res: Response,\n  next: NextFunction\n) {\n  const username = req.auth?.user?.username;\n  const info = req.body.user;\n  try {\n    // Get current user\n    const user = await userUpdatePrisma(username, info);\n    if (!user) return res.sendStatus(404);\n\n    // Create the user token for future authentications\n    const token = createUserToken(user);\n\n    // Create the user view with the authenticated token\n    const userView = userViewer(user, token);\n\n    return res.json(userView);\n  } catch (error) {\n    return next(error);\n  }\n}\n",
+          "sha": "7740c86593c233c07f9eb820e65d074bfbce680fe93961ff8c4eec2b271e19c0"
+        },
+        {
+          "path": "src/controllers/usersController/index.ts",
+          "content": "export { default as usersLogin } from \"./usersLogin\";\nexport { default as usersRegister } from \"./usersRegister\";\n",
+          "sha": "2e3ef9ae93bbb9660ed76cdcd890bd0ba8a2fccdd6167a23efb989d5050ad47e"
+        },
+        {
+          "path": "src/controllers/usersController/usersLogin.ts",
+          "content": "import { NextFunction, Request, Response } from \"express\";\nimport createUserToken from \"../../utils/auth/createUserToken\";\nimport userGetEmailPrisma from \"../../utils/db/user/userGetEmailPrisma\";\nimport { compareWithHash } from \"../../utils/hashPasswords\";\nimport userViewer from \"../../view/userViewer\";\n\n/**\n * Users controller for the login function sending a valid jwt token in the response if login is successful.\n * @param req Request with a body property body containing a json with user object with name and email as properties.\n * @param res Response\n */\nexport default async function userLogin(\n  req: Request,\n  res: Response,\n  next: NextFunction\n) {\n  const { email, password } = req.body.user;\n  try {\n    // Get the user with given email\n    const user = await userGetEmailPrisma(email);\n    if (!user) return res.sendStatus(404);\n\n    // Compare the user password given with the one stored\n    console.log(password, user.password);\n    if (!compareWithHash(password, user.password)) return res.sendStatus(403);\n\n    // Create the user token for future authentication\n    const token = createUserToken(user);\n\n    // Create the user view containing the authentication token\n    const userView = userViewer(user, token);\n\n    return res.json(userView);\n  } catch (error) {\n    return next(error);\n  }\n}\n",
+          "sha": "53f13e4c27afe2001482a3effc6db45caff44d7d39dee34412ec17f95539bcc6"
+        },
+        {
+          "path": "src/controllers/usersController/usersRegister.ts",
+          "content": "import { NextFunction, Request, Response } from \"express\";\nimport createUserToken from \"../../utils/auth/createUserToken\";\nimport userCreatePrisma from \"../../utils/db/user/userCreatePrisma\";\nimport { hashPassword } from \"../../utils/hashPasswords\";\nimport userViewer from \"../../view/userViewer\";\n\n/**\n * Users controller that registers the user with information given in the body of the request.\n * @param req Request\n * @param res Response\n * @param next NextFunction\n * @returns\n */\nexport default async function usersRegister(\n  req: Request,\n  res: Response,\n  next: NextFunction\n) {\n  const { email, password, username } = req.body.user;\n  try {\n    // Hash password\n    const hashed = hashPassword(password);\n\n    // Create the new user on the database\n    const user = await userCreatePrisma(username, email, hashed);\n\n    // Create the authentication token for future use\n    const token = createUserToken(user);\n\n    // Create the user view with the authentication token\n    const userView = userViewer(user, token);\n\n    return res.status(201).json(userView);\n  } catch (error) {\n    return next(error);\n  }\n}\n",
+          "sha": "5a180df88456b0d9368531c5bff77291a4eff8fb8a1fee1e54c7331e77da6368"
+        },
+        {
+          "path": "src/middleware/articlesValidator/articlesCreateValidator.ts",
+          "content": "import { NextFunction, Response } from \"express\";\nimport { Request } from \"express-jwt\";\nimport { ValidationError } from \"../../utils/types\";\n\n/**\n * Middleware to validate input for article creation controller.\n * @param req Request\n * @param res Response\n * @param next NextFunction\n * @returns void\n */\nexport default async function articlesCreateValidator(\n  req: Request,\n  res: Response,\n  next: NextFunction\n) {\n  const errors: ValidationError = {};\n  errors.body = [];\n\n  if (!req.body) {\n    errors.body.push(\"can't be empty\");\n    return res.status(400).json({ errors });\n  }\n\n  if (!req.body.article && typeof req.body.article != \"object\") {\n    errors.body.push(\"article must be an object inside body\");\n    return res.status(400).json({ errors });\n  }\n\n  const { title, description, body, tagList } = req.body.article;\n\n  // Checks if title description and body are present and non-empty strings.\n  const requiredChecks = { title, description, body };\n  for (const [variable, content] of Object.entries(requiredChecks)) {\n    if (typeof content != \"string\" || content.length == 0) {\n      errors.body.push(`${variable} field must be a non-empty string`);\n    }\n  }\n\n  // Checks if tagList is an array of strings in case it is not undefined.\n  if (tagList && !Array.isArray(tagList))\n    errors.body.push(\"tagList must be an array of non-empty strings\");\n  else if (tagList) {\n    let foundError = false;\n    for (const tag of tagList) {\n      if (typeof tag != \"string\" || tag.length == 0) {\n        foundError = true;\n      }\n    }\n    if (foundError)\n      errors.body.push(\"tagList must be an array of non-empty strings\");\n  }\n\n  if (errors.body.length) return res.status(400).json({ errors });\n  next();\n}\n",
+          "sha": "4181bfdbcd151a72b8db60a88e6932ad5b32f7bc33571e8b9dc2a3fc6a50a268"
+        },
+        {
+          "path": "src/middleware/articlesValidator/articlesFeedValidator.ts",
+          "content": "import { NextFunction, Response } from \"express\";\nimport { Request } from \"express-jwt\";\nimport { ValidationError } from \"../../utils/types\";\n\n/**\n * Middleware to validate request for article feed controller.\n * @param req Request\n * @param res Response\n * @param next NextFunction\n * @returns\n */\nexport default async function articlesFeedValidator(\n  req: Request,\n  res: Response,\n  next: NextFunction\n) {\n  const { limit, offset } = req.query;\n  const errors: ValidationError = {};\n  errors.query = [];\n\n  if (limit && typeof limit != \"string\")\n    errors.query.push(\"limit must be a string\");\n  if (limit && typeof limit == \"string\") {\n    const limitValue = parseInt(limit);\n    if (isNaN(limitValue)) errors.query.push(\"limit is not a valid number\");\n  }\n\n  if (offset && typeof offset != \"string\")\n    errors.query.push(\"offset must be a string\");\n  if (offset && typeof offset == \"string\") {\n    const offsetValue = parseInt(offset);\n    if (isNaN(offsetValue)) errors.query.push(\"offset is not a valid number\");\n  }\n\n  if (errors.query.length > 0) return res.json({ errors });\n  return next();\n}\n",
+          "sha": "32e360aa002250dbe91f8c62acde6ee3d5d67af4b1504fcf2f5aeda11c8a5c8c"
+        },
+        {
+          "path": "src/middleware/articlesValidator/articlesListValidator.ts",
+          "content": "import { NextFunction, Response } from \"express\";\nimport { Request } from \"express-jwt\";\nimport { ValidationError } from \"../../utils/types\";\n\n/**\n * Middleware to validate request properties for articles listing controller.\n * @param req Request\n * @param res Response\n * @param next NextFunction\n * @returns\n */\nexport default async function articlesListValidator(\n  req: Request,\n  res: Response,\n  next: NextFunction\n) {\n  const { tag, author, favorited, limit, offset } = req.query;\n  const errors: ValidationError = {};\n  errors.query = [];\n\n  if (author && typeof author != \"string\")\n    errors.query.push(\"author must be a string\");\n\n  if (tag && typeof tag != \"string\") errors.query.push(\"tag must be a string\");\n\n  if (favorited && typeof favorited != \"string\")\n    errors.query.push(\"favorited must be a string\");\n\n  if (limit && typeof limit != \"string\")\n    errors.query.push(\"limit must be a string\");\n  if (limit && typeof limit == \"string\") {\n    const limitValue = parseInt(limit);\n    if (isNaN(limitValue)) errors.query.push(\"limit is not a valid number\");\n  }\n\n  if (offset && typeof offset != \"string\")\n    errors.query.push(\"offset must be a string\");\n  if (offset && typeof offset == \"string\") {\n    const offsetValue = parseInt(offset);\n    if (isNaN(offsetValue)) errors.query.push(\"offset is not a valid number\");\n  }\n\n  if (errors.query.length > 0) return res.json({ errors });\n  return next();\n}\n",
+          "sha": "adbcc5c4049afe9b9baae9c54d6d1ddbeda5be8d7301e52e984ec3168315e7ba"
+        },
+        {
+          "path": "src/middleware/articlesValidator/articlesUpdateValidator.ts",
+          "content": "import { NextFunction, Response } from \"express\";\nimport { Request } from \"express-jwt\";\nimport { ValidationError } from \"../../utils/types\";\n\n/**\n * Middleware to validate request properties for articles update controller.\n * @param req Request\n * @param res Response\n * @param next NextFunction\n * @returns\n */\nexport default async function articlesUpdateValidator(\n  req: Request,\n  res: Response,\n  next: NextFunction\n) {\n  const errors: ValidationError = {};\n  errors.body = [];\n  if (!req.body) {\n    errors.body.push(\"can't be empty\");\n    return res.status(400).json({ errors });\n  }\n\n  if (!req.body.article && typeof req.body.article != \"object\") {\n    errors.body.push(\"article must be an object inside body\");\n    return res.status(400).json({ errors });\n  }\n\n  const { title, description, body } = req.body.article;\n\n  if (title && typeof title != \"string\")\n    errors.body.push(\"title must be a string\");\n\n  if (description && typeof description != \"string\")\n    errors.body.push(\"description must be a string\");\n\n  if (body && typeof body != \"string\")\n    errors.body.push(\"body must be a string\");\n\n  if (errors.body.length) return res.status(400).json({ errors });\n\n  next();\n}\n",
+          "sha": "ddfe64a55a165345342443e6ba368dd049d4f5cadc7804fc5045c5634afa515c"
+        },
+        {
+          "path": "src/middleware/articlesValidator/index.ts",
+          "content": "export { default as articlesCreateValidator } from \"./articlesCreateValidator\";\nexport { default as articlesUpdateValidator } from \"./articlesUpdateValidator\";\nexport { default as articlesListValidator } from \"./articlesListValidator\";\nexport { default as articlesFeedValidator } from \"./articlesFeedValidator\";\n",
+          "sha": "fabbf779da077e2c5774fc238926b6d3dd78a2e9a49b0fd64638c614330adbf8"
+        },
+        {
+          "path": "src/middleware/auth/authenticator.ts",
+          "content": "import * as dotenv from \"dotenv\";\nimport { Request } from \"express\";\nimport { expressjwt as jwt } from \"express-jwt\";\n\ndotenv.config();\n\nif (!process.env.JWT_SECRET) {\n  throw new Error(\"JWT_SECRET missing in environment.\");\n}\n\n/**\n * Function that receives a request with possibly an authorization token in the headers and returns this token.\n * @param req Request\n * @returns the token or undefined\n */\nfunction getTokenInHeader(req: Request) {\n  const authorization = req.headers.authorization;\n  if (!authorization) return;\n  if (authorization.split(\" \").length != 2) return;\n  const [tag, token] = authorization.split(\" \");\n  if (tag === \"Token\" || tag === \"Bearer\") return token;\n  return;\n}\n\n// Authenticate is a middleware that will not throw errors, only if user is able to authenticate.\nexport const authenticate = jwt({\n  algorithms: [\"HS256\"],\n  secret: process.env.JWT_SECRET,\n  getToken: getTokenInHeader,\n});\n\n// OptionalAuthenticate is a middleware that will not throw errors, the authentication is optional.\nexport const optionalAuthenticate = jwt({\n  algorithms: [\"HS256\"],\n  secret: process.env.JWT_SECRET,\n  credentialsRequired: false,\n  getToken: getTokenInHeader,\n});\n",
+          "sha": "7cc8edf18b82228a6a9088a13b8ddf2135d9eeb6b7902640d935f0ca9936aa6f"
+        },
+        {
+          "path": "src/middleware/commentsValidator/commentCreateValidator.ts",
+          "content": "import { NextFunction, Response } from \"express\";\nimport { Request } from \"express-jwt\";\n\n/**\n * Middleware that validates the properties of the request for the comment creation controller.\n * @param req Request\n * @param res Response\n * @param next NextFunction\n * @returns\n */\nexport default function commentCreateValidator(\n  req: Request,\n  res: Response,\n  next: NextFunction\n) {\n  const comment = req.body.comment;\n  if (!comment)\n    return res\n      .status(400)\n      .json({ errors: { body: [\"the body must contain a comment object\"] } });\n  if (typeof comment != \"object\")\n    return res\n      .status(400)\n      .json({ errors: { body: [\"the comment  must be an object\"] } });\n  const body = comment.body;\n  if (!body || typeof body != \"string\")\n    return res.status(400).json({\n      errors: {\n        body: [\"there must be a body string property in the comment object\"],\n      },\n    });\n  next();\n}\n",
+          "sha": "1a5e713f53932a934920ee905b056e9757133734453b5b6bce07d73ef85716c1"
+        },
+        {
+          "path": "src/middleware/errorHandling/authErrorHandler.ts",
+          "content": "import { NextFunction, Request, Response } from \"express\";\nimport { UnauthorizedError } from \"express-jwt\";\nimport logger from \"../../utils/logger\";\n\n/**\n * Middleware that handles authentication errors.\n * @param err Error\n * @param _req Request\n * @param res Response\n * @param next NextFunction\n * @returns void\n */\nexport default async function authErrorHandler(\n  err: Error,\n  _req: Request,\n  res: Response,\n  next: NextFunction\n) {\n  if (!(err instanceof UnauthorizedError)) return next(err);\n\n  // Se why authorization failed\n  logger.debug(`Authorization failed due to ${err.code}`);\n  switch (err.code) {\n    case \"credentials_required\":\n      return res.sendStatus(401);\n    case \"credentials_bad_scheme\":\n      return res.status(400).json({\n        errors: { header: [\"authorization token with bad scheme\"] },\n      });\n    case \"invalid_token\":\n      return res\n        .status(401)\n        .json({ errors: { header: [\"authorization token is invalid\"] } });\n    default:\n      logger.error(`Unhandled UnauthorizedError with code ${err.code}`);\n      return res.sendStatus(500);\n  }\n}\n",
+          "sha": "3bfec43eaa2526dc2336abf656a3e631fed0a42875e2f15daa6d524aa5fdd090"
+        },
+        {
+          "path": "src/middleware/errorHandling/generalErrorHandler.ts",
+          "content": "import { NextFunction, Request, Response } from \"express\";\nimport logger from \"../../utils/logger\";\n\n/**\n * Middleware that handles general errors not handled by other middleware.\n * The last line of defense against errors.\n * @param err Error\n * @param _req Request\n * @param res Response\n * @param _next NextFunction\n * @returns\n */\nexport default function generalErrorHandler(\n  err: Error,\n  _req: Request,\n  res: Response,\n  // eslint-disable-next-line @typescript-eslint/no-unused-vars\n  _next: NextFunction\n) {\n  // This is an unknown type of error.\n  logger.error(`Unhandled error in generalErrorHandler`);\n  logger.error(`${err.message}\\n${err.name}\\n${err.stack}`);\n  return res.sendStatus(500);\n}\n",
+          "sha": "c71808b5df5eec92a8b53940d33e594948f9d3792c4c915a685dc5c23f76a81b"
+        },
+        {
+          "path": "src/middleware/errorHandling/index.ts",
+          "content": "export { default as authErrorHandler } from \"./authErrorHandler\";\nexport { default as prismaErrorHandler } from \"./prismaErrorHandler\";\nexport { default as generalErrorHandler } from \"./generalErrorHandler\";\n",
+          "sha": "671e338d4417325c2150d47dab5bd8ccef8d1722439ec2112b0938862856b20b"
+        },
+        {
+          "path": "src/middleware/errorHandling/prismaErrorHandler.ts",
+          "content": "import { PrismaClientKnownRequestError } from \"@prisma/client/runtime\";\nimport { NextFunction, Request, Response } from \"express\";\nimport logger from \"../../utils/logger\";\n\n/**\n * Middleware that handles errors generated by the prisma orm.\n * @param err Error\n * @param _req Request\n * @param res Response\n * @param next NextFunction\n * @returns\n */\nexport default async function prismaErrorHandler(\n  err: Error,\n  _req: Request,\n  res: Response,\n  next: NextFunction\n) {\n  if (!(err instanceof PrismaClientKnownRequestError)) return next(err);\n\n  logger.debug(`treating PrismaKnowRequestError with code ${err.code}`);\n  switch (err.code) {\n    case \"P2002\":\n      return res\n        .status(422)\n        .json({ errors: [`the field ${err.meta?.target} is not unique`] });\n    case \"P2025\":\n      return res.status(422).json({\n        errors: [`${err.meta?.cause}`],\n      });\n    default:\n      logger.debug(\n        `Unhandled error with code ${err.code} in prismaErrorHandler`\n      );\n      return res.sendStatus(500);\n  }\n}\n",
+          "sha": "1031247a8a0aedb576b4c13cae9e13478f7987917a714d7569071d41ad9e10dd"
+        },
+        {
+          "path": "src/middleware/userValidator/index.ts",
+          "content": "export { default as userLoginValidator } from \"./userLoginValidator\";\nexport { default as userRegisterValidator } from \"./userRegisterValidator\";\nexport { default as userUpdateValidator } from \"./userUpdateValidator\";\n",
+          "sha": "5ebd0675a2b56acf118fbe2551bc0f30afd5a2dfc447518d2a6e389de21b5e91"
+        },
+        {
+          "path": "src/middleware/userValidator/userLoginValidator.ts",
+          "content": "import { NextFunction, Request, Response } from \"express\";\nimport { ValidationError } from \"../../utils/types\";\n\n/**\n * This function is a middleware that validates the user information in the request in order to log the user.\n * If the request is malformed it responds accordingly and returns, stopping the flow of the express.\n * If the request is well formed, it passes control to the next handler.\n * @param req Request\n * @param res Response\n * @param next Next Function\n */\nexport default async function userLoginValidator(\n  req: Request,\n  res: Response,\n  next: NextFunction\n) {\n  const errors: ValidationError = {};\n  errors.body = [];\n  if (!req.body) {\n    errors.body.push(\"can't be empty\");\n    return res.status(400).json({ errors });\n  }\n\n  const { user } = req.body;\n  if (!user) {\n    errors.body.push(\"user object must be defined\");\n    return res.status(400).json({ errors });\n  }\n\n  const { password, email } = user;\n\n  if (!password) {\n    errors.body.push(\"password property in user can't be empty\");\n  } else if (typeof password != \"string\") {\n    errors.body.push(\"password property in user must be a string\");\n  }\n\n  if (!email) {\n    errors.body.push(\"email property in user can't be empty\");\n  } else if (typeof email != \"string\") {\n    errors.body.push(\"email property in user must be a string\");\n  }\n\n  if (errors.body.length) return res.status(400).json({ errors });\n  next();\n}\n",
+          "sha": "1da02eacac17e74bc39cd7225eefe55207a3766eb02a52e1e130bf7878c47aaa"
+        },
+        {
+          "path": "src/middleware/userValidator/userRegisterValidator.ts",
+          "content": "import { NextFunction, Request, Response } from \"express\";\nimport { ValidationError } from \"../../utils/types\";\n\n/**\n * This function is a middleware that validates the user information in the request in order to log the user.\n * If the request is malformed it responds accordingly and returns, stopping the flow of the express.\n * If the request is well formed, it passes control to the next handler.\n * @param req Request\n * @param res Response\n * @param next NextFunction\n * @returns\n */\nexport default async function userRegisterValidator(\n  req: Request,\n  res: Response,\n  next: NextFunction\n) {\n  const errors: ValidationError = {};\n  errors.body = [];\n  if (!req.body) {\n    errors.body.push(\"can't be empty\");\n    return res.status(400).json({ errors });\n  }\n\n  const { user } = req.body;\n  if (!user) {\n    errors.body.push(\"user object must be defined\");\n    return res.status(400).json({ errors });\n  }\n\n  const { password, email, username } = user;\n  if (!password) {\n    errors.body.push(\"password property in user can't be empty\");\n  } else if (typeof password != \"string\") {\n    errors.body.push(\"password property in user must be a string\");\n  }\n\n  if (!email) {\n    errors.body.push(\"email property in user can't be empty\");\n  } else if (typeof email != \"string\") {\n    errors.body.push(\"email property in user must be a string\");\n  }\n\n  if (!username) {\n    errors.body.push(\"username property in user can't be empty\");\n  } else if (typeof username != \"string\") {\n    errors.body.push(\"username property in user must be a string\");\n  }\n\n  if (errors.body.length) return res.status(400).json({ errors });\n  next();\n}\n",
+          "sha": "ed5e57a6fc0d3bb32f276cd2cc03dc66aa50ab80206bbfd396d989153effeab5"
+        },
+        {
+          "path": "src/middleware/userValidator/userUpdateValidator.ts",
+          "content": "import { NextFunction, Response } from \"express\";\nimport { Request } from \"express-jwt\";\nimport { ValidationError } from \"../../utils/types\";\n\n/**\n * This function is a middleware that validates the user information in the request in order to log the user.\n * If the request is malformed it responds accordingly and returns, stopping the flow of the express.\n * If the request is well formed, it passes control to the next handler.\n * @param req Request\n * @param res Response\n * @param next NextFunction\n * @returns\n */\nexport default async function userUpdateValidator(\n  req: Request,\n  res: Response,\n  next: NextFunction\n) {\n  const errors: ValidationError = {};\n  errors.body = [];\n\n  if (!req.body) {\n    errors.body.push(\"can't be empty\");\n    return res.status(400).json({ errors });\n  }\n\n  const { user } = req.body;\n  if (!user) {\n    errors.body.push(\"user property must exist\");\n    return res.status(400).json({ errors });\n  }\n\n  if (typeof user != \"object\") {\n    errors.body.push(\"user must be an object\");\n    return res.status(400).json({ errors });\n  }\n\n  const optional_fields = [\"email\", \"username\", \"password\", \"image\", \"bio\"];\n  for (const key of Object.keys(user)) {\n    if (typeof key != \"string\" && key in optional_fields) {\n      errors.body.push(`${key} must be of type string`);\n    }\n    if (!optional_fields.includes(key)) {\n      errors.body.push(`${key} is not one of the fields accepted`);\n    }\n  }\n\n  if (errors.body.length) return res.status(400).json({ errors });\n  next();\n}\n",
+          "sha": "b716c3788e8e39f2860177a6f213cddc0dc7762e3fafa51877753fc528d91f8b"
+        },
+        {
+          "path": "src/routes/api/articles.ts",
+          "content": "import { Router } from \"express\";\nimport * as articles from \"../../controllers/articlesController\";\nimport * as comments from \"../../controllers/commentsController\";\nimport * as validator from \"../../middleware/articlesValidator\";\nimport commentCreateValidator from \"../../middleware/commentsValidator/commentCreateValidator\";\nimport * as auth from \"../../middleware/auth/authenticator\";\n\nconst router = Router();\n\nrouter.get(\n  \"/\",\n  auth.optionalAuthenticate,\n  validator.articlesListValidator,\n  articles.articlesList\n);\n\nrouter.get(\n  \"/feed\",\n  auth.authenticate,\n  validator.articlesFeedValidator,\n  articles.articlesFeed\n);\n\nrouter.get(\"/:slug\", auth.optionalAuthenticate, articles.articlesGet);\n\nrouter.post(\n  \"/\",\n  auth.authenticate,\n  validator.articlesCreateValidator,\n  articles.articlesCreate\n);\n\nrouter.put(\n  \"/:slug\",\n  auth.authenticate,\n  validator.articlesUpdateValidator,\n  articles.articlesUpdate\n);\n\nrouter.delete(\"/:slug\", auth.authenticate, articles.articlesDelete);\n\nrouter.post(\n  \"/:slug/comments\",\n  auth.authenticate,\n  commentCreateValidator,\n  comments.createComment\n);\n\nrouter.get(\"/:slug/comments\", auth.optionalAuthenticate, comments.getComments);\n\nrouter.delete(\n  \"/:slug/comments/:id([0-9]+)\",\n  auth.authenticate,\n  comments.deleteComment\n);\n\nrouter.post(\"/:slug/favorite\", auth.authenticate, articles.articlesFavorite);\n\nrouter.delete(\n  \"/:slug/favorite\",\n  auth.authenticate,\n  articles.articlesUnFavorite\n);\n\nexport default router;\n",
+          "sha": "18797b97fb71c8483085ef46d1458e324a37548bed5f498aa640cdf10dbcfd82"
+        },
+        {
+          "path": "src/routes/api/profiles.ts",
+          "content": "import { Router } from \"express\";\nimport * as profile from \"../../controllers/profileController\";\nimport * as auth from \"../../middleware/auth/authenticator\";\n\nconst router = Router();\n\nrouter.get(\"/:username\", auth.optionalAuthenticate, profile.getProfile);\n\nrouter.post(\"/:username/follow\", auth.authenticate, profile.followProfile);\n\nrouter.delete(\"/:username/follow\", auth.authenticate, profile.unFollowProfile);\n\nexport default router;\n",
+          "sha": "66dcb9967ec9a77c5ff82a8f6c8788808d205ab7ff9f488b81884ec5f9116ab0"
+        },
+        {
+          "path": "src/routes/api/tags.ts",
+          "content": "import { Router } from \"express\";\nimport { getTags } from \"../../controllers/tagsController\";\n\nconst router = Router();\n\nrouter.get(\"/\", getTags);\n\nexport default router;\n",
+          "sha": "95fd20c10d19e02fde1083b3104ec0ba151b0ae6ca7a4712a625d11061acbd2a"
+        },
+        {
+          "path": "src/routes/api/user.ts",
+          "content": "import { Router } from \"express\";\nimport { userGet, userUpdate } from \"../../controllers/userController\";\nimport { authenticate } from \"../../middleware/auth/authenticator\";\nimport { userUpdateValidator } from \"../../middleware/userValidator\";\n\nconst router = Router();\n\nrouter.get(\"/\", authenticate, userGet);\n\nrouter.put(\"/\", authenticate, userUpdateValidator, userUpdate);\n\nexport default router;\n",
+          "sha": "c78152562afcd243762aa2f6d5ee08bbab0ef1b2d8ca15cd5ec348084d2fbc86"
+        },
+        {
+          "path": "src/routes/api/users.ts",
+          "content": "import { Router } from \"express\";\nimport { usersLogin, usersRegister } from \"../../controllers/usersController\";\nimport * as validator from \"../../middleware/userValidator\";\n\nconst router = Router();\n\nrouter.post(\"/login\", validator.userLoginValidator, usersLogin);\n\nrouter.post(\"/\", validator.userRegisterValidator, usersRegister);\n\nexport default router;\n",
+          "sha": "80f46c38b522b2c485fb4bf0c5f66d47a108ea0dd0d53b6bf3accef784f32845"
+        },
+        {
+          "path": "src/server.ts",
+          "content": "import app from \"./app\";\n\nconst port = process.env.PORT ? parseInt(process.env.PORT) : 3000;\n\napp.listen(port, function () {\n  console.log(`Express Server initiated listening on port ${port}`);\n});\n\nprocess.on(\"SIGTERM\", function () {\n  console.log(`SIGTERM signal received: closing HTTP server.`);\n  process.exit();\n});\n\nprocess.on(\"SIGINT\", function () {\n  console.log(`SIGINT signal received: closing HTTP server.`);\n  process.exit();\n});\n",
+          "sha": "e16cb4c8be551e89a2b22aa33c9ac190b09a70a662eb1ca63b6f56256adf1dcb"
+        },
+        {
+          "path": "src/utils/auth/createUserToken.ts",
+          "content": "import { User } from \"@prisma/client\";\nimport * as dotenv from \"dotenv\";\nimport jwt from \"jsonwebtoken\";\n\ndotenv.config();\n\n/**\n * Creates a token containing the user information for future authorization.\n * @param user User information to create the token\n * @returns the token created\n */\nexport default function createUserToken(user: User) {\n  if (!process.env.JWT_SECRET)\n    throw new Error(\"JWT_SECRET missing in environment.\");\n  const tokenObject = { user: { username: user.username, email: user.email } };\n  const userJSON = JSON.stringify(tokenObject);\n  const token = jwt.sign(userJSON, process.env.JWT_SECRET);\n  return token;\n}\n",
+          "sha": "c1125840501b6f36beeb67c017df6804bcd3dd4d8bc73e4b3760ff11ac538883"
+        },
+        {
+          "path": "src/utils/auth/index.ts",
+          "content": "export { default as createToken } from \"./createUserToken\";\n",
+          "sha": "6385561e48e6bfd0e7346c26adbc54ee3b207003548b8441d48be955607f2736"
+        },
+        {
+          "path": "src/utils/db/article/articleCreatePrisma.ts",
+          "content": "import { Tag } from \"@prisma/client\";\nimport prisma from \"../prisma\";\nimport slugfy from \"../../slugfy\";\n\ninterface RequiredFields {\n  title: string;\n  description: string;\n  body: string;\n}\n\nexport default async function articleCreatePrisma(\n  info: RequiredFields,\n  tagList: Tag[],\n  authorUsername: string\n) {\n  const slug = slugfy(info.title);\n  const article = await prisma.article.create({\n    data: {\n      ...info,\n      slug,\n      authorUsername,\n      tagList: { connect: tagList },\n    },\n    include: {\n      author: { include: { followedBy: true } },\n      tagList: true,\n      _count: { select: { favoritedBy: true } },\n    },\n  });\n  return article;\n}\n",
+          "sha": "1de49e4ad6e7ebdc465a2b247f5d5a23c0a8e18cece3625c8913e646d9de83a2"
+        },
+        {
+          "path": "src/utils/db/article/articleDeletePrisma.ts",
+          "content": "import prisma from \"../prisma\";\n\nexport default async function articleDeletePrisma(slug: string) {\n  const article = await prisma.article.delete({\n    where: { slug },\n    include: {\n      author: { include: { followedBy: true } },\n      tagList: true,\n      _count: { select: { favoritedBy: true } },\n    },\n  });\n  return article;\n}\n",
+          "sha": "ec73c011c669a767da5bc274626cea9b222f5da6ac671385f6051741cd3edcf0"
+        },
+        {
+          "path": "src/utils/db/article/articleFavoritePrisma.ts",
+          "content": "import { User } from \"@prisma/client\";\nimport prisma from \"../prisma\";\n\nexport default async function articleFavoritePrisma(\n  currentUser: User,\n  slug: string\n) {\n  const article = await prisma.article.update({\n    where: { slug },\n    data: { favoritedBy: { connect: { username: currentUser.username } } },\n    include: {\n      tagList: true,\n      author: {\n        include: { followedBy: { where: { username: currentUser.username } } },\n      },\n      _count: { select: { favoritedBy: true } },\n    },\n  });\n  return article;\n}\n",
+          "sha": "810939cc2d46e245254fa4fdcbe8d55141609f85a735d89266ec22f979aa8bc5"
+        },
+        {
+          "path": "src/utils/db/article/articleFeedPrisma.ts",
+          "content": "import { User } from \"@prisma/client\";\nimport prisma from \"../prisma\";\n\nexport default async function articleFeedPrisma(\n  currentUser: User & { follows: User[] },\n  limit = 20,\n  offset = 0\n) {\n  const articles = await prisma.article.findMany({\n    include: {\n      tagList: true,\n      author: {\n        include: { followedBy: { where: { username: currentUser.username } } },\n      },\n      _count: { select: { favoritedBy: true } },\n    },\n    take: limit,\n    skip: offset,\n  });\n  return articles;\n}\n",
+          "sha": "34695205e31ecf012693a72ee3fc98071a6ac2d5c6a77a5f341f869d2b6e4baa"
+        },
+        {
+          "path": "src/utils/db/article/articleGetPrisma.ts",
+          "content": "import prisma from \"../prisma\";\n\nexport default async function articleGetPrisma(slug: string) {\n  const article = await prisma.article.findUnique({\n    where: { slug },\n    include: {\n      author: { include: { followedBy: true } },\n      tagList: true,\n      _count: { select: { favoritedBy: true } },\n    },\n  });\n  return article;\n}\n",
+          "sha": "38601eedb560af49eac3e949c68219b603bf8799ac1e2667bcd208744eab2545"
+        },
+        {
+          "path": "src/utils/db/article/articleListPrisma.ts",
+          "content": "import prisma from \"../prisma\";\n\nexport default async function articlesListPrisma(\n  tag?: string,\n  authorUsername?: string,\n  favorited?: string,\n  limit = 20,\n  offset = 0\n) {\n  const articles = await prisma.article.findMany({\n    where: {\n      authorUsername,\n      tagList: tag ? { some: { tagName: tag } } : undefined,\n      favoritedBy: favorited ? { some: { username: favorited } } : undefined,\n    },\n    take: limit,\n    skip: offset,\n    orderBy: { updatedAt: \"desc\" },\n    include: {\n      author: { include: { followedBy: true } },\n      tagList: true,\n      _count: { select: { favoritedBy: true } },\n    },\n  });\n  return articles;\n}\n",
+          "sha": "8d56038944b0eeb5a0b06961aa6d258b7f542a5930807427942d2b852c8c632e"
+        },
+        {
+          "path": "src/utils/db/article/articleUnFavoritePrisma.ts",
+          "content": "import { User } from \"@prisma/client\";\nimport prisma from \"../prisma\";\n\nexport default async function articleUnFavoritePrisma(\n  currentUser: User,\n  slug: string\n) {\n  const article = await prisma.article.update({\n    where: { slug },\n    data: { favoritedBy: { disconnect: { username: currentUser.username } } },\n    include: {\n      tagList: true,\n      author: {\n        include: { followedBy: { where: { username: currentUser.username } } },\n      },\n      _count: { select: { favoritedBy: true } },\n    },\n  });\n  return article;\n}\n",
+          "sha": "21f97a7f5eee2f5454d41e702806c01d5efdbf1eedd7adab9be76a10e6130493"
+        },
+        {
+          "path": "src/utils/db/article/articleUpdatePrisma.ts",
+          "content": "import slugfy from \"../../slugfy\";\nimport prisma from \"../prisma\";\n\ninterface UpdateFields {\n  title?: string;\n  description?: string;\n  body?: string;\n}\n\nexport default async function articleUpdatePrisma(\n  slug: string,\n  info: UpdateFields\n) {\n  const newSlug = slugfy(slug);\n  const article = await prisma.article.update({\n    where: { slug },\n    data: {\n      ...info,\n      slug: newSlug,\n      updatedAt: new Date(),\n    },\n    include: {\n      author: { include: { followedBy: true } },\n      tagList: true,\n      _count: { select: { favoritedBy: true } },\n    },\n  });\n  return article;\n}\n",
+          "sha": "07703b9a32dbf725c4aac253401ccfbdbe86c77409c662bf72102d4139e0e1e7"
+        },
+        {
+          "path": "src/utils/db/comment/commentCreatePrisma.ts",
+          "content": "import { User } from \"@prisma/client\";\nimport prisma from \"../prisma\";\n\nexport default async function commentCreatePrisma(\n  slug: string,\n  content: string,\n  author: User\n) {\n  const comment = await prisma.comment.create({\n    data: { body: content, authorUsername: author.username, articleSlug: slug },\n    include: { author: { include: { followedBy: true } } },\n  });\n  return comment;\n}\n",
+          "sha": "2292a8f6cc2844d08a61dd1231b37bddb7acf726c97d75bd925b1dce01e26c7c"
+        },
+        {
+          "path": "src/utils/db/comment/commentDeletePrisma.ts",
+          "content": "import { User } from \"@prisma/client\";\nimport prisma from \"../prisma\";\n\nexport default async function commentDeletePrisma(\n  slug: string,\n  id: number,\n  user: User\n) {\n  // See if user is the author of the comment it wants to delete\n  await prisma.comment.findFirstOrThrow({\n    where: { id, authorUsername: user.username },\n    include: { author: true },\n  });\n\n  // Delete the comment from the database.\n  const deletedComment = await prisma.comment.delete({\n    where: { id },\n    include: {\n      author: {\n        include: { followedBy: { where: { username: user.username } } },\n      },\n    },\n  });\n  return deletedComment;\n}\n",
+          "sha": "4ebe002925fc287ecdd0fed5291c1d8eb94eb067a24495ea5c3bdb2b2952dd75"
+        },
+        {
+          "path": "src/utils/db/comment/commentsGetPrisma.ts",
+          "content": "import { User } from \"@prisma/client\";\nimport prisma from \"../prisma\";\n\nexport default async function commentsGetPrisma(slug: string, user?: User) {\n  const comments = prisma.comment.findMany({\n    where: { articleSlug: slug },\n    include: {\n      author: {\n        include: { followedBy: { where: { username: user?.username } } },\n      },\n    },\n  });\n  return comments;\n}\n",
+          "sha": "8ca7276844b40c48b4f2ade38b421c08390e482e9668ef24c98c025a7a326b91"
+        },
+        {
+          "path": "src/utils/db/prisma.ts",
+          "content": "import { PrismaClient } from \"@prisma/client\";\n\nconst prisma = new PrismaClient();\n\nexport default prisma;\n",
+          "sha": "c374b5aefaf966755880e18faee66c5adda1c4855888ef8c00926d13651de409"
+        },
+        {
+          "path": "src/utils/db/tag/tagsCreatePrisma.ts",
+          "content": "import prisma from \"../prisma\";\n\nexport default async function tagsCreatePrisma(tags: Array<string>) {\n  const createdTags = [];\n  for (const tag of tags) {\n    createdTags.push(\n      await prisma.tag.upsert({\n        create: { tagName: tag },\n        where: { tagName: tag },\n        update: {},\n      })\n    );\n  }\n  return createdTags;\n}\n",
+          "sha": "2f26b5e5f3bc5cf8ea40aded00b73a117f1aabf8b124dcd54fe70d4a76346fc0"
+        },
+        {
+          "path": "src/utils/db/user/userCreatePrisma.ts",
+          "content": "import prisma from \"../prisma\";\n\nexport default async function userCreatePrisma(\n  username: string,\n  email: string,\n  password: string\n) {\n  const user = await prisma.user.create({\n    data: { username, email, password },\n  });\n  return user;\n}\n",
+          "sha": "abd33f79bd257d94e188ba0fc110c717eec945dae81d5e6154ad673d45fdf15a"
+        },
+        {
+          "path": "src/utils/db/user/userFollowProfilePrisma.ts",
+          "content": "import { User } from \"@prisma/client\";\nimport prisma from \"../prisma\";\n\nexport default async function userFollowProfilePrisma(\n  currentUser: User,\n  followUsername: string\n) {\n  const followed = await prisma.user.update({\n    where: { username: followUsername },\n    data: { followedBy: { connect: { username: currentUser.username } } },\n    include: { followedBy: { where: { username: currentUser.username } } },\n  });\n  return followed;\n}\n",
+          "sha": "dc10b065a427e4498a9d3eb8b9086bcb93c5bac6a5f5603c2979168df9689460"
+        },
+        {
+          "path": "src/utils/db/user/userGetEmailPrisma.ts",
+          "content": "import prisma from \"../prisma\";\n\nexport default async function userGetEmailPrisma(email: string) {\n  if (!email) return null;\n  const user = await prisma.user.findUnique({\n    where: { email },\n    include: {\n      follows: true,\n      followedBy: true,\n      authored: true,\n      favorites: true,\n    },\n  });\n  return user;\n}\n",
+          "sha": "e23c1509e4070dbe98d7b81bbdd627937d01a1f2e1b3bad1c289626a3878a45b"
+        },
+        {
+          "path": "src/utils/db/user/userGetPrisma.ts",
+          "content": "import prisma from \"../prisma\";\n\nexport default async function userGetPrisma(username: string) {\n  if (!username) return null;\n  const user = await prisma.user.findUnique({\n    where: { username },\n    include: {\n      follows: true,\n      followedBy: true,\n      authored: true,\n      favorites: true,\n    },\n  });\n  return user;\n}\n",
+          "sha": "1bc7cb4a20f44c0905bc04ba6eeb2a9a518568d6cae80ba930dab2734a2363e1"
+        },
+        {
+          "path": "src/utils/db/user/userUnFollowProfilePrisma.ts",
+          "content": "import { User } from \"@prisma/client\";\nimport prisma from \"../prisma\";\n\nexport default async function userUnFollowProfilePrisma(\n  currentUser: User,\n  unFollowUsername: string\n) {\n  const follows = await prisma.user.update({\n    where: { username: unFollowUsername },\n    data: { followedBy: { disconnect: { username: currentUser.username } } },\n    include: { followedBy: { where: { username: currentUser.username } } },\n  });\n  return follows;\n}\n",
+          "sha": "66f13c7214b2684e9d1791d0ce72fa68c6e70b1013da8434e6006d7032dbb190"
+        },
+        {
+          "path": "src/utils/db/user/userUpdatePrisma.ts",
+          "content": "import prisma from \"../prisma\";\n\ninterface UpdateFields {\n  email?: string;\n  username?: string;\n  password?: string;\n  image?: string;\n  bio?: string;\n}\n\nexport default async function userUpdatePrisma(\n  username: string,\n  info: UpdateFields\n) {\n  if (!username) return null;\n  const user = await prisma.user.update({ where: { username }, data: info });\n  return user;\n}\n",
+          "sha": "9a7fe56d0240ce8593f4189c5c2aafd07e9f01b7c8e2e572076195fe3ce64e40"
+        },
+        {
+          "path": "src/utils/hashPasswords.ts",
+          "content": "import bcrypt from \"bcrypt\";\n\nconst saltRounds = 10;\n\nexport function hashPassword(password: string) {\n  return bcrypt.hashSync(password, saltRounds);\n}\n\nexport function compareWithHash(password: string, hash: string) {\n  console.log(password, hash);\n  console.log(bcrypt.compareSync(password, hash));\n  return bcrypt.compareSync(password, hash);\n}\n",
+          "sha": "814491f1370529f3b025f43e9b0d7cb62866c13dae9cb88ed88b977d5ccfbf5c"
+        },
+        {
+          "path": "src/utils/logger.ts",
+          "content": "import winston from \"winston\";\n\nconst logger = winston.createLogger({\n  level: \"info\",\n  format: winston.format.json(),\n  defaultMeta: { service: \"realworld-express-prisma\" },\n  transports: [\n    //\n    // - Write all logs with importance level of `error` or less to `error.log`\n    // - Write all logs with importance level of `info` or less to `combined.log`\n    //\n    new winston.transports.File({\n      filename: \"./logs/error.log\",\n      level: \"error\",\n    }),\n    new winston.transports.File({ filename: \"./logs/combined.log\" }),\n  ],\n});\n\n//\n// If we're not in production then log to the `console` with the format:\n// `${info.level}: ${info.message} JSON.stringify({ ...rest }) `\n//\nif (process.env.NODE_ENV !== \"production\") {\n  logger.add(\n    new winston.transports.Console({\n      format: winston.format.simple(),\n      level: \"debug\",\n    })\n  );\n  logger.add(\n    new winston.transports.File({\n      filename: \"./logs/debug.log\",\n      level: \"debug\",\n    })\n  );\n}\n\nexport default logger;\n",
+          "sha": "35e85244cf5bb23dacc430903ebd85aed01c4edc01e7ff7c1d0bf5ab415d42ae"
+        },
+        {
+          "path": "src/utils/slugfy.ts",
+          "content": "/**\n * Converts an input text to an uri safe string.\n * @param text text to convert to a slug\n * @returns the slug string\n */\nexport default function slugfy(text: string) {\n  return text\n    .normalize(\"NFD\")\n    .replace(/[\\u0300-\\u036f]/g, \"\")\n    .toLowerCase()\n    .trim()\n    .replace(/[^\\w\\s-]/g, \"\")\n    .replace(/[\\s_-]+/g, \"-\")\n    .replace(/^-+|-+$/g, \"\");\n}\n",
+          "sha": "12eed84354575c18dfa43de915bd56da06c44f722081150cd56d41d76f1ebd51"
+        },
+        {
+          "path": "src/utils/types/index.ts",
+          "content": "export { ValidationError } from \"./validationError\";\n",
+          "sha": "ee9da60052d8850b97e4654e48d6baa30a8da5336b2076d876c66c11e8f5d65c"
+        },
+        {
+          "path": "src/utils/types/validationError.ts",
+          "content": "export interface ValidationError {\n  body?: Array<string>;\n  query?: Array<string>;\n}\n",
+          "sha": "69d007034ccd9d5bd306d78f70ebc609d7cd1f3895af5908448a8919150aaf65"
+        },
+        {
+          "path": "src/view/articleViewer.ts",
+          "content": "import { Article, Tag, User } from \"@prisma/client\";\nimport profileViewer from \"./profileViewer\";\n\ntype FullArticle = Article & {\n  tagList: Tag[];\n  author: User & { followedBy: User[] };\n  _count: { favoritedBy: number };\n};\n\nexport default function articleViewer(\n  article: FullArticle,\n  currentUser?: User & { favorites: Article[] }\n) {\n  const favorited = currentUser\n    ? currentUser.favorites.some((value) => value.slug === article.slug)\n    : false;\n\n  const tagListView = article.tagList.map((tag) => tag.tagName).sort();\n\n  const authorView = profileViewer(article.author, currentUser);\n\n  const articleView = {\n    slug: article.slug,\n    title: article.title,\n    description: article.description,\n    body: article.body,\n    tagList: tagListView,\n    createdAt: article.createdAt,\n    updatedAt: article.updatedAt,\n    favorited: favorited,\n    favoritesCount: article._count.favoritedBy,\n    author: authorView,\n  };\n  return articleView;\n}\n",
+          "sha": "ad00a63c52c475f2aa3a5476b898fd59e4b48457a22ae29bd079233bd892271a"
+        },
+        {
+          "path": "src/view/commentViewer.ts",
+          "content": "import { Comment, User } from \"@prisma/client\";\nimport profileViewer from \"./profileViewer\";\n\nexport default function commentViewer(\n  comment: Comment & { author: User & { followedBy: User[] } },\n  currentUser?: User\n) {\n  const commentView = {\n    id: comment.id,\n    createdAt: comment.createdAt,\n    updatedAt: comment.updatedAt,\n    body: comment.body,\n    author: profileViewer(comment.author, currentUser),\n  };\n  return commentView;\n}\n",
+          "sha": "69b6bf6e45dcc7a8a98f3f64248f23dbc0313b791f0cafa709869d72b66cb147"
+        },
+        {
+          "path": "src/view/profileViewer.ts",
+          "content": "import { User } from \"@prisma/client\";\n\ntype UserWithFollow = User & { followedBy: User[] };\n\nexport default function profileViewer(\n  user: UserWithFollow,\n  currentUser?: User\n) {\n  const follows = currentUser\n    ? Boolean(\n        user.followedBy.find((value) => value.username == currentUser.username)\n      )\n    : false;\n  const userView = {\n    username: user.username,\n    bio: user.bio,\n    image: user.image,\n    following: follows,\n  };\n  return userView;\n}\n",
+          "sha": "15c0ccf911cd1ca2d2cb772e6ed147298accc942c5349e75bc6379315f5dd0cc"
+        },
+        {
+          "path": "src/view/tagViewer.ts",
+          "content": "import { Tag } from \"@prisma/client\";\n\nexport default function tagViewer(tag: Tag) {\n  const tagView = tag.tagName;\n  return tagView;\n}\n",
+          "sha": "c5c5fe0daa477c22ce64e813f4e71ee65abe8354a5c8100380af6bda838d77e1"
+        },
+        {
+          "path": "src/view/userViewer.ts",
+          "content": "import { User } from \"@prisma/client\";\n\nexport default function userViewer(user: User, token: string) {\n  const userView = {\n    user: {\n      email: user.email,\n      token: token,\n      username: user.username,\n      bio: user.bio,\n      image: user.image,\n    },\n  };\n  return userView;\n}\n",
+          "sha": "adc93249f53e90d021bd6acadc7971bd72d3696a227eeeddc30dd63c421e1c2d"
+        },
+        {
+          "path": "tsconfig.json",
+          "content": "{\n  \"compilerOptions\": {\n    /* Visit https://aka.ms/tsconfig to read more about this file */\n\n    /* Projects */\n    // \"incremental\": true,                              /* Save .tsbuildinfo files to allow for incremental compilation of projects. */\n    // \"composite\": true,                                /* Enable constraints that allow a TypeScript project to be used with project references. */\n    // \"tsBuildInfoFile\": \"./.tsbuildinfo\",              /* Specify the path to .tsbuildinfo incremental compilation file. */\n    // \"disableSourceOfProjectReferenceRedirect\": true,  /* Disable preferring source files instead of declaration files when referencing composite projects. */\n    // \"disableSolutionSearching\": true,                 /* Opt a project out of multi-project reference checking when editing. */\n    // \"disableReferencedProjectLoad\": true,             /* Reduce the number of projects loaded automatically by TypeScript. */\n\n    /* Language and Environment */\n    \"target\": \"es2016\" /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */,\n    // \"lib\": [],                                        /* Specify a set of bundled library declaration files that describe the target runtime environment. */\n    // \"jsx\": \"preserve\",                                /* Specify what JSX code is generated. */\n    // \"experimentalDecorators\": true,                   /* Enable experimental support for TC39 stage 2 draft decorators. */\n    // \"emitDecoratorMetadata\": true,                    /* Emit design-type metadata for decorated declarations in source files. */\n    // \"jsxFactory\": \"\",                                 /* Specify the JSX factory function used when targeting React JSX emit, e.g. 'React.createElement' or 'h'. */\n    // \"jsxFragmentFactory\": \"\",                         /* Specify the JSX Fragment reference used for fragments when targeting React JSX emit e.g. 'React.Fragment' or 'Fragment'. */\n    // \"jsxImportSource\": \"\",                            /* Specify module specifier used to import the JSX factory functions when using 'jsx: react-jsx*'. */\n    // \"reactNamespace\": \"\",                             /* Specify the object invoked for 'createElement'. This only applies when targeting 'react' JSX emit. */\n    // \"noLib\": true,                                    /* Disable including any library files, including the default lib.d.ts. */\n    // \"useDefineForClassFields\": true,                  /* Emit ECMAScript-standard-compliant class fields. */\n    // \"moduleDetection\": \"auto\",                        /* Control what method is used to detect module-format JS files. */\n\n    /* Modules */\n    \"module\": \"commonjs\" /* Specify what module code is generated. */,\n    // \"rootDir\": \"./\",                                  /* Specify the root folder within your source files. */\n    // \"moduleResolution\": \"node\",                       /* Specify how TypeScript looks up a file from a given module specifier. */\n    // \"baseUrl\": \"./\",                                  /* Specify the base directory to resolve non-relative module names. */\n    // \"paths\": {},                                      /* Specify a set of entries that re-map imports to additional lookup locations. */\n    // \"rootDirs\": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */\n    // \"typeRoots\": [],                                  /* Specify multiple folders that act like './node_modules/@types'. */\n    // \"types\": [],                                      /* Specify type package names to be included without being referenced in a source file. */\n    // \"allowUmdGlobalAccess\": true,                     /* Allow accessing UMD globals from modules. */\n    // \"moduleSuffixes\": [],                             /* List of file name suffixes to search when resolving a module. */\n    // \"resolveJsonModule\": true,                        /* Enable importing .json files. */\n    // \"noResolve\": true,                                /* Disallow 'import's, 'require's or '<reference>'s from expanding the number of files TypeScript should add to a project. */\n\n    /* JavaScript Support */\n    // \"allowJs\": true,                                  /* Allow JavaScript files to be a part of your program. Use the 'checkJS' option to get errors from these files. */\n    // \"checkJs\": true,                                  /* Enable error reporting in type-checked JavaScript files. */\n    // \"maxNodeModuleJsDepth\": 1,                        /* Specify the maximum folder depth used for checking JavaScript files from 'node_modules'. Only applicable with 'allowJs'. */\n\n    /* Emit */\n    // \"declaration\": true,                              /* Generate .d.ts files from TypeScript and JavaScript files in your project. */\n    // \"declarationMap\": true,                           /* Create sourcemaps for d.ts files. */\n    // \"emitDeclarationOnly\": true,                      /* Only output d.ts files and not JavaScript files. */\n    // \"sourceMap\": true,                                /* Create source map files for emitted JavaScript files. */\n    // \"outFile\": \"./\",                                  /* Specify a file that bundles all outputs into one JavaScript file. If 'declaration' is true, also designates a file that bundles all .d.ts output. */\n    \"outDir\": \"./dist\" /* Specify an output folder for all emitted files. */,\n    // \"removeComments\": true,                           /* Disable emitting comments. */\n    // \"noEmit\": true,                                   /* Disable emitting files from a compilation. */\n    // \"importHelpers\": true,                            /* Allow importing helper functions from tslib once per project, instead of including them per-file. */\n    // \"importsNotUsedAsValues\": \"remove\",               /* Specify emit/checking behavior for imports that are only used for types. */\n    // \"downlevelIteration\": true,                       /* Emit more compliant, but verbose and less performant JavaScript for iteration. */\n    // \"sourceRoot\": \"\",                                 /* Specify the root path for debuggers to find the reference source code. */\n    // \"mapRoot\": \"\",                                    /* Specify the location where debugger should locate map files instead of generated locations. */\n    // \"inlineSourceMap\": true,                          /* Include sourcemap files inside the emitted JavaScript. */\n    // \"inlineSources\": true,                            /* Include source code in the sourcemaps inside the emitted JavaScript. */\n    // \"emitBOM\": true,                                  /* Emit a UTF-8 Byte Order Mark (BOM) in the beginning of output files. */\n    // \"newLine\": \"crlf\",                                /* Set the newline character for emitting files. */\n    // \"stripInternal\": true,                            /* Disable emitting declarations that have '@internal' in their JSDoc comments. */\n    // \"noEmitHelpers\": true,                            /* Disable generating custom helper functions like '__extends' in compiled output. */\n    // \"noEmitOnError\": true,                            /* Disable emitting files if any type checking errors are reported. */\n    // \"preserveConstEnums\": true,                       /* Disable erasing 'const enum' declarations in generated code. */\n    // \"declarationDir\": \"./\",                           /* Specify the output directory for generated declaration files. */\n    // \"preserveValueImports\": true,                     /* Preserve unused imported values in the JavaScript output that would otherwise be removed. */\n\n    /* Interop Constraints */\n    // \"isolatedModules\": true,                          /* Ensure that each file can be safely transpiled without relying on other imports. */\n    // \"allowSyntheticDefaultImports\": true,             /* Allow 'import x from y' when a module doesn't have a default export. */\n    \"esModuleInterop\": true /* Emit additional JavaScript to ease support for importing CommonJS modules. This enables 'allowSyntheticDefaultImports' for type compatibility. */,\n    // \"preserveSymlinks\": true,                         /* Disable resolving symlinks to their realpath. This correlates to the same flag in node. */\n    \"forceConsistentCasingInFileNames\": true /* Ensure that casing is correct in imports. */,\n\n    /* Type Checking */\n    \"strict\": true /* Enable all strict type-checking options. */,\n    // \"noImplicitAny\": true,                            /* Enable error reporting for expressions and declarations with an implied 'any' type. */\n    // \"strictNullChecks\": true,                         /* When type checking, take into account 'null' and 'undefined'. */\n    // \"strictFunctionTypes\": true,                      /* When assigning functions, check to ensure parameters and the return values are subtype-compatible. */\n    // \"strictBindCallApply\": true,                      /* Check that the arguments for 'bind', 'call', and 'apply' methods match the original function. */\n    // \"strictPropertyInitialization\": true,             /* Check for class properties that are declared but not set in the constructor. */\n    // \"noImplicitThis\": true,                           /* Enable error reporting when 'this' is given the type 'any'. */\n    // \"useUnknownInCatchVariables\": true,               /* Default catch clause variables as 'unknown' instead of 'any'. */\n    // \"alwaysStrict\": true,                             /* Ensure 'use strict' is always emitted. */\n    // \"noUnusedLocals\": true,                           /* Enable error reporting when local variables aren't read. */\n    // \"noUnusedParameters\": true,                       /* Raise an error when a function parameter isn't read. */\n    // \"exactOptionalPropertyTypes\": true,               /* Interpret optional property types as written, rather than adding 'undefined'. */\n    // \"noImplicitReturns\": true,                        /* Enable error reporting for codepaths that do not explicitly return in a function. */\n    // \"noFallthroughCasesInSwitch\": true,               /* Enable error reporting for fallthrough cases in switch statements. */\n    // \"noUncheckedIndexedAccess\": true,                 /* Add 'undefined' to a type when accessed using an index. */\n    // \"noImplicitOverride\": true,                       /* Ensure overriding members in derived classes are marked with an override modifier. */\n    // \"noPropertyAccessFromIndexSignature\": true,       /* Enforces using indexed accessors for keys declared using an indexed type. */\n    // \"allowUnusedLabels\": true,                        /* Disable error reporting for unused labels. */\n    // \"allowUnreachableCode\": true,                     /* Disable error reporting for unreachable code. */\n\n    /* Completeness */\n    // \"skipDefaultLibCheck\": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */\n    \"skipLibCheck\": true /* Skip type checking all .d.ts files. */\n  },\n  \"include\": [\"src/\"]\n}\n",
+          "sha": "84a5584db0cadc6cfd21b8ecb065f6ad6bb756f2a250b00c4be780b02f15a933"
+        }
+      ]
+    }
+  }
+}

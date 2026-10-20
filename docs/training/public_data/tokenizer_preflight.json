@@ -1,0 +1,10 @@
+{
+  "dataset_sha256": "ca6995b6c01c8d1a92eb3854dcd0258cc91605edcfc25b7c54e21af343c5cfbb",
+  "tokenizer_revision": "233902d25c440f23af6f7d6e94d2946bac0bee0a",
+  "tokenizer_sha256": "d241a60d5e8f04cc1b2b3e9ef7a4921b27bf526d9f6050ab90f9267a1f9e5c66",
+  "candidates": 113,
+  "max_pair_tokens": 226,
+  "max_query_tokens": 30,
+  "pairs_over_384": 0,
+  "queries_over_128": 0
+}

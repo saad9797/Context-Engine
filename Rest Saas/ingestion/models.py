@@ -34,6 +34,24 @@ class IngestionContext(models.Model):
         return f"{self.project_name or 'Unnamed'} — {self.user} — {self.id}"
 
 
+class SavedHandoff(models.Model):
+    """Private, immutable export plus its request and user-reported outcome."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    context = models.ForeignKey(IngestionContext, on_delete=models.CASCADE, related_name="saved_handoffs")
+    title = models.CharField(max_length=160)
+    request_data = models.JSONField()
+    output = models.JSONField()
+    digest = models.CharField(max_length=64)
+    outcome = models.CharField(max_length=24, default="unreviewed")
+    feedback = models.CharField(max_length=2000, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        constraints = [models.UniqueConstraint(fields=["context", "digest"], name="unique_saved_handoff_digest")]
+
+
 class DataSourceConnection(models.Model):
     """
     A reusable, encrypted-at-rest connection to a Postgres/Mongo/object

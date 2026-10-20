@@ -252,7 +252,7 @@ const faqs = [
   ],
   [
     "What can I connect?",
-    "GitHub repositories, PostgreSQL, MongoDB, and supported object storage. Start with a repository or database and add the other sources when you need a fuller picture.",
+    "Start with a local source folder, or connect GitHub, PostgreSQL, MySQL, MongoDB, and supported object storage. Source code supplies application contracts; databases supply metadata. Review captured files and context gaps before sharing a handoff.",
   ],
   [
     "Does it change my project?",
@@ -378,13 +378,14 @@ export default function Landing() {
             <span>to work on your code.</span>
           </h1>
           <p className="hero-description">
-            Connect your GitHub repo, database, or storage. Contexa maps your
-            architecture, schemas, and conventions into a project overview and
-            task-focused context you can paste into your AI coding tool.
+            Choose a project folder or connect GitHub and your database.
+            Describe the change. Contexa selects source, models and dependencies
+            within your budget, flags missing contracts, and gives you one
+            handoff to paste into your AI chat.
           </p>
           <div className="hero-actions">
             <Link className="button button-dark" to={destination}>
-              Connect your project
+              Prepare your first handoff
               <ArrowForward />
             </Link>
             <a className="button button-white" href="#product">
@@ -528,8 +529,9 @@ export default function Landing() {
               <span className="feature-number">02 / FOCUS</span>
               <h3>Small context. Big understanding.</h3>
               <p>
-                Choose a token budget and describe your task. Keep the relevant
-                structure and leave out the bulk.
+                Describe your task and set an estimated token budget. Review
+                selected source and missing contracts before copying. Save the
+                handoff to resume later.
               </p>
             </article>
             <article className="feature-card">

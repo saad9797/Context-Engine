@@ -1,0 +1,36 @@
+{
+  "duration_seconds": 40,
+  "dimensions": [
+    1920,
+    1080
+  ],
+  "frames_per_second": 30,
+  "expected_frames": 1200,
+  "full_decode_passed": true,
+  "narration_tempo_adjustments": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+  ],
+  "audio_measured": {
+    "input_i": "-16.88",
+    "input_tp": "-1.19",
+    "input_lra": "5.00",
+    "input_thresh": "-27.93",
+    "output_i": "-16.87",
+    "output_tp": "-1.20",
+    "output_lra": "4.70",
+    "output_thresh": "-27.58",
+    "normalization_type": "dynamic",
+    "target_offset": "0.87"
+  },
+  "size_bytes": 5469776,
+  "demo": "Actual frontend components with synthetic fixture data; animated engine and Claude handoff explanations",
+  "publication": "Not published",
+  "old_deliverables": "Deletion requested by user; shell deletion rejected by automatic approval review."
+}

@@ -1,0 +1,53 @@
+{
+  "format": "contexa.contract-benchmark.v1",
+  "scope": "Original known-answer fixtures; not public-project or generated-code success evidence.",
+  "cases": [
+    {
+      "name": "express-prisma-generic-large-controller",
+      "required": 7,
+      "missing": [
+        "function createInterview"
+      ],
+      "required_contract_recall": 0.8571428571428571,
+      "unrelated_markers_included": [],
+      "base_tokens": 251,
+      "task_tokens": 634,
+      "handoff_tokens": null,
+      "within_budget": true,
+      "fixture_sha256": "fc01f89f00e2501476103f99d7414698fbd348d1ac2368aae24a66ce7a06d969"
+    },
+    {
+      "name": "django-decorators-and-reverse-url",
+      "required": 6,
+      "missing": [
+        "def create_invoice",
+        "@permission_classes",
+        "path(\"invoices\""
+      ],
+      "required_contract_recall": 0.5,
+      "unrelated_markers_included": [],
+      "base_tokens": 418,
+      "task_tokens": 278,
+      "handoff_tokens": null,
+      "within_budget": true,
+      "fixture_sha256": "1eafe9939887831616b9ae4725561ca54858758f6baa24ec58f6d5fb573d7e45"
+    },
+    {
+      "name": "react-typescript-alias-and-shared-types",
+      "required": 4,
+      "missing": [
+        "function InvoiceEditor",
+        "function useInvoices",
+        "function apiGet"
+      ],
+      "required_contract_recall": 0.25,
+      "unrelated_markers_included": [],
+      "base_tokens": 200,
+      "task_tokens": 332,
+      "handoff_tokens": null,
+      "within_budget": true,
+      "fixture_sha256": "e789d6971dc434998affd64ec6ac7f3e369e65f47c4b4d0d53816aba9e2f1951"
+    }
+  ],
+  "all_contracts_present": false
+}

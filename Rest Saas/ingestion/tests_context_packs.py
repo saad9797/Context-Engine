@@ -108,7 +108,8 @@ def test_framework_neutral_complete_source_selection(path, source):
 
 
 @pytest.mark.django_db
-def test_pack_endpoint_is_tenant_scoped_and_validates_budget(project):
+def test_pack_endpoint_is_tenant_scoped_and_validates_budget(project, settings):
+    settings.CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
     owner = User.objects.create_user(username="pack-owner")
     other = User.objects.create_user(username="pack-other")
     snapshot = IngestionContext.objects.create(user=owner, data=project)
@@ -122,6 +123,8 @@ def test_pack_endpoint_is_tenant_scoped_and_validates_budget(project):
     response = api.post(url, {"task": "interviews"}, format="json")
     assert response.status_code == 200
     assert response.data["base"]["base_id"] == response.data["task"]["base_id"]
+    assert response.data['handoff']['kind'] == 'handoff'
+    assert response['Cache-Control'] == 'no-store'
 
 
 def test_unrelated_enums_never_displace_the_requested_model(project):
@@ -155,3 +158,9 @@ def test_rebuild_checks_current_access_and_enqueues_same_sources(project, settin
     assert rebuilt.connection_refs == original.connection_refs
     assert rebuilt.result_id is None
     queue.return_value.enqueue.assert_called_once()
+    with patch("ingestion.views_context_packs.django_rq.get_queue") as queue:
+        queue.return_value.enqueue.return_value = MagicMock(id="pinned-retry-job")
+        pinned_response = api.post(url, {'include_paths': ['src/utils/missing.ts']}, format='json')
+    assert pinned_response.status_code == 202
+    pinned_job = IngestionJob.objects.get(pk=pinned_response.data['job_id'])
+    assert pinned_job.connection_refs['github_include_paths'] == ['src/utils/missing.ts']

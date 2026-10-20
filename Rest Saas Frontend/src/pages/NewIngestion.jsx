@@ -23,6 +23,7 @@ import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutlineOutlin
 import { useAuth } from "../context/AuthContext";
 import { GitHubIcon } from "../components/BrandIcons";
 import PageHeader from "../components/PageHeader";
+import FolderImport from "../components/FolderImport";
 const emptyForm = {
   usePostgres: false,
   postgres_connection_id: "",
@@ -279,7 +280,8 @@ export default function NewIngestion() {
         title="Build a project snapshot"
         description="Choose what to include. Contexa maps your sources into one project overview and focused AI context. Follow progress as your snapshot builds."
       />
-
+      <FolderImport />
+      <Typography variant="h6" sx={{ mb: 2 }}>Or connect live sources</Typography>
       {validationError && (
         <Alert
           severity="warning"

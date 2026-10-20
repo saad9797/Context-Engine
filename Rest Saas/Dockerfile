@@ -12,24 +12,27 @@
 
 FROM python:3.11-slim
 
-# --- Node.js 18.x, for the ingestion engine ---
+# --- Node.js 22.x, matching CI and the ingestion drivers ---
 RUN apt-get update && apt-get install -y --no-install-recommends curl gnupg \
-    && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 # --- Python deps first (better layer caching than copying the whole repo first) ---
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements.txt requirements-build.txt ./
+RUN python -m pip install --no-cache-dir -r requirements-build.txt \
+    && python -m pip install --no-cache-dir -r requirements.txt
 
 # --- Node deps for the ingestion engine ---
 COPY ingestion/ingestion-engine/package.json ingestion/ingestion-engine/package-lock.json* ingestion/ingestion-engine/
 RUN cd ingestion/ingestion-engine && npm ci --omit=dev
 
 # --- Application code ---
-COPY . .
+RUN groupadd --gid 10001 app && useradd --uid 10001 --gid app --create-home app
+COPY --chown=app:app . .
+USER app
 
 ENV PYTHONUNBUFFERED=1 \
     DJANGO_SETTINGS_MODULE=core.settings

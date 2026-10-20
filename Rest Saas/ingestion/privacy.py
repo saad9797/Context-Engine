@@ -16,7 +16,9 @@ def redact_text(text):
     text = re.sub(r"(?i)\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", "[REDACTED EMAIL]", text)
     text = re.sub(r"(?i)\b(?:postgres(?:ql)?|mysql|mongodb(?:\+srv)?)://[^\s'\"`]+", "[REDACTED CONNECTION URL]", text)
     text = re.sub(r"(?i)https?://[^\s'\"`]*\.(?:blob\.core\.windows\.net|s3[.-][a-z0-9.-]*amazonaws\.com)[^\s'\"`]*", "[REDACTED OBJECT URL]", text)
-    text = re.sub(r"(?i)(\b(?:password|passwd|client_secret|api_key|access_token|refresh_token|routing_number|account_number|AccountKey)\b\s*[=:]\s*)(['\"])[^'\"\n]+\2", r"\1\2[REDACTED]\2", text)
+    names = r"password|passwd|client_secret|api_key|access_token|refresh_token|routing_number|account_number|AccountKey"
+    key = r"['\"]?\b(?:" + names + r")\b['\"]?"
+    text = re.sub(r"(?i)(" + key + r"\s*[=:]\s*)(['\"])[^'\"\n]+\2", r"\1\2[REDACTED]\2", text)
     return text
 
 

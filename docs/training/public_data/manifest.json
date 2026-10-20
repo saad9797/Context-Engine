@@ -1,0 +1,204 @@
+{
+  "label_policy": "weak_patch_overlap_v1",
+  "repositories": [
+    {
+      "repo": "pallets/flask",
+      "task": 6168,
+      "base_commit": "d73fa1cdcbd8b1465c151db8924ba58b1dd14e35",
+      "license_file": "pallets__flask__d73fa1cdcbd8b1465c151db8924ba58b1dd14e35.txt",
+      "license_path": "LICENSE.txt",
+      "candidates": 14
+    },
+    {
+      "repo": "django/django",
+      "task": 22144,
+      "base_commit": "adeef108afa7c6c50959cf2c94a4d4efbf1fae91",
+      "license_file": "django__django__adeef108afa7c6c50959cf2c94a4d4efbf1fae91.txt",
+      "license_path": "LICENSE",
+      "candidates": 11
+    },
+    {
+      "repo": "encode/django-rest-framework",
+      "task": 10066,
+      "base_commit": "7195f7e4c51527054623ea55fc4491786acc91f8",
+      "license_file": "encode__django-rest-framework__7195f7e4c51527054623ea55fc4491786acc91f8.txt",
+      "license_path": "LICENSE.md",
+      "candidates": 9
+    },
+    {
+      "repo": "sequelize/sequelize",
+      "task": 18536,
+      "base_commit": "9c3ec5c775d43867184f6289bb891648098e9836",
+      "license_file": "sequelize__sequelize__9c3ec5c775d43867184f6289bb891648098e9836.txt",
+      "license_path": "LICENSE",
+      "candidates": 13
+    },
+    {
+      "repo": "sequelize/sequelize",
+      "task": 18530,
+      "base_commit": "7a976d561215ccbe1dd420e54c36a63b1794ee14",
+      "license_file": "sequelize__sequelize__7a976d561215ccbe1dd420e54c36a63b1794ee14.txt",
+      "license_path": "LICENSE",
+      "candidates": 14
+    },
+    {
+      "repo": "Automattic/mongoose",
+      "task": 16592,
+      "base_commit": "a477fca5c4ea47711b7f1a354d1a7367442ef178",
+      "license_file": "Automattic__mongoose__a477fca5c4ea47711b7f1a354d1a7367442ef178.txt",
+      "license_path": "LICENSE.md",
+      "candidates": 12
+    },
+    {
+      "repo": "Automattic/mongoose",
+      "task": 16585,
+      "base_commit": "754c8a73e3a086408bac4ab3dc9bef0eb364f5dd",
+      "license_file": "Automattic__mongoose__754c8a73e3a086408bac4ab3dc9bef0eb364f5dd.txt",
+      "license_path": "LICENSE.md",
+      "candidates": 13
+    },
+    {
+      "repo": "vuejs/core",
+      "task": 15908,
+      "base_commit": "2e9d110d8ce90d38f2fd45e2c9648ffb01644997",
+      "license_file": "vuejs__core__2e9d110d8ce90d38f2fd45e2c9648ffb01644997.txt",
+      "license_path": "LICENSE",
+      "candidates": 11
+    },
+    {
+      "repo": "vuejs/core",
+      "task": 15907,
+      "base_commit": "931497fa830291c5897e3088d3ed38c734e589f1",
+      "license_file": "vuejs__core__931497fa830291c5897e3088d3ed38c734e589f1.txt",
+      "license_path": "LICENSE",
+      "candidates": 16
+    }
+  ],
+  "skipped": [
+    {
+      "repo": "pallets/flask",
+      "task": 6133,
+      "reason": "Insufficient complete small changed/unchanged units; no truncation or invented labels"
+    },
+    {
+      "repo": "fastapi/fastapi",
+      "task": 16520,
+      "reason": "Row 1: possible private data or credentials. Sanitize locally before uploading; this scan is not comprehensive."
+    },
+    {
+      "repo": "fastapi/fastapi",
+      "task": 16518,
+      "reason": "Insufficient complete small changed/unchanged units; no truncation or invented labels"
+    },
+    {
+      "repo": "fastapi/fastapi",
+      "task": 16517,
+      "reason": "Insufficient complete small changed/unchanged units; no truncation or invented labels"
+    },
+    {
+      "repo": "fastapi/fastapi",
+      "task": 16512,
+      "reason": "Insufficient complete small changed/unchanged units; no truncation or invented labels"
+    },
+    {
+      "repo": "django/django",
+      "task": 22149,
+      "reason": "Insufficient complete small changed/unchanged units; no truncation or invented labels"
+    },
+    {
+      "repo": "django/django",
+      "task": 22141,
+      "reason": "Insufficient complete small changed/unchanged units; no truncation or invented labels"
+    },
+    {
+      "repo": "django/django",
+      "task": 22139,
+      "reason": "Insufficient complete small changed/unchanged units; no truncation or invented labels"
+    },
+    {
+      "repo": "encode/django-rest-framework",
+      "task": 10071,
+      "reason": "Insufficient complete small changed/unchanged units; no truncation or invented labels"
+    },
+    {
+      "repo": "encode/django-rest-framework",
+      "task": 10056,
+      "reason": "Insufficient complete small changed/unchanged units; no truncation or invented labels"
+    },
+    {
+      "repo": "encode/django-rest-framework",
+      "task": 10052,
+      "reason": "Insufficient complete small changed/unchanged units; no truncation or invented labels"
+    },
+    {
+      "repo": "sqlalchemy/sqlalchemy",
+      "task": 13669,
+      "reason": "Insufficient complete small changed/unchanged units; no truncation or invented labels"
+    },
+    {
+      "repo": "sqlalchemy/sqlalchemy",
+      "task": 13662,
+      "reason": "Insufficient complete small changed/unchanged units; no truncation or invented labels"
+    },
+    {
+      "repo": "pydantic/pydantic",
+      "task": 14008,
+      "reason": "Insufficient complete small changed/unchanged units; no truncation or invented labels"
+    },
+    {
+      "repo": "pydantic/pydantic",
+      "task": 14006,
+      "reason": "Insufficient complete small changed/unchanged units; no truncation or invented labels"
+    },
+    {
+      "repo": "pydantic/pydantic",
+      "task": 13997,
+      "reason": "Insufficient complete small changed/unchanged units; no truncation or invented labels"
+    },
+    {
+      "repo": "pydantic/pydantic",
+      "task": 13996,
+      "reason": "Insufficient complete small changed/unchanged units; no truncation or invented labels"
+    },
+    {
+      "repo": "expressjs/express",
+      "task": 7468,
+      "reason": "Insufficient complete small changed/unchanged units; no truncation or invented labels"
+    },
+    {
+      "repo": "expressjs/express",
+      "task": 7466,
+      "reason": "Insufficient complete small changed/unchanged units; no truncation or invented labels"
+    },
+    {
+      "repo": "expressjs/express",
+      "task": 7459,
+      "reason": "Insufficient complete small changed/unchanged units; no truncation or invented labels"
+    },
+    {
+      "repo": "sequelize/sequelize",
+      "task": 18533,
+      "reason": "Insufficient complete small changed/unchanged units; no truncation or invented labels"
+    },
+    {
+      "repo": "Automattic/mongoose",
+      "task": 16590,
+      "reason": "Insufficient complete small changed/unchanged units; no truncation or invented labels"
+    },
+    {
+      "repo": "Automattic/mongoose",
+      "task": 16588,
+      "reason": "Insufficient complete small changed/unchanged units; no truncation or invented labels"
+    },
+    {
+      "repo": "vuejs/core",
+      "task": 15913,
+      "reason": "Insufficient complete small changed/unchanged units; no truncation or invented labels"
+    },
+    {
+      "repo": "vuejs/core",
+      "task": 15911,
+      "reason": "Insufficient complete small changed/unchanged units; no truncation or invented labels"
+    }
+  ]
+}

@@ -13,6 +13,8 @@ from .views import (
     IngestionResultView,
 )
 from .views_crypto import TransitPublicKeyView
+from .views_import import ImportSnapshotView
+from .views_handoffs import SavedHandoffsView, SavedHandoffView
 from .views_context_packs import ContextPackView, RebuildSnapshotView
 from .views_github import (
     GitHubInstallationDetailView,
@@ -27,6 +29,9 @@ from .views_github import (
 )
 
 urlpatterns = [
+    path("api/ingestion/<uuid:pk>/handoffs/", SavedHandoffsView.as_view(), name="saved-handoffs"),
+    path("api/ingestion/<uuid:pk>/handoffs/<uuid:handoff_id>/", SavedHandoffView.as_view(), name="saved-handoff"),
+    path("api/ingestion/import/", ImportSnapshotView.as_view(), name="snapshot-import"),
     path("api/ingestion/<uuid:pk>/context-pack/", ContextPackView.as_view(), name="context-pack"),
     path("api/ingestion/<uuid:pk>/rebuild/", RebuildSnapshotView.as_view(), name="snapshot-rebuild"),
     path("api/ingestion/run/", IngestionJobCreateView.as_view(), name="ingestion-run"),

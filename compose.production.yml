@@ -1,0 +1,30 @@
+# Existing external PostgreSQL/Redis plus a TLS reverse proxy are required.
+# Copy docs/production.env.example to Rest Saas/.env.production and fill it.
+services:
+  web:
+    image: contexa-backend:release
+    build:
+      context: ./Rest Saas
+    env_file: [./Rest Saas/.env.production]
+    environment:
+      DJANGO_SETTINGS_MODULE: core.production_settings
+    command: gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 2 --timeout 45 --access-logfile -
+    ports: ["127.0.0.1:8000:8000"]
+    restart: unless-stopped
+    init: true
+    mem_limit: 1g
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+  worker:
+    image: contexa-backend:release
+    env_file: [./Rest Saas/.env.production]
+    environment:
+      DJANGO_SETTINGS_MODULE: core.production_settings
+    command: python manage.py rqworker ingestion --worker-class ingestion.workers.ProductionWorker
+    restart: unless-stopped
+    init: true
+    mem_limit: 1g
+    stop_grace_period: 11m

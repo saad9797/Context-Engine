@@ -1,0 +1,73 @@
+[
+  {
+    "name": "pip",
+    "version": "24.0",
+    "advisory_ids": [
+      "PYSEC-2026-1795",
+      "PYSEC-2026-1796",
+      "PYSEC-2026-196",
+      "PYSEC-2026-2875",
+      "PYSEC-2026-2876",
+      "PYSEC-2026-3721"
+    ]
+  },
+  {
+    "name": "pyjwt",
+    "version": "2.13.0",
+    "advisory_ids": [
+      "PYSEC-2026-4140",
+      "PYSEC-2026-4141",
+      "PYSEC-2026-4142",
+      "PYSEC-2026-4143",
+      "PYSEC-2026-4144",
+      "PYSEC-2026-4145",
+      "PYSEC-2026-4146",
+      "PYSEC-2026-4147",
+      "PYSEC-2026-4148",
+      "PYSEC-2026-4149",
+      "PYSEC-2026-4150",
+      "PYSEC-2026-4151",
+      "PYSEC-2026-4152",
+      "PYSEC-2026-4183"
+    ]
+  },
+  {
+    "name": "pymongo",
+    "version": "4.18.1",
+    "advisory_ids": [
+      "PYSEC-2026-4295",
+      "PYSEC-2026-4296",
+      "PYSEC-2026-4297"
+    ]
+  },
+  {
+    "name": "setuptools",
+    "version": "65.5.0",
+    "advisory_ids": [
+      "PYSEC-2022-43012",
+      "PYSEC-2025-49",
+      "PYSEC-2026-1918",
+      "PYSEC-2026-3447"
+    ]
+  },
+  {
+    "name": "sqlparse",
+    "version": "0.5.5",
+    "advisory_ids": [
+      "PYSEC-2026-3696",
+      "PYSEC-2026-3697",
+      "PYSEC-2026-3698",
+      "PYSEC-2026-3699",
+      "PYSEC-2026-3923"
+    ]
+  },
+  {
+    "name": "urllib3",
+    "version": "2.7.0",
+    "advisory_ids": [
+      "PYSEC-2026-4175",
+      "PYSEC-2026-4176",
+      "PYSEC-2026-4177"
+    ]
+  }
+]

@@ -47,3 +47,13 @@ It's a thin wrapper: every tool here is a direct call to the existing Contexa RE
 # Task-focused context packs
 
 Prefer `get_context_packs` for code generation. Load `pack: "base"` once per conversation, then request `pack: "task"` with `task`, `endpoints`, `access`, `rules`, `response_shape`, optional `include_paths`, and `max_tokens`. Match `base_id` and check the coverage report. MySQL connections can be selected with `mysql_connection_id` when starting ingestion. `get_context` remains a legacy overview export. See [the release guide](../PRODUCTION.md).
+
+The default is now `pack: "handoff"`: one self-contained task context within
+one estimated budget, without a prior base. Use `include_symbols` with exact
+names or `path#symbol` for missing-context follow-ups. Read `handoff.status`,
+`context_gaps`, `follow_up` and `report.handoff_omitted` before generating code.
+Use the base/task split explicitly only when its base is already in the chat.
+
+Default responses contain only the selected pack. Set `include_report: true`
+for diagnostics, which add context beyond the pack budget. `pack: "both"`
+returns all packs and reports and is not a single-budget response.

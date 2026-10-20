@@ -5,8 +5,9 @@
 function resolveApiBase() {
   let fromEnv = null;
   try {
-    // eslint-disable-next-line no-new-func
-    const viteEnv = new Function("try { return import.meta.env; } catch (e) { return null; }")();
+    // Vite replaces this expression at build time. import.meta inside a
+    // Function() string is never transformed and silently used localhost.
+    const viteEnv = import.meta.env;
     if (viteEnv) fromEnv = viteEnv.VITE_API_BASE_URL || viteEnv.API_BASE_URL || fromEnv;
   } catch (e) { /* not in an ESM/Vite context */ }
   try {

@@ -49,8 +49,8 @@ class ReadinessView(APIView):
             with connections["default"].cursor() as cursor:
                 cursor.execute("SELECT 1")
             return {"ok": True}
-        except OperationalError as e:
-            return {"ok": False, "error": str(e)}
+        except OperationalError:
+            return {"ok": False, "error": "database_unavailable"}
 
     def _check_redis(self):
         if redis_lib is None:
@@ -59,5 +59,5 @@ class ReadinessView(APIView):
             client = redis_lib.from_url(settings.REDIS_URL, socket_connect_timeout=3, socket_timeout=3)
             client.ping()
             return {"ok": True}
-        except Exception as e:  # broad on purpose — this endpoint's entire job is "did anything go wrong"
-            return {"ok": False, "error": str(e)}
+        except Exception:  # Connection details must never reach this public endpoint.
+            return {"ok": False, "error": "redis_unavailable"}

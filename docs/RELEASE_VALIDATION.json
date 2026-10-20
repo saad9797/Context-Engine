@@ -1,0 +1,38 @@
+{
+  "release": "context-contracts-v3",
+  "status": "tested_local_release_candidate",
+  "custom_trained_model_enabled": false,
+  "backend_tests_passed": 99,
+  "frontend_tests_passed": 42,
+  "saved_handoff_migration": "0008_saved_handoffs_applied_locally",
+  "frontend_full_dependency_audit": "zero_known_vulnerabilities_including_dev",
+  "frontend_toolchain": {"vite": "8.3.4", "vitest": "5.0.5", "react_plugin": "6.1.2", "test_pool": "one_isolated_fork"},
+  "frontend_production_build": "passed",
+  "django_system_check": "passed",
+  "missing_migrations_check": "none",
+  "installed_backend_dependency_audit": "no_known_vulnerabilities",
+  "frontend_production_dependency_audit": "no_known_vulnerabilities",
+  "engine_production_dependency_audit": "no_known_vulnerabilities",
+  "dependency_consistency": "pip_check_passed",
+  "controlled_retrieval_cases_passed": 3,
+  "public_app_contract_checks": {
+    "repositories": 4,
+    "checked_contracts": 34,
+    "all_checked_contracts_present_at_10000_token_ceiling": true,
+    "express_prisma_estimated_copy_tokens": 7766,
+    "django_estimated_copy_tokens": 7003,
+    "next_form_estimated_copy_tokens": 3810,
+    "fastapi_analysis": "Checked contracts present, but newer Python grammar requires conservative fallback and is flagged incomplete.",
+    "tight_budgets": "Omitted dependencies explicitly reported, even if checked markers happen to fit."
+  },
+  "validation_limits": [
+    "Agent-authored retrieval checks informed implementation; not independent complete-context ground truth.",
+    "No coding-model generation, generated-code compile/test, or provider free-plan usage benchmark was performed.",
+    "Docker is unavailable locally; image build and runtime smoke checks are configured in CI, not verified here.",
+    "Deployed OAuth flows, live MySQL, browser/mobile validation and backup restoration still require their target environments.",
+    "Automatic approval review blocked background local-server startup; operator start commands are in RELEASE_CANDIDATE.md."
+  ],
+  "benchmark_evidence": ["benchmarks/public_contract_report.json", "benchmarks/expanded_contract_report.json"],
+  "research": "PRODUCT_RESEARCH.md",
+  "deployment_guide": "RELEASE_CANDIDATE.md"
+}

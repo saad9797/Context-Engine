@@ -23,10 +23,10 @@ server.tool(
 
 server.tool(
   "get_context_packs",
-  "Preferred context for coding: reusable base pack and task-specific pack with complete source units, ORM blocks, enums, and coverage gaps. Read the base once per base_id, then use only the task pack for follow-up work. Check report.missing and report.omitted before generating code; ask for missing contracts. Never assume generated code is verified.",
+  "Preferred context for coding: default self-contained handoff with complete source units, ORM blocks, enums and coverage gaps within one estimated budget. Check handoff.status, context_gaps and follow_up; request missing symbols/paths before generating code. Reusable base/task split remains optional. Never assume generated code is verified.",
   {
     context_id: z.string().uuid(),
-    pack: z.enum(["both", "base", "task"]).optional().describe("Request only task after the matching base is already in the conversation"),
+    pack: z.enum(["handoff", "both", "base", "task"]).optional().describe("Default handoff is self-contained within one budget. Task-only requires the matching base."),
     task: z.string().max(4000).optional(),
     endpoints: z.string().max(2000).optional(),
     access: z.string().max(2000).optional(),
@@ -34,10 +34,14 @@ server.tool(
     response_shape: z.string().max(4000).optional(),
     max_tokens: z.number().int().min(1000).max(32000).optional(),
     include_paths: z.array(z.string().max(500)).max(15).optional(),
+    include_symbols: z.array(z.string().max(500)).max(20).optional().describe("Exact declaration names or path#symbol for missing-context follow-up"),
+    include_report: z.boolean().optional().describe("Optional diagnostics outside the copied-pack budget; omitted by default to save context"),
   },
-  async ({ context_id, pack = "both", ...body }) => {
+  async ({ context_id, pack = "handoff", include_report = false, ...body }) => {
     const output = await apiRequest(`/api/ingestion/${context_id}/context-pack/`, { method: "POST", body });
-    return json(pack === "both" ? output : { [pack]: output[pack], report: output.report });
+    if (pack === "both") return json(output);
+    if (include_report) return json({ [pack]: output[pack], report: output.report });
+    return json(output[pack]);
   }
 );
 

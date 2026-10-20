@@ -26,7 +26,7 @@ const sources = [
   ["database", "PostgreSQL"],
   ["mongo_database", "MongoDB"],
   ["object_storage", "Storage"],
-  ["codebase", "GitHub"],
+  ["codebase", "Source code"],
 ];
 export default function Dashboard() {
   const { request, user } = useAuth();

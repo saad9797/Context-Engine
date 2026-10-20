@@ -25,6 +25,7 @@ pnpm-debug.log*
 # ── Secrets — never commit real credentials, only *.example templates ──────
 .env
 .env.local
+.env.production
 .env.*.local
 !.env.example
 
@@ -58,3 +59,6 @@ temp/
 #    visibility.
 sample.json
 *.ingestion-output.json
+
+# Reproducible public research download cache (not training artifacts).
+docs/training/public_cache/
