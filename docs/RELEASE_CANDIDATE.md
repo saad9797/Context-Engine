@@ -118,6 +118,18 @@ and is not silently enabled.
 
 ## Deploy the backend and worker
 
+For a first backend-only deploy on Render, `core.production_settings` reads
+Render's `RENDER_EXTERNAL_HOSTNAME` automatically and adds that exact hostname
+to `ALLOWED_HOSTS`. Omit `ALLOWED_HOSTS`, `BACKEND_BASE_URL`,
+`GITHUB_APP_BASE_URL`, `FRONTEND_URL` and `CORS_ALLOWED_ORIGINS` initially; do not
+enter placeholders or a wildcard. HTTPS backend URLs are inferred and frontend
+redirects temporarily use the backend origin. This permits API/health checks,
+not a functioning frontend on that origin. Once the frontend exists, set
+`FRONTEND_URL` and `CORS_ALLOWED_ORIGINS` to its real HTTPS origin and configure
+provider callbacks before enabling social login. Custom backend domains can
+be configured explicitly through `BACKEND_BASE_URL` and `ALLOWED_HOSTS`.
+PostgreSQL, Redis and valid production secret/encryption keys remain required.
+
 `Rest Saas/Dockerfile` uses Node 22, runs as an unprivileged user and excludes
 local secrets/data through `.dockerignore`. Docker is unavailable on this
 workstation; the image-build/smoke job in CI must pass before deployment.

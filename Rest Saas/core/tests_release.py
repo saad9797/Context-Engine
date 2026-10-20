@@ -10,7 +10,7 @@ import pytest
 from rest_framework.test import APIClient
 
 
-def load_production_profile(monkeypatch, database='django.db.backends.postgresql', hosts=None):
+def load_production_profile(monkeypatch, database='django.db.backends.postgresql', hosts=None, render_bootstrap=False):
     stub = ModuleType('core.settings')
     import os
     stub.os = os
@@ -24,6 +24,11 @@ def load_production_profile(monkeypatch, database='django.db.backends.postgresql
     monkeypatch.setitem(sys.modules, 'core.settings', stub)
     monkeypatch.setenv('FRONTEND_URL', 'https://app.example.invalid')
     monkeypatch.setenv('BACKEND_BASE_URL', 'https://api.example.invalid')
+    if render_bootstrap:
+        monkeypatch.setenv('RENDER', 'true')
+        monkeypatch.setenv('RENDER_EXTERNAL_HOSTNAME', 'contexa-first-deploy.onrender.com')
+        for key in ('BACKEND_BASE_URL', 'FRONTEND_URL', 'CORS_ALLOWED_ORIGINS'):
+            monkeypatch.delenv(key, raising=False)
     spec = importlib.util.spec_from_file_location('core._profile_test', Path(__file__).with_name('production_settings.py'))
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -43,6 +48,25 @@ def test_production_profile_enables_transport_and_rejects_dev_database(monkeypat
 def test_production_profile_rejects_wildcard_hosts(monkeypatch):
     with pytest.raises(ImproperlyConfigured, match='ALLOWED_HOSTS'):
         load_production_profile(monkeypatch, hosts=['*'])
+
+
+def test_render_first_deploy_needs_no_public_url_placeholders(monkeypatch):
+    profile = load_production_profile(monkeypatch, hosts=['localhost', '127.0.0.1'], render_bootstrap=True)
+    assert profile.ALLOWED_HOSTS == ['localhost', '127.0.0.1', 'contexa-first-deploy.onrender.com']
+    assert profile.BACKEND_BASE_URL == 'https://contexa-first-deploy.onrender.com'
+    assert profile.FRONTEND_URL == profile.BACKEND_BASE_URL
+    assert profile.GITHUB_APP_BASE_URL == profile.BACKEND_BASE_URL
+    assert profile.CORS_ALLOWED_ORIGINS == [profile.BACKEND_BASE_URL]
+    assert '*' not in profile.ALLOWED_HOSTS
+
+
+def test_render_custom_frontend_overrides_bootstrap_default(monkeypatch):
+    monkeypatch.setenv('RENDER', 'true')
+    monkeypatch.setenv('RENDER_EXTERNAL_HOSTNAME', 'contexa-first-deploy.onrender.com')
+    profile = load_production_profile(monkeypatch)
+    assert profile.FRONTEND_URL == 'https://app.example.invalid'
+    assert profile.BACKEND_BASE_URL == 'https://api.example.invalid'
+    assert 'contexa-first-deploy.onrender.com' in profile.ALLOWED_HOSTS
 
 
 def test_public_readiness_never_returns_connection_details():
