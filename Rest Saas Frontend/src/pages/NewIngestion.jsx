@@ -265,6 +265,8 @@ export default function NewIngestion() {
       setSubmitting(false);
     }
   };
+  if (submitting) return <SnapshotBuildScreen open projectName={form.project_name}
+    database={form.usePostgres} mongo={form.useMongo} storage={form.useStorage} repository={form.useGithub} />;
   const selectedSources = [
     form.usePostgres && "SQL database",
     form.useMongo && "MongoDB",
@@ -614,8 +616,6 @@ export default function NewIngestion() {
         </Card>
       )}
 
-      <SnapshotBuildScreen open={submitting} projectName={form.project_name}
-        database={form.usePostgres} mongo={form.useMongo} storage={form.useStorage} repository={form.useGithub} />
       <Button
         variant="contained"
         size="large"
