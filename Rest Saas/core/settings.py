@@ -107,6 +107,9 @@ RQ_QUEUES = {
 
 # Django REST Framework
 REST_FRAMEWORK = {
+    # This service is a JSON API. Browser Accept headers must not select
+    # DRF's HTML renderer, whose templates are not installed in this API.
+    "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.TokenAuthentication",
     ],

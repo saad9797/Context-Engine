@@ -79,3 +79,26 @@ def test_public_readiness_never_returns_connection_details():
     assert secret not in str(response.data)
     assert response.data['checks']['database']['error'] == 'database_unavailable'
     assert response.data['checks']['redis']['error'] == 'redis_unavailable'
+
+
+def test_browser_health_request_returns_json_without_templates_or_authentication():
+    browser_accept = 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+    response = APIClient().get('/healthz', HTTP_ACCEPT=browser_accept, HTTP_AUTHORIZATION='Token invalid')
+    assert response.status_code == 200
+    assert response['Content-Type'].startswith('application/json')
+    assert response.json() == {'status': 'ok'}
+
+
+def test_browser_readiness_returns_json_with_dependency_results():
+    with patch('core.health.connections') as connections, patch('core.health.redis_lib') as redis:
+        redis.from_url.return_value.ping.return_value = True
+        response = APIClient().get('/readyz', HTTP_ACCEPT='text/html,*/*;q=0.8')
+    assert response.status_code == 200
+    assert response['Content-Type'].startswith('application/json')
+    assert response.json()['checks'] == {'database': {'ok': True}, 'redis': {'ok': True}}
+
+
+def test_html_only_api_request_is_not_a_template_server_error():
+    response = APIClient().get('/healthz', HTTP_ACCEPT='text/html')
+    assert response.status_code == 406
+    assert response['Content-Type'].startswith('application/json')

@@ -46,4 +46,4 @@ EXPOSE 8000
 # explicit deploy step (see DEPLOYMENT.md), not automatically on container
 # start, so a bad migration doesn't get silently applied by an autoscaled
 # replica restarting.
-CMD ["gunicorn", "core.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3"]
+CMD ["sh", "-c", "exec gunicorn core.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers ${WEB_CONCURRENCY:-1} --timeout 60 --access-logfile -"]

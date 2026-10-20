@@ -16,6 +16,7 @@ any per-user rate limit would allow, by design).
 from django.db import connections
 from django.db.utils import OperationalError
 from rest_framework.permissions import AllowAny
+from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -28,6 +29,8 @@ from django.conf import settings
 
 
 class LivenessView(APIView):
+    authentication_classes = []
+    renderer_classes = [JSONRenderer]
     permission_classes = [AllowAny]
     throttle_classes = []
 
@@ -36,6 +39,8 @@ class LivenessView(APIView):
 
 
 class ReadinessView(APIView):
+    authentication_classes = []
+    renderer_classes = [JSONRenderer]
     permission_classes = [AllowAny]
     throttle_classes = []
 
