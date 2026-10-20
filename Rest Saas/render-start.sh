@@ -7,5 +7,5 @@ python manage.py migrate --noinput
 exec gunicorn core.wsgi:application \
     --bind "0.0.0.0:${PORT:-10000}" \
     --workers "${WEB_CONCURRENCY:-1}" \
-    --timeout 60 \
+    --threads 2 --timeout 90 \
     --access-logfile -

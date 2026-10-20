@@ -613,6 +613,10 @@ export default function NewIngestion() {
         </Card>
       )}
 
+      {submitting && <Alert severity="info" sx={{ mb: 2 }}>
+        Connecting sources and building your snapshot. Keep this page open.
+        Backend processing can take about a minute; worker mode opens live progress shortly.
+      </Alert>}
       <Button
         variant="contained"
         size="large"
@@ -626,7 +630,7 @@ export default function NewIngestion() {
         onClick={submit}
         disabled={submitting || !canSubmit}
       >
-        {submitting ? "Starting…" : "Build snapshot"}
+        {submitting ? "Building snapshot..." : "Build snapshot"}
       </Button>
     </Box>
   );

@@ -9,7 +9,7 @@ import posixpath
 from .context_packs import CODE, build_packs
 from .privacy import SECRET_FILE
 from .models import DataSourceConnection, GitHubAppInstallation, IngestionContext, IngestionJob
-from .tasks import run_ingestion_job
+from .dispatch import dispatch_job
 from .limits import reserve_job
 
 
@@ -80,12 +80,7 @@ class RebuildSnapshotView(APIView):
         except ValueError as exc:
             return Response({"error": str(exc)}, status=409)
         try:
-            queued = django_rq.get_queue("ingestion").enqueue(run_ingestion_job, str(job.id))
-        except Exception:
-            job.status = "failed"
-            job.error = "Could not queue the snapshot. Try again when the worker service is available."
-            job.save(update_fields=["status", "error"])
-            return Response({"error": job.error}, status=503)
-        job.rq_job_id = queued.id
-        job.save(update_fields=["rq_job_id"])
+            dispatch_job(job)
+        except ValueError as exc:
+            return Response({"error": str(exc), "job_id": str(job.id)}, status=503)
         return Response({"job_id": str(job.id)}, status=202)

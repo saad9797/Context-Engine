@@ -238,3 +238,9 @@ LOGGING = {
         "django.request": {"handlers": ["console"], "level": "ERROR", "propagate": False},
     },
 }
+
+# Keep worker mode for larger deployments; inline needs no queue consumer.
+INGESTION_EXECUTION_MODE = os.environ.get("INGESTION_EXECUTION_MODE", "worker").strip().lower()
+if INGESTION_EXECUTION_MODE not in {"inline", "worker"}:
+    from django.core.exceptions import ImproperlyConfigured
+    raise ImproperlyConfigured("INGESTION_EXECUTION_MODE must be inline or worker.")

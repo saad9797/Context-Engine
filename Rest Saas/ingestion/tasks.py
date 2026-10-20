@@ -1,14 +1,10 @@
-"""
-The Django-RQ task that actually runs an ingestion. Enqueued by
-IngestionJobCreateView and executed by a separate `rqworker` process — never
-on a request thread. See ingestion/views.py and README for how to run the
-worker.
-"""
+"""Shared ingestion runner for workers and bounded backend requests."""
 
 import json
 import re
 import subprocess
 import threading
+import time
 from pathlib import Path
 
 from django.conf import settings
@@ -162,19 +158,29 @@ def _validate_ssrf(config: dict) -> None:
     )
 
 
-def run_ingestion_job(job_id):
+def run_ingestion_job(job_id, timeout_seconds=JOB_TIMEOUT_SECONDS, memory_mb=INGESTION_MAX_MEMORY_MB):
+    deadline = time.monotonic() + timeout_seconds
+    # A delayed/duplicate queue delivery must never repeat an already claimed job.
+    if not IngestionJob.objects.filter(id=job_id, status="pending").update(
+        status="running", started_at=timezone.now(), stage="starting"
+    ):
+        return
     job = IngestionJob.objects.get(id=job_id)
     job.status = "running"
     job.started_at = timezone.now()
     job.stage = "starting"
     job.save(update_fields=["status", "started_at", "stage"])
 
+    proc = None
     try:
         runner_config = _build_runner_config(job)
         _validate_ssrf(runner_config)
 
+        if time.monotonic() >= deadline:
+            raise TimeoutError("Source connection setup exceeded the build time limit.")
+
         proc = subprocess.Popen(
-            ["node", f"--max-old-space-size={INGESTION_MAX_MEMORY_MB}", str(INGESTION_RUNNER)],
+            ["node", f"--max-old-space-size={memory_mb}", str(INGESTION_RUNNER)],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -218,11 +224,11 @@ def run_ingestion_job(job_id):
         proc.stdin.close()
 
         try:
-            proc.wait(timeout=JOB_TIMEOUT_SECONDS)
+            proc.wait(timeout=max(0.1, deadline - time.monotonic()))
         except subprocess.TimeoutExpired:
             proc.kill()
             proc.wait()
-            raise TimeoutError(f"Ingestion timed out after {JOB_TIMEOUT_SECONDS} seconds.")
+            raise TimeoutError(f"Ingestion timed out after {timeout_seconds} seconds. Use a smaller source selection, local folder import, or worker mode for larger projects.")
 
         stdout_thread.join(timeout=5)
         stderr_thread.join(timeout=5)
@@ -249,6 +255,9 @@ def run_ingestion_job(job_id):
         job.save(update_fields=["status", "result", "stage", "progress_pct", "finished_at"])
 
     except Exception as e:
+        if proc is not None and proc.poll() is None:
+            proc.kill()
+            proc.wait()
         job.status = "failed"
         job.error = _scrub(str(e))[:4000]
         job.finished_at = timezone.now()

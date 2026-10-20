@@ -26,7 +26,7 @@ from rest_framework.views import APIView
 
 from . import diffing, freshness, scoping
 from .audit import log_action
-from .limits import reserve_job
+from .limits import reserve_job, expire_inline_jobs
 from .models import AuditLogEntry, DataSourceConnection, IngestionContext, IngestionJob
 from .serializers import (
     AuditLogEntrySerializer,
@@ -34,7 +34,7 @@ from .serializers import (
     IngestionJobCreateSerializer,
     IngestionJobSerializer,
 )
-from .tasks import run_ingestion_job
+from .dispatch import dispatch_job
 from .privacy import safe_snapshot
 
 
@@ -51,9 +51,9 @@ class IngestionJobCreateView(APIView):
         "meta": {"project_name": "My App"}
     }
 
-    Returns 202 immediately with a job id — the actual inspection runs on an
-    RQ worker, not this request's thread. Poll
-    GET /api/ingestion/jobs/<job_id>/ for progress/result.
+    Worker mode returns a queued job immediately; inline mode builds within
+    the request before returning. Poll GET /api/ingestion/jobs/<job_id>/
+    for saved status and results.
     """
 
     throttle_scope = "ingestion"
@@ -97,14 +97,9 @@ class IngestionJobCreateView(APIView):
         except ValueError as exc:
             return Response({"error": str(exc)}, status=409)
         try:
-            rq_job = django_rq.get_queue("ingestion").enqueue(run_ingestion_job, str(job.id))
-        except Exception:
-            job.status = "failed"
-            job.error = "Could not queue the snapshot. Try again when the worker service is available."
-            job.save(update_fields=["status", "error"])
-            return Response({"error": job.error}, status=503)
-        job.rq_job_id = rq_job.id
-        job.save(update_fields=["rq_job_id"])
+            dispatch_job(job)
+        except ValueError as exc:
+            return Response({"error": str(exc), "job_id": str(job.id)}, status=503)
 
         log_action(
             request.user,
@@ -128,6 +123,7 @@ class IngestionJobStatusView(APIView):
     """GET /api/ingestion/jobs/<uuid:pk>/ — poll status/progress of one job."""
 
     def get(self, request, pk):
+        expire_inline_jobs(request.user)
         job = IngestionJob.objects.filter(id=pk, user=request.user).first()
         if job is None:
             return Response({"error": "Not found."}, status=status.HTTP_404_NOT_FOUND)
