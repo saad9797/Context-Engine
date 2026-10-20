@@ -32,6 +32,8 @@ RUN cd ingestion/ingestion-engine && npm ci --omit=dev
 # --- Application code ---
 RUN groupadd --gid 10001 app && useradd --uid 10001 --gid app --create-home app
 COPY --chown=app:app . .
+# Windows checkouts can use CRLF; the Render shell requires Unix line endings.
+RUN sed -i 's/\r$//' /app/render-start.sh
 USER app
 
 ENV PYTHONUNBUFFERED=1 \

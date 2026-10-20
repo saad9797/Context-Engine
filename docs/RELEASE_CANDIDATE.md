@@ -130,6 +130,13 @@ provider callbacks before enabling social login. Custom backend domains can
 be configured explicitly through `BACKEND_BASE_URL` and `ALLOWED_HOSTS`.
 PostgreSQL, Redis and valid production secret/encryption keys remain required.
 
+For the single-instance Render beta, set **Docker Command** to
+`sh /app/render-start.sh` (without quotes). This script runs migrations then
+replaces itself with Gunicorn, using Render's `PORT` and one worker by default.
+Docker normalizes its line endings for Windows checkouts. Do not paste a
+nested quoted `sh -c` command into the dashboard. The normal Docker CMD remains
+unchanged for deployments that run migrations in a separate release step.
+
 `Rest Saas/Dockerfile` uses Node 22, runs as an unprivileged user and excludes
 local secrets/data through `.dockerignore`. Docker is unavailable on this
 workstation; the image-build/smoke job in CI must pass before deployment.
