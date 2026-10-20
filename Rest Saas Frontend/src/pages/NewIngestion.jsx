@@ -24,6 +24,7 @@ import { useAuth } from "../context/AuthContext";
 import { GitHubIcon } from "../components/BrandIcons";
 import PageHeader from "../components/PageHeader";
 import FolderImport from "../components/FolderImport";
+import SnapshotBuildScreen from "../components/SnapshotBuildScreen";
 const emptyForm = {
   usePostgres: false,
   postgres_connection_id: "",
@@ -613,10 +614,8 @@ export default function NewIngestion() {
         </Card>
       )}
 
-      {submitting && <Alert severity="info" sx={{ mb: 2 }}>
-        Connecting sources and building your snapshot. Keep this page open.
-        Backend processing can take about a minute; worker mode opens live progress shortly.
-      </Alert>}
+      <SnapshotBuildScreen open={submitting} projectName={form.project_name}
+        database={form.usePostgres} mongo={form.useMongo} storage={form.useStorage} repository={form.useGithub} />
       <Button
         variant="contained"
         size="large"

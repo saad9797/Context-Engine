@@ -20,6 +20,7 @@ import { copyToClipboard } from "../lib/format";
 import { useToast } from "../components/ToastProvider";
 import PageHeader from "../components/PageHeader";
 import SavedHandoffs from "../components/SavedHandoffs";
+import SnapshotBuildScreen from "../components/SnapshotBuildScreen";
 
 const emptyTask = { task: "", endpoints: "", access: "", rules: "", response_shape: "", paths: "", symbols: "" };
 const fields = [
@@ -112,6 +113,7 @@ export default function ClaudeContext() {
     finally { setRebuilding(false); }
   }
   return <Box>
+    <SnapshotBuildScreen open={rebuilding} rebuilding />
     <Stack direction="row" sx={{ mb: 1, justifyContent: 'space-between' }}>
       <Button startIcon={<ArrowBack />} onClick={() => navigate(`/contexts/${contextId}`)}>Back to project</Button>
       <Button color="error" disabled={deleting || loading} onClick={async () => {

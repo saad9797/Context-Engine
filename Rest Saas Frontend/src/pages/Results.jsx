@@ -31,6 +31,7 @@ import CodebaseTab from "../components/results/CodebaseTab";
 import ArchitectureTab from "../components/results/ArchitectureTab";
 import ChangesTab, { countDiffItems } from "../components/results/ChangesTab";
 import JsonViewer from "../components/results/JsonTree";
+import SourceContextActions from "../components/results/SourceContextActions";
 export default function Results() {
   const { contextId } = useParams();
   const { request } = useAuth();
@@ -115,6 +116,13 @@ export default function Results() {
   const storage = data.object_storage;
   const codebase = data.codebase;
   const graph = data.architecture_graph;
+  const sourceExports = {
+    postgres: { sourceKey: "database", source: database, label: database?.dialect === "mysql" ? "MySQL" : "PostgreSQL" },
+    mongo: { sourceKey: "mongo_database", source: mongo, label: "MongoDB" },
+    storage: { sourceKey: "object_storage", source: storage, label: "Storage" },
+    codebase: { sourceKey: "codebase", source: codebase, label: "Codebase" },
+  };
+  const sourceExport = sourceExports[tab];
   const tabs = [
     {
       id: "overview",
@@ -341,6 +349,7 @@ export default function Results() {
         ))}
       </Tabs>
 
+      {sourceExport?.source && <SourceContextActions key={`${contextId}-${tab}`} {...sourceExport} contextId={contextId} />}
       {tab === "overview" && (
         <>
           {data.plain_english_summary && (
