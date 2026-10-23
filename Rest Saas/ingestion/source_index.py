@@ -6,6 +6,7 @@ import hashlib
 import json
 import math
 from pathlib import Path
+from .semantic import semantic_rank, fuse
 import posixpath
 import re
 import subprocess
@@ -72,12 +73,12 @@ def python_units(path, content):
     return dict(path=path, imports=imports, units=units)
 
 
-@lru_cache(maxsize=3)
+@lru_cache(maxsize=0)
 def _parse_js(payload):
     try:
-        process = subprocess.run(['node', '--max-old-space-size=256', str(PARSER)], input=payload, capture_output=True,
-            encoding='utf-8', timeout=15, check=True)
-        if len(process.stdout.encode()) > 8 * 1024 * 1024:
+        process = subprocess.run(['node', '--max-old-space-size=512', str(PARSER)], input=payload, capture_output=True,
+            encoding='utf-8', timeout=45, check=True)
+        if len(process.stdout.encode()) > 48 * 1024 * 1024:
             raise ValueError('Index response limit')
         return json.loads(process.stdout)
     except (OSError, subprocess.SubprocessError, ValueError):
@@ -256,9 +257,9 @@ class SourceIndex:
         matches = list(dict.fromkeys(c for c in candidates if c in self.by_path))
         return (matches[0] if matches else None), local
 
-    def select(self, task, pinned=(), symbols=()):
+    def select(self, task, pinned=(), symbols=(), use_semantic=True, progress=None, embedding_cache=None):
         query = words(' '.join(task.values()))
-        primary = set(words(task.get('task', '') + ' ' + task.get('endpoints', '')))
+        primary = set(words(task.get('task', '') + ' ' + task.get('endpoints', '') + ' ' + task.get('follow_up', '')))
         intent_text = task.get('task', '').lower()
         actions = set()
         for action, pattern in (('create', r'\bcreat(?:e|ing|ion)\b'), ('update', r'\b(?:updat\w*|edit\w*)\b'),
@@ -271,7 +272,8 @@ class SourceIndex:
             actions = {{'POST': 'create', 'PUT': 'update', 'PATCH': 'update', 'DELETE': 'delete'}[next(iter(methods))]}
         documents = {uid: Counter(words(' '.join(u['symbols']) + ' ' + u['content'])) for uid, u in self.units.items()}
         frequency = Counter(w for doc in documents.values() for w in doc)
-        avg = sum(sum(d.values()) for d in documents.values()) / max(1, len(documents))
+        lengths = {uid: sum(doc.values()) for uid, doc in documents.items()}
+        avg = sum(lengths.values()) / max(1, len(documents))
         ranking = []
         for uid, doc in documents.items():
             u, score = self.units[uid], 0.0
@@ -281,7 +283,7 @@ class SourceIndex:
                 count = doc[word]
                 if count:
                     idf = math.log(1 + (len(documents) - frequency[word] + .5) / (frequency[word] + .5))
-                    score += idf * count * 2.2 / (count + 1.2 * (.25 + .75 * sum(doc.values()) / max(1, avg)))
+                    score += idf * count * 2.2 / (count + 1.2 * (.25 + .75 * lengths[uid] / max(1, avg)))
             score += len(symbols_hit) * 15 + len(path_hit) * 4
             if primary and (symbols_hit or primary.intersection(doc) or path_hit and u.get('whole_file')):
                 strong = bool(symbols_hit or primary.intersection(words(' '.join(u['refs']))) or path_hit and u.get('whole_file'))
@@ -290,18 +292,31 @@ class SourceIndex:
                 ranking.append((score + 12 * action_match, uid, strong, action_match))
         if any(row[2] for row in ranking):
             ranking = [row for row in ranking if row[2]]
-        if any(row[3] for row in ranking):
+        if not task.get('follow_up') and any(row[3] for row in ranking):
             ranking = [row for row in ranking if row[3]]
         ranking.sort(key=lambda pair: (-pair[0], pair[1]))
         # An exact compound identifier in the request is a stronger scope
         # signal than its generic constituent words (FormInput vs every form).
         explicit_ids = {uid for uid, unit in self.units.items() if any(
             len(symbol) >= 6 and re.search(r'[a-z][A-Z]|_', symbol) and
-            re.search(r'(?<![\w])' + re.escape(symbol) + r'(?![\w])', task.get('task', ''), re.I)
+            re.search(r'(?<![\w])' + re.escape(symbol) + r'(?![\w])', task.get('task', '') + ' ' + task.get('follow_up', ''), re.I)
             for symbol in unit['symbols'])}
         if explicit_ids:
             ranking = [row for row in ranking if row[1] in explicit_ids]
+        if explicit_ids:
+            semantic, self.retrieval = [], {'mode': 'lexical', 'status': 'exact_scope'}
+        else:
+            semantic, self.retrieval = semantic_rank(self.units, ' '.join(task.values()), progress=progress, cache=embedding_cache) if use_semantic else ([], {'mode': 'lexical', 'status': 'disabled'})
+        self.retrieval['semantic_only'] = bool(semantic and not ranking)
+        candidates = [row[1] for row in ranking]
+        if not explicit_ids:
+            candidates = fuse(candidates, semantic)
         seeds, reasons = [], {}
+        for name in set(WORDS.findall(task.get('follow_up', ''))):
+            for uid in self.by_symbol.get(name, []):
+                if uid not in seeds and len(seeds) < 20:
+                    seeds.append(uid)
+                    reasons[uid] = 'exact declaration requested in follow-up'
         for path in pinned:
             for uid in self.by_path[path]:
                 seeds.append(uid)
@@ -315,12 +330,20 @@ class SourceIndex:
                     reasons[uid] = 'explicitly requested symbol'
         # Limit entry points, not dependency closure. Avoid 350 unrelated
         # declarations winning merely because they share a matched filename.
-        for _, uid, _, _ in ranking:
+        for uid in candidates:
             if len([v for v in seeds if reasons[v] == 'task symbol or weighted lexical match']) >= 5:
                 break
             if uid not in seeds:
                 seeds.append(uid)
-                reasons[uid] = 'task symbol or weighted lexical match'
+                reasons[uid] = 'semantic code match' if uid in semantic and uid not in {row[1] for row in ranking} else 'task symbol or weighted lexical match'
+        # Focused tests are supporting behavioral contracts, never an excuse to
+        # expand into every caller of a common utility.
+        implementations = set(seeds)
+        for uid, unit in self.units.items():
+            if re.search(r'(^|/)(__tests__|tests?)(/|$)|(?:test|spec)\.[^.]+$|(^|/)test_[^/]+\.py$', unit['path'], re.I):
+                if self.edges[uid].intersection(implementations) and len([s for s in seeds if reasons[s] == 'test referencing selected implementation']) < 3:
+                    seeds.append(uid)
+                    reasons[uid] = 'test referencing selected implementation'
         django_task = any(self.units[uid]['path'].endswith('.py') and any(imp['module'].startswith(('django', 'rest_framework')) for imp in self.modules[self.units[uid]['path']]['imports']) for uid in seeds)
         if django_task:
             for uid, unit in self.units.items():

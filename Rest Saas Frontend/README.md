@@ -37,13 +37,22 @@ VITE_API_BASE_URL=http://localhost:8000
 ## Build
 
 ```bash
-npm run build    # outputs to dist/
+VITE_API_BASE_URL=https://your-api.example.com npm run build  # outputs to dist/
 npm run preview  # serve the production build locally to sanity-check it
 ```
 
 `dist/` is a static site — any static host (Vercel, Netlify, S3+CloudFront,
 nginx) can serve it. It needs the backend's real URL baked in at build time
-via `VITE_API_BASE_URL` if it isn't `http://localhost:8000`.
+via `VITE_API_BASE_URL`. Production builds reject missing, insecure or localhost API origins.
+
+For PowerShell, set `$env:VITE_API_BASE_URL='https://your-api.example.com'` before
+running `npm run build`. Local development still defaults to localhost.
+
+BrowserRouter requires a host fallback to `/index.html` for direct links and
+refreshes. On Render use source `/*`, destination `/index.html`, action **Rewrite**.
+See [Render release instructions](../docs/RENDER_RELEASE.md) and the root
+[render.yaml](../render.yaml); manually created services need the rule applied
+in their Render settings or a Blueprint sync.
 
 ## Project structure
 
@@ -60,12 +69,15 @@ src/
                    don't scatter raw hex codes or px values through pages
 ```
 
-## What doesn't exist yet
+## Verification
 
-No automated frontend tests (component or otherwise) as of this writing —
-see `docs/PRODUCTION_READINESS.md` at the repo root for the current gap
-list and priority order. No visual/cross-browser QA has been performed
-either — every design pass to date was verified by code review only,
-because the project's headless-browser tooling has not successfully
-connected in any session; treat prior "verified responsive" claims in
-commit history accordingly until someone actually checks it in a browser.
+`npm test` runs the frontend component and workflow tests. `npm run build`
+checks the production bundle. After deployment, run:
+
+```bash
+npm run check:deployment -- --frontend https://your-site.example.com --api https://your-api.example.com
+```
+
+This read-only check covers direct route loads, assets, API readiness, CORS and
+unauthenticated access enforcement. It does not replace authenticated customer
+workflow checks or visual/cross-browser QA. See the release instructions above.

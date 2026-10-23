@@ -1,0 +1,33 @@
+{
+  "scope": "Local isolated HTTP workflow verification. No coding model called and no customer source executed.",
+  "checks": [
+    "authenticated_http",
+    "background_preparation",
+    "real_local_coderankembed",
+    "source_dependencies",
+    "follow_up_preserves_task",
+    "pasted_credential_redaction",
+    "snapshot_vector_cache_hit",
+    "exact_prepared_export_saved"
+  ],
+  "first_preparation_seconds": 95.906,
+  "progress_stages": [
+    "Finding relevant source",
+    "Loading project search"
+  ],
+  "cache_verification_seconds": 3.438,
+  "restored_cache_windows": 3,
+  "cached_preparation_seconds": 0.109,
+  "retrieval": {
+    "mode": "hybrid",
+    "model": "nomic-ai/CodeRankEmbed",
+    "revision": "3c4b60807d71f79b43f3c4363786d9493691f8b1",
+    "status": "ready",
+    "persistent_cache": "ready",
+    "indexed_units": 3,
+    "windows": 3,
+    "cached_windows": 3,
+    "semantic_only": false
+  },
+  "passed": true
+}

@@ -20,6 +20,7 @@ jobs:
       # "Generate test-only secrets" step below), so there's nothing here
       # to accidentally get wrong or to mistake for a real credential.
       DJANGO_SECRET_KEY: ci-test-only-not-a-real-secret
+      CONTEXA_SEMANTIC: "0"
       TRANSIT_PRIVATE_KEY: "not-a-real-key-but-non-empty"
     steps:
       - uses: actions/checkout@v4
@@ -73,6 +74,8 @@ jobs:
         run: npm ci
       - name: Build
         working-directory: Rest Saas Frontend
+        env:
+          VITE_API_BASE_URL: https://api.example.invalid
         run: npm run build
       - name: Test user workflows
         working-directory: Rest Saas Frontend

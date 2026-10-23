@@ -1,0 +1,10 @@
+# Build the normal backend image first. Keep torch/model memory out of web workers.
+FROM contexa-backend:release
+USER root
+COPY requirements-semantic.txt /app/requirements-semantic.txt
+RUN python -m pip install --no-cache-dir torch==2.14.1 --index-url https://download.pytorch.org/whl/cpu \
+    && python -m pip install --no-cache-dir -r /app/requirements-semantic.txt
+USER app
+# Preparing weights does not require Django settings, credentials or a database.
+RUN python -c "from huggingface_hub import snapshot_download; from ingestion.semantic import MODEL,REVISION,load_model; snapshot_download(MODEL, revision=REVISION, ignore_patterns=['*.bin','*.onnx','*.h5','*.msgpack']); load_model().encode(['Represent this query for searching relevant code: validate request'], show_progress_bar=False)"
+CMD ["python", "manage.py", "rqworker", "context", "--worker-class", "ingestion.workers.ContextWorker"]

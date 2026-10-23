@@ -1,9 +1,12 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { apiRequest, readStoredUser, readToken, writeStoredUser, writeToken } from "../api/client";
+import { useNavigate } from 'react-router-dom';
+import { takeReturnPath } from '../lib/authReturn';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
+  const navigate = useNavigate();
   const [token, setTokenState] = useState(readToken);
   const [user, setUser] = useState(readStoredUser);
   const [sessionExpired, setSessionExpired] = useState(false);
@@ -52,7 +55,7 @@ export function AuthProvider({ children }) {
     const incomingToken = decodeURIComponent(match[1]);
     window.history.replaceState(null, "", window.location.pathname + window.location.search);
     apiRequest("/api/auth/me/", { token: incomingToken })
-      .then((u) => setAuthenticated(incomingToken, u))
+      .then((u) => { setAuthenticated(incomingToken, u); navigate(takeReturnPath(), { replace: true }); })
       .catch(() => { /* stale/invalid token from a redirect — fall through to login */ })
       .finally(() => setResolvingOAuthToken(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -366,9 +366,9 @@ export default function IngestionProgress() {
   const openSnapshot = () => {
     if (job?.result)
       startTransition(() =>
-        navigate(`/contexts/${job.result}`, {
+        navigate(`/contexts/${job.result}${routeState?.carryTask ? '/claude-context' : ''}`, {
           replace: true,
-          state: { fromBuild: true },
+          state: { fromBuild: true, ...(routeState?.carryTask ? { carryTask: routeState.carryTask } : {}) },
         }),
       );
   };
@@ -441,9 +441,9 @@ export default function IngestionProgress() {
     const route = setTimeout(
       () =>
         startTransition(() =>
-          navigate(`/contexts/${job.result}`, {
+          navigate(`/contexts/${job.result}${routeState?.carryTask ? '/claude-context' : ''}`, {
             replace: true,
-            state: { fromBuild: true },
+            state: { fromBuild: true, ...(routeState?.carryTask ? { carryTask: routeState.carryTask } : {}) },
           }),
         ),
       reducedMotion ? 500 : 1850,
@@ -452,7 +452,7 @@ export default function IngestionProgress() {
       clearTimeout(fade);
       clearTimeout(route);
     };
-  }, [ready, job?.result, navigate, reducedMotion]);
+  }, [ready, job?.result, navigate, reducedMotion, routeState?.carryTask]);
 
   useEffect(() => {
     if (!expanded && wasExpanded.current) expandButton.current?.focus();

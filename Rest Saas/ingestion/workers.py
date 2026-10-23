@@ -1,5 +1,7 @@
 """Keep Redis dequeue waits below managed-provider socket timeouts."""
 from rq.worker import Worker, SimpleWorker
+import logging
+import os
 
 
 class ShortDequeueWait:
@@ -16,3 +18,16 @@ class ProductionWorker(ShortDequeueWait, Worker):
 
 class WindowsWorker(ShortDequeueWait, SimpleWorker):
     """Development worker for Windows, where fork is unavailable."""
+
+
+class ContextWorker(ShortDequeueWait, SimpleWorker):
+    """Persistent model/cache across context jobs. Never executes customer code."""
+
+    def work(self, *args, **kwargs):
+        if os.getenv('CONTEXA_SEMANTIC', '1') != '0':
+            from .semantic import load_model
+            try:
+                load_model()
+            except Exception:
+                logging.getLogger(__name__).warning('Local semantic model unavailable; context jobs will report lexical fallback.')
+        return super().work(*args, **kwargs)

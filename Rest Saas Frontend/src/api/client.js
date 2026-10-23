@@ -61,7 +61,7 @@ function formatErrorPayload(payload) {
   return null;
 }
 
-export async function apiRequest(path, { method = "GET", body, params, token, onUnauthorized } = {}) {
+export async function apiRequest(path, { method = "GET", body, params, token, onUnauthorized, timeoutMs = 90000 } = {}) {
   let url = `${API_BASE}${path}`;
   if (params) {
     const qs = new URLSearchParams(params).toString();
@@ -71,6 +71,9 @@ export async function apiRequest(path, { method = "GET", body, params, token, on
   if (token) headers["Authorization"] = `Token ${token}`;
 
   let res;
+  let text;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     res = await fetch(url, {
       method,
@@ -79,16 +82,23 @@ export async function apiRequest(path, { method = "GET", body, params, token, on
       // set, the token is what's doing the authenticating — sending
       // cookies too just forces stricter CORS requirements for no benefit.
       credentials: "omit",
+      signal: controller.signal,
       body: body ? JSON.stringify(body) : undefined,
     });
+    text = await res.text();
   } catch (e) {
-    throw new Error(`Could not reach ${url}. Check that the backend is running and VITE_API_BASE_URL is correct.`);
+    throw new Error(e.name === 'AbortError' ? 'Contexa is taking too long to respond. Please try again shortly.' : 'Could not reach Contexa. Check your connection and try again.');
+  } finally {
+    clearTimeout(timer);
   }
 
   let payload = null;
-  const text = await res.text();
   if (text) {
-    try { payload = JSON.parse(text); } catch { payload = text; }
+    try { payload = JSON.parse(text); } catch {
+      // Hosting error pages and misrouted SPA HTML are never customer messages.
+      payload = /^\s*</.test(text) ? null : text.slice(0, 500);
+      if (res.ok) throw new Error('Contexa returned an unexpected response. Please try again shortly.');
+    }
   }
 
   if (!res.ok) {
@@ -96,7 +106,7 @@ export async function apiRequest(path, { method = "GET", body, params, token, on
     // (expired, revoked, or invalidated by a logout elsewhere — DRF's
     // TokenAuthentication is one token per user).
     if (res.status === 401 && token && onUnauthorized) onUnauthorized();
-    const detail = formatErrorPayload(payload) || `Request failed with status ${res.status}`;
+    const detail = formatErrorPayload(payload) || (res.status >= 500 ? 'Contexa is temporarily unavailable. Please try again shortly.' : `Request failed with status ${res.status}`);
     const err = new Error(detail);
     err.status = res.status;
     err.payload = payload;

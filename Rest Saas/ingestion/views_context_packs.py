@@ -5,6 +5,11 @@ from rest_framework.views import APIView
 import django_rq
 from copy import deepcopy
 import posixpath
+from django.db import transaction
+from django.contrib.auth import get_user_model
+from .models import ContextPreparation
+from .preparation import dispatch_preparation, expire_preparations
+from .privacy import safe_snapshot
 
 from .context_packs import CODE, build_packs
 from .privacy import SECRET_FILE
@@ -14,12 +19,15 @@ from .limits import reserve_job
 
 
 class PackRequest(serializers.Serializer):
+    retrieval_mode = serializers.ChoiceField(choices=['fast', 'semantic'], default='fast')
     task = serializers.CharField(required=False, allow_blank=True, max_length=4000, default="")
     endpoints = serializers.CharField(required=False, allow_blank=True, max_length=2000, default="")
     access = serializers.CharField(required=False, allow_blank=True, max_length=2000, default="")
     rules = serializers.CharField(required=False, allow_blank=True, max_length=4000, default="")
     response_shape = serializers.CharField(required=False, allow_blank=True, max_length=4000, default="")
-    max_tokens = serializers.IntegerField(min_value=1000, max_value=32000, default=4000)
+    acceptance = serializers.CharField(required=False, allow_blank=True, max_length=4000, default="")
+    follow_up = serializers.CharField(required=False, allow_blank=True, max_length=8000, default="")
+    max_tokens = serializers.IntegerField(min_value=1000, max_value=32000, default=10000)
     include_paths = serializers.ListField(child=serializers.CharField(max_length=500), max_length=15, default=list)
     include_symbols = serializers.ListField(child=serializers.CharField(max_length=500), max_length=20, default=list)
 
@@ -45,10 +53,58 @@ class ContextPackView(APIView):
         if snapshot is None:
             return Response({"error": "Not found."}, status=status.HTTP_404_NOT_FOUND)
         try:
-            output = build_packs(snapshot.data, serializer.validated_data, snapshot.id, snapshot.created_at.isoformat())
+            output = build_packs(snapshot.data, serializer.validated_data, snapshot.id, snapshot.created_at.isoformat(), use_semantic=False)
         except ValueError as exc:
             return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         response = Response(output)
+        response['Cache-Control'] = 'no-store'
+        return response
+
+
+class PrepareContextView(APIView):
+    permission_classes = [IsAuthenticated]
+    throttle_scope = 'context_pack'
+
+    def post(self, request, pk):
+        serializer = PackRequest(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        with transaction.atomic():
+            get_user_model().objects.select_for_update().get(pk=request.user.pk)
+            snapshot = IngestionContext.objects.select_for_update().filter(pk=pk, user=request.user).first()
+            if snapshot is None:
+                return Response({'error': 'Not found.'}, status=404)
+            jobs = ContextPreparation.objects.filter(context__user=request.user)
+            expire_preparations(jobs)
+            if jobs.filter(status__in=['pending', 'running']).count() >= 2:
+                return Response({'error': 'Two context preparations are already active. Wait for one to finish.'}, status=409)
+            # Keep temporary exports bounded. Explicitly saved handoffs are separate.
+            prior = list(jobs.filter(status__in=['succeeded', 'failed']).order_by('-created_at').values_list('id', flat=True)[9:])
+            jobs.filter(id__in=prior).delete()
+            job = ContextPreparation.objects.create(context=snapshot, request_data=safe_snapshot(dict(serializer.validated_data)))
+        try:
+            dispatch_preparation(job)
+        except Exception:
+            ContextPreparation.objects.filter(pk=job.pk).update(status='failed', error='Could not start preparation. Check the worker service and retry.')
+            return Response({'error': 'Could not start preparation. Check the worker service and retry.'}, status=503)
+        response = Response({'preparation_id': str(job.pk), 'status': 'pending'}, status=202)
+        response['Cache-Control'] = 'no-store'
+        return response
+
+
+class PreparedContextView(APIView):
+    permission_classes = [IsAuthenticated]
+    throttle_scope = 'context_poll'
+
+    def get(self, request, pk, preparation_id):
+        jobs = ContextPreparation.objects.filter(context_id=pk, context__user=request.user)
+        expire_preparations(jobs)
+        job = jobs.filter(pk=preparation_id).first()
+        if job is None:
+            return Response({'error': 'Not found or expired. Prepare context again.'}, status=404)
+        response = Response({'preparation_id': str(job.pk), 'status': job.status,
+                             'progress': job.output.get('_progress', {}) if job.status != 'succeeded' else {},
+                             'request': job.request_data, 'error': job.error,
+                             **({'output': job.output} if job.status == 'succeeded' else {})})
         response['Cache-Control'] = 'no-store'
         return response
 

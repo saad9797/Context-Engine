@@ -31,10 +31,10 @@ export default class ErrorBoundary extends React.Component {
         <ErrorOutlineIcon sx={{ fontSize: 40, color: "error.main", mb: 2 }} />
         <Typography variant="h4" sx={{ mb: 1 }}>Something went wrong</Typography>
         <Typography color="text.secondary" sx={{ mb: 3, maxWidth: 420 }}>
-          This page hit an unexpected error. Reloading usually fixes it — if it keeps happening,
-          the error has been logged to the browser console.
+          Reload this page to try again, or return to your project library.
         </Typography>
         <Button variant="contained" onClick={() => window.location.reload()}>Reload</Button>
+        <Button href="/dashboard" sx={{ mt: 1 }}>Go to project library</Button>
       </Box>
     );
   }

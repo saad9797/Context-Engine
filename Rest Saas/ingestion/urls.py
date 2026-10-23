@@ -15,7 +15,7 @@ from .views import (
 from .views_crypto import TransitPublicKeyView
 from .views_import import ImportSnapshotView
 from .views_handoffs import SavedHandoffsView, SavedHandoffView
-from .views_context_packs import ContextPackView, RebuildSnapshotView
+from .views_context_packs import ContextPackView, RebuildSnapshotView, PrepareContextView, PreparedContextView
 from .views_github import (
     GitHubInstallationDetailView,
     GitHubInstallationListView,
@@ -29,6 +29,8 @@ from .views_github import (
 )
 
 urlpatterns = [
+    path('api/ingestion/<uuid:pk>/prepare/', PrepareContextView.as_view(), name='prepare-context'),
+    path('api/ingestion/<uuid:pk>/prepare/<uuid:preparation_id>/', PreparedContextView.as_view(), name='prepared-context'),
     path("api/ingestion/<uuid:pk>/handoffs/", SavedHandoffsView.as_view(), name="saved-handoffs"),
     path("api/ingestion/<uuid:pk>/handoffs/<uuid:handoff_id>/", SavedHandoffView.as_view(), name="saved-handoff"),
     path("api/ingestion/import/", ImportSnapshotView.as_view(), name="snapshot-import"),

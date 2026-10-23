@@ -1,6 +1,19 @@
 # Existing external PostgreSQL/Redis plus a TLS reverse proxy are required.
 # Copy docs/production.env.example to Rest Saas/.env.production and fill it.
 services:
+  context:
+    image: contexa-context:release
+    build:
+      context: ./Rest Saas
+      dockerfile: Dockerfile.context
+    env_file: [./Rest Saas/.env.production]
+    environment:
+      DJANGO_SETTINGS_MODULE: core.production_settings
+      CONTEXA_SEMANTIC: "1"
+    restart: unless-stopped
+    init: true
+    mem_limit: 3g
+    stop_grace_period: 16m
   web:
     image: contexa-backend:release
     build:
@@ -8,6 +21,7 @@ services:
     env_file: [./Rest Saas/.env.production]
     environment:
       DJANGO_SETTINGS_MODULE: core.production_settings
+      INGESTION_EXECUTION_MODE: worker
     command: gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 2 --timeout 45 --access-logfile -
     ports: ["127.0.0.1:8000:8000"]
     restart: unless-stopped

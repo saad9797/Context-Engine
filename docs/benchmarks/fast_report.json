@@ -1,0 +1,142 @@
+{
+  "created_at": "2026-10-23T16:39:59.391432+00:00",
+  "scope": "Local retrieval from already-captured source, three calls per case. Excludes upload, ingestion, queueing, HTTP, production load and coding-model success. Regression fixtures informed implementation, not blind evaluation.",
+  "results": [
+    {
+      "fixture": "SeuRonao__realworld-express-prisma.json",
+      "budget": 4000,
+      "seconds": [
+        2.474,
+        1.1107,
+        0.7181
+      ],
+      "median_seconds": 1.1107,
+      "required_contracts": 9,
+      "missing": [
+        "src/middleware/auth/authenticator.ts: export const authenticate = jwt(",
+        "src/view/articleViewer.ts: export default function articleViewer(",
+        "src/view/profileViewer.ts: export default function profileViewer("
+      ],
+      "forbidden_present": [],
+      "estimated_tokens": 3604,
+      "status": "incomplete"
+    },
+    {
+      "fixture": "SeuRonao__realworld-express-prisma.json",
+      "budget": 10000,
+      "seconds": [
+        0.5627,
+        0.6139,
+        0.7633
+      ],
+      "median_seconds": 0.6139,
+      "required_contracts": 9,
+      "missing": [],
+      "forbidden_present": [],
+      "estimated_tokens": 7858,
+      "status": "review"
+    },
+    {
+      "fixture": "Sean-Miningah__realWorld-DjangoRestFramework.json",
+      "budget": 4000,
+      "seconds": [
+        0.4688,
+        0.1556,
+        0.4563
+      ],
+      "median_seconds": 0.4563,
+      "required_contracts": 9,
+      "missing": [
+        "articles/serializers.py: class ArticleSerializer(",
+        "articles/serializers.py: class AuthorSerializer(",
+        "articles/models.py: class Article(",
+        "accounts/models.py: class User(AbstractUser)",
+        "articles/urls.py: article_router.register('articles', views.ArticleView",
+        "config/settings.py: AUTH_USER_MODEL = 'accounts.User'",
+        "config/settings.py: rest_framework_simplejwt.authentication.JWTAuthentication"
+      ],
+      "forbidden_present": [],
+      "estimated_tokens": 3626,
+      "status": "incomplete"
+    },
+    {
+      "fixture": "Sean-Miningah__realWorld-DjangoRestFramework.json",
+      "budget": 10000,
+      "seconds": [
+        0.4595,
+        0.1828,
+        0.2859
+      ],
+      "median_seconds": 0.2859,
+      "required_contracts": 9,
+      "missing": [],
+      "forbidden_present": [],
+      "estimated_tokens": 7095,
+      "status": "review"
+    },
+    {
+      "fixture": "fastapi__full-stack-fastapi-template.json",
+      "budget": 4000,
+      "seconds": [
+        3.1254,
+        2.7068,
+        1.5038
+      ],
+      "median_seconds": 2.7068,
+      "required_contracts": 10,
+      "missing": [
+        "backend/app/models.py: class ItemBase(",
+        "backend/app/core/db.py: engine =",
+        "backend/app/core/security.py: ALGORITHM ="
+      ],
+      "forbidden_present": [],
+      "estimated_tokens": 3664,
+      "status": "incomplete"
+    },
+    {
+      "fixture": "fastapi__full-stack-fastapi-template.json",
+      "budget": 10000,
+      "seconds": [
+        1.3426,
+        2.5396,
+        2.1971
+      ],
+      "median_seconds": 2.1971,
+      "required_contracts": 10,
+      "missing": [],
+      "forbidden_present": [],
+      "estimated_tokens": 6817,
+      "status": "incomplete"
+    },
+    {
+      "fixture": "jimleestone__next-real-world.json",
+      "budget": 4000,
+      "seconds": [
+        1.9547,
+        1.7188,
+        2.2189
+      ],
+      "median_seconds": 1.9547,
+      "required_contracts": 6,
+      "missing": [],
+      "forbidden_present": [],
+      "estimated_tokens": 3641,
+      "status": "incomplete"
+    },
+    {
+      "fixture": "jimleestone__next-real-world.json",
+      "budget": 10000,
+      "seconds": [
+        3.0884,
+        1.8123,
+        2.229
+      ],
+      "median_seconds": 2.229,
+      "required_contracts": 6,
+      "missing": [],
+      "forbidden_present": [],
+      "estimated_tokens": 3906,
+      "status": "review"
+    }
+  ]
+}

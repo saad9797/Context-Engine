@@ -1,0 +1,31 @@
+# Sync this Blueprint with the existing frontend service. A manually-created
+# static site also needs the same rewrite added in its Render dashboard.
+services:
+  - type: web
+    name: context-engine-frontend
+    runtime: static
+    rootDir: Rest Saas Frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: VITE_API_BASE_URL
+        value: https://context-engine-z4s8.onrender.com
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: Cache-Control
+        value: no-cache

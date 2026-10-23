@@ -4,7 +4,7 @@ The current customer flow uses **Complete handoff**: one self-contained JSON
 within one estimated copy budget. See the [current test/deployment guide](docs/RELEASE_CANDIDATE.md)
 and [measured contract checks](docs/benchmarks/README.md). Base/task splitting
 below remains available as an advanced conversation-reuse option. The trained
-pilot model is not integrated; retrieval uses static parsing and dependency tracing.
+pilot training model is separate from the revision-pinned CodeRankEmbed integration. See [the context workflow](docs/CONTEXT_WORKFLOW.md) for model worker deployment.
 
 Contexa's job is to give a coding assistant enough evidence to make a specific change, without making the developer paste an entire project or production database. A schema dump cannot supply ORM relation names, response helpers, authorization contracts, or business requirements. A smaller dump is not enough: selection must preserve those contracts.
 
@@ -34,7 +34,7 @@ Paste the base again in a new conversation, after rebuilding, or if the conversa
 | Other languages/frameworks | Existing language detection and complete relevant source (Go/Java/C#/PHP/Ruby/Rust) | Source-assisted fallback, not dedicated semantic adapters. Do not advertise equivalent semantic coverage. |
 | MCP | `get_context_packs`, optional `pack: base/task/both`, structured requirements and budgets | Existing `get_context` remains a legacy overview tool. Use task-only responses after loading the matching base. |
 
-Capture currently allows at most 128 KB per file, 2 MB total, 220 files, 100 controller files and 60 per other role. Snapshot metadata records capture limits and failures. Export limits operate on complete units: oversized units are omitted with a reason, not cut at arbitrary character boundaries. Tokens are estimated from compact JSON UTF-8 bytes divided by three; this is not the Claude tokenizer and not a guaranteed hard limit on provider billing.
+Capture currently allows at most 512 KB per file, 12 MB total and 1,200 files, without per-role quotas. Snapshot metadata records capture limits and failures. Export limits operate on complete units: oversized units are omitted with a reason, not cut at arbitrary character boundaries. Tokens are estimated from compact JSON UTF-8 bytes divided by three; this is not the Claude tokenizer and not a guaranteed hard limit on provider billing.
 
 ## Privacy and trust
 

@@ -1,6 +1,6 @@
 # Contexa
 
-**Task-specific context in one copy.** Connect a repository, describe a change, and prepare a self-contained handoff with source contracts, dependencies, ORM models and explicit gaps within one estimated budget. Large JS/TS/Python files contribute complete source units. Database records are excluded. Start with the [test and deployment guide](docs/RELEASE_CANDIDATE.md) and [measured contract checks](docs/benchmarks/README.md). A custom trained model is not enabled.
+**Task-specific context in one copy.** Connect a repository, describe a change, and prepare a self-contained handoff with source contracts, dependencies, ORM models and explicit gaps within one estimated budget. Large JS/TS/Python files contribute complete source units. Database records are excluded. Start with the [test and deployment guide](docs/RELEASE_CANDIDATE.md) and [measured contract checks](docs/benchmarks/README.md). Hybrid retrieval combines local CodeRankEmbed with static analysis when the model worker is provisioned. See the [context and repair workflow](docs/CONTEXT_WORKFLOW.md).
 
 An automated context-extraction platform: connect a codebase, a database, and cloud storage, and get back one distilled, structured JSON context package sized for handing to an AI coding assistant — instead of pasting files by hand or letting an agent re-derive the same facts on every session.
 
@@ -29,3 +29,5 @@ Backend setup, environment variables, and the GitHub App onboarding flow are doc
 For the current customer workflow, use [the release guide](docs/RELEASE_CANDIDATE.md): review a local folder or connect sources, describe one change, inspect the selected contracts and gaps, then copy the handoff into your AI chat. Private saved handoffs preserve the request and original export for later. [Research and support limits](docs/PRODUCT_RESEARCH.md) explain the stack priorities, public-codebase checks and what remains unproven.
 
 Both the backend and the ingestion engine need a `.env` — copy `Rest Saas/.env.example` to `Rest Saas/.env` and fill in real values locally. **Never commit a real `.env`** — see `.gitignore`.
+
+Render deployment and route-refresh verification: [release instructions](docs/RENDER_RELEASE.md).

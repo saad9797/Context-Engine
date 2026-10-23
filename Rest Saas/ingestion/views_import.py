@@ -23,7 +23,7 @@ EXCLUDED = re.compile(r'(?:^|/)(?:\.git|\.venv|venv|node_modules|vendor|dist|bui
 
 class SourceFile(serializers.Serializer):
     path = serializers.CharField(max_length=500)
-    content = serializers.CharField(trim_whitespace=False, allow_blank=True, max_length=128000)
+    content = serializers.CharField(trim_whitespace=False, allow_blank=True, max_length=512000)
 
     def validate_path(self, path):
         if path.startswith('/') or '\\' in path or ':' in path or '..' in path.split('/') or posixpath.normpath(path) != path or any(ord(c) < 32 for c in path):
@@ -35,7 +35,8 @@ class SourceFile(serializers.Serializer):
 
 class ImportRequest(serializers.Serializer):
     project_name = serializers.CharField(max_length=255)
-    files = SourceFile(many=True, min_length=1, max_length=220)
+    files = SourceFile(many=True, min_length=1, max_length=1200)
+    omitted_source_files = serializers.IntegerField(min_value=0, max_value=1000000, default=0)
 
     def validate_files(self, files):
         names, size = set(), 0
@@ -44,11 +45,11 @@ class ImportRequest(serializers.Serializer):
                 raise serializers.ValidationError('Duplicate source paths are not accepted.')
             names.add(item['path'].casefold())
             length = len(item['content'].encode('utf-8'))
-            if length > 128000 or '\x00' in item['content']:
-                raise serializers.ValidationError('Files must be UTF-8 text, at most 128 KB each.')
+            if length > 512000 or '\x00' in item['content'] or '\ufffd' in item['content']:
+                raise serializers.ValidationError('Files must be UTF-8 text, at most 512 KB each.')
             size += length
-        if size > 2000000:
-            raise serializers.ValidationError('Import at most 2 MB of source. Select a focused project folder.')
+        if size > 12000000:
+            raise serializers.ValidationError('Import at most 12 MB of source. Select a focused project folder.')
         if not any(CODE.search(item['path']) for item in files):
             raise serializers.ValidationError('Select at least one source file, not just manifests.')
         return files
@@ -74,7 +75,8 @@ class ImportSnapshotView(APIView):
             'repository': {'source_kind': 'folder', 'content_sha256': digest, 'full_name': values['project_name']},
             'file_tree': {'total_files': len(sources)},
             'stack': {'languages': languages}, 'key_files_by_role': {'source': sources},
-            'capture': {'files_captured': len(sources), 'redacted_paths': redacted, 'scope': 'User-selected files; other project files may be absent.'}}}
+            'key_files_truncated': values['omitted_source_files'] > 0,
+            'capture': {'files_captured': len(sources), 'candidate_files': len(sources) + values['omitted_source_files'], 'redacted_paths': redacted, 'scope': 'User-selected files; files outside this selection have not been inspected.'}}}
         # Serialize quota checks per owner on Postgres; never evict customer data.
         with transaction.atomic():
             get_user_model().objects.select_for_update().get(pk=request.user.pk)

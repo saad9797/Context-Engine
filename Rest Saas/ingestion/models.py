@@ -198,6 +198,27 @@ class IngestionJob(models.Model):
         return f"IngestionJob({self.id}, {self.status})"
 
 
+class SourceVectorCache(models.Model):
+    """Private source-derived vectors; deleting the snapshot removes the cache."""
+    context = models.OneToOneField(IngestionContext, on_delete=models.CASCADE, related_name='vector_cache', primary_key=True)
+    policy = models.CharField(max_length=100)
+    keys = models.JSONField(default=list)
+    vectors = models.BinaryField()
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+class ContextPreparation(models.Model):
+    """Owner-scoped, short-lived context build; snapshot deletion cascades."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    context = models.ForeignKey(IngestionContext, on_delete=models.CASCADE, related_name='preparations')
+    request_data = models.JSONField(default=dict)
+    output = models.JSONField(default=dict)
+    status = models.CharField(max_length=20, default='pending')
+    error = models.CharField(max_length=300, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
 class AuditLogEntry(models.Model):
     """Append-only record of who did what, for after-the-fact review."""
 

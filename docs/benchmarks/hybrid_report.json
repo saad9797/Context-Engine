@@ -1,0 +1,342 @@
+{
+  "created_at": "2026-10-23T08:56:49.685921+00:00",
+  "model": "nomic-ai/CodeRankEmbed",
+  "revision": "3c4b60807d71f79b43f3c4363786d9493691f8b1",
+  "scope": "Agent-authored regression fixtures, not blind evaluation or generated-code success. No customer/public application code executed.",
+  "results": [
+    {
+      "fixture": "SeuRonao__realworld-express-prisma.json",
+      "fixture_sha256": "b8ba2e13868a11cf50c96b13cdb6c0e4b2ec0fe0f57ac8d54cdbad4b35d33d9d",
+      "mode": "lexical",
+      "budget": 4000,
+      "elapsed_seconds": 1.809,
+      "required_contracts": 9,
+      "missing": [
+        "src/middleware/auth/authenticator.ts: export const authenticate = jwt(",
+        "src/view/articleViewer.ts: export default function articleViewer(",
+        "src/view/profileViewer.ts: export default function profileViewer("
+      ],
+      "forbidden_present": [],
+      "estimated_tokens": 3604,
+      "status": "incomplete",
+      "retrieval": {
+        "mode": "lexical",
+        "status": "disabled",
+        "semantic_only": false
+      }
+    },
+    {
+      "fixture": "SeuRonao__realworld-express-prisma.json",
+      "fixture_sha256": "b8ba2e13868a11cf50c96b13cdb6c0e4b2ec0fe0f57ac8d54cdbad4b35d33d9d",
+      "mode": "hybrid",
+      "budget": 4000,
+      "elapsed_seconds": 254.684,
+      "required_contracts": 9,
+      "missing": [
+        "src/middleware/auth/authenticator.ts: export const authenticate = jwt(",
+        "src/view/articleViewer.ts: export default function articleViewer(",
+        "src/view/profileViewer.ts: export default function profileViewer("
+      ],
+      "forbidden_present": [],
+      "estimated_tokens": 3604,
+      "status": "incomplete",
+      "retrieval": {
+        "mode": "hybrid",
+        "model": "nomic-ai/CodeRankEmbed",
+        "revision": "3c4b60807d71f79b43f3c4363786d9493691f8b1",
+        "status": "ready",
+        "indexed_units": 110,
+        "windows": 115,
+        "cached_windows": 0,
+        "semantic_only": false
+      }
+    },
+    {
+      "fixture": "SeuRonao__realworld-express-prisma.json",
+      "fixture_sha256": "b8ba2e13868a11cf50c96b13cdb6c0e4b2ec0fe0f57ac8d54cdbad4b35d33d9d",
+      "mode": "lexical",
+      "budget": 10000,
+      "elapsed_seconds": 0.181,
+      "required_contracts": 9,
+      "missing": [],
+      "forbidden_present": [],
+      "estimated_tokens": 7858,
+      "status": "review",
+      "retrieval": {
+        "mode": "lexical",
+        "status": "disabled",
+        "semantic_only": false
+      }
+    },
+    {
+      "fixture": "SeuRonao__realworld-express-prisma.json",
+      "fixture_sha256": "b8ba2e13868a11cf50c96b13cdb6c0e4b2ec0fe0f57ac8d54cdbad4b35d33d9d",
+      "mode": "hybrid",
+      "budget": 10000,
+      "elapsed_seconds": 7.225,
+      "required_contracts": 9,
+      "missing": [],
+      "forbidden_present": [],
+      "estimated_tokens": 9408,
+      "status": "review",
+      "retrieval": {
+        "mode": "hybrid",
+        "model": "nomic-ai/CodeRankEmbed",
+        "revision": "3c4b60807d71f79b43f3c4363786d9493691f8b1",
+        "status": "ready",
+        "indexed_units": 110,
+        "windows": 115,
+        "cached_windows": 115,
+        "semantic_only": false
+      }
+    },
+    {
+      "fixture": "Sean-Miningah__realWorld-DjangoRestFramework.json",
+      "fixture_sha256": "79eae188a2218823c24f4534ff00174189e8744d198be1ae83019549e3594a71",
+      "mode": "lexical",
+      "budget": 4000,
+      "elapsed_seconds": 0.813,
+      "required_contracts": 9,
+      "missing": [
+        "articles/serializers.py: class ArticleSerializer(",
+        "articles/serializers.py: class AuthorSerializer(",
+        "articles/models.py: class Article(",
+        "accounts/models.py: class User(AbstractUser)",
+        "articles/urls.py: article_router.register('articles', views.ArticleView",
+        "config/settings.py: AUTH_USER_MODEL = 'accounts.User'",
+        "config/settings.py: rest_framework_simplejwt.authentication.JWTAuthentication"
+      ],
+      "forbidden_present": [],
+      "estimated_tokens": 3626,
+      "status": "incomplete",
+      "retrieval": {
+        "mode": "lexical",
+        "status": "disabled",
+        "semantic_only": false
+      }
+    },
+    {
+      "fixture": "Sean-Miningah__realWorld-DjangoRestFramework.json",
+      "fixture_sha256": "79eae188a2218823c24f4534ff00174189e8744d198be1ae83019549e3594a71",
+      "mode": "hybrid",
+      "budget": 4000,
+      "elapsed_seconds": 76.035,
+      "required_contracts": 9,
+      "missing": [
+        "articles/serializers.py: class ArticleSerializer(",
+        "articles/serializers.py: class AuthorSerializer(",
+        "articles/models.py: class Article(",
+        "accounts/models.py: class User(AbstractUser)",
+        "articles/urls.py: article_router.register('articles', views.ArticleView",
+        "config/settings.py: AUTH_USER_MODEL = 'accounts.User'",
+        "config/settings.py: rest_framework_simplejwt.authentication.JWTAuthentication"
+      ],
+      "forbidden_present": [],
+      "estimated_tokens": 3626,
+      "status": "incomplete",
+      "retrieval": {
+        "mode": "hybrid",
+        "model": "nomic-ai/CodeRankEmbed",
+        "revision": "3c4b60807d71f79b43f3c4363786d9493691f8b1",
+        "status": "ready",
+        "indexed_units": 61,
+        "windows": 68,
+        "cached_windows": 0,
+        "semantic_only": false
+      }
+    },
+    {
+      "fixture": "Sean-Miningah__realWorld-DjangoRestFramework.json",
+      "fixture_sha256": "79eae188a2218823c24f4534ff00174189e8744d198be1ae83019549e3594a71",
+      "mode": "lexical",
+      "budget": 10000,
+      "elapsed_seconds": 0.159,
+      "required_contracts": 9,
+      "missing": [],
+      "forbidden_present": [],
+      "estimated_tokens": 7095,
+      "status": "review",
+      "retrieval": {
+        "mode": "lexical",
+        "status": "disabled",
+        "semantic_only": false
+      }
+    },
+    {
+      "fixture": "Sean-Miningah__realWorld-DjangoRestFramework.json",
+      "fixture_sha256": "79eae188a2218823c24f4534ff00174189e8744d198be1ae83019549e3594a71",
+      "mode": "hybrid",
+      "budget": 10000,
+      "elapsed_seconds": 0.787,
+      "required_contracts": 9,
+      "missing": [],
+      "forbidden_present": [],
+      "estimated_tokens": 8993,
+      "status": "review",
+      "retrieval": {
+        "mode": "hybrid",
+        "model": "nomic-ai/CodeRankEmbed",
+        "revision": "3c4b60807d71f79b43f3c4363786d9493691f8b1",
+        "status": "ready",
+        "indexed_units": 61,
+        "windows": 68,
+        "cached_windows": 68,
+        "semantic_only": false
+      }
+    },
+    {
+      "fixture": "fastapi__full-stack-fastapi-template.json",
+      "fixture_sha256": "8fba16077db30938fabe74e056a60dab79fa4802dabefbd781d51c58eb3c5820",
+      "mode": "lexical",
+      "budget": 4000,
+      "elapsed_seconds": 5.949,
+      "required_contracts": 10,
+      "missing": [
+        "backend/app/models.py: class ItemBase(",
+        "backend/app/core/db.py: engine =",
+        "backend/app/core/security.py: ALGORITHM ="
+      ],
+      "forbidden_present": [],
+      "estimated_tokens": 3664,
+      "status": "incomplete",
+      "retrieval": {
+        "mode": "lexical",
+        "status": "disabled",
+        "semantic_only": false
+      }
+    },
+    {
+      "fixture": "fastapi__full-stack-fastapi-template.json",
+      "fixture_sha256": "8fba16077db30938fabe74e056a60dab79fa4802dabefbd781d51c58eb3c5820",
+      "mode": "hybrid",
+      "budget": 4000,
+      "elapsed_seconds": 872.378,
+      "required_contracts": 10,
+      "missing": [
+        "backend/app/models.py: class ItemBase(",
+        "backend/app/core/db.py: engine =",
+        "backend/app/core/security.py: ALGORITHM ="
+      ],
+      "forbidden_present": [],
+      "estimated_tokens": 3664,
+      "status": "incomplete",
+      "retrieval": {
+        "mode": "hybrid",
+        "model": "nomic-ai/CodeRankEmbed",
+        "revision": "3c4b60807d71f79b43f3c4363786d9493691f8b1",
+        "status": "ready",
+        "indexed_units": 585,
+        "windows": 660,
+        "cached_windows": 0,
+        "semantic_only": false
+      }
+    },
+    {
+      "fixture": "fastapi__full-stack-fastapi-template.json",
+      "fixture_sha256": "8fba16077db30938fabe74e056a60dab79fa4802dabefbd781d51c58eb3c5820",
+      "mode": "lexical",
+      "budget": 10000,
+      "elapsed_seconds": 0.946,
+      "required_contracts": 10,
+      "missing": [],
+      "forbidden_present": [],
+      "estimated_tokens": 6817,
+      "status": "incomplete",
+      "retrieval": {
+        "mode": "lexical",
+        "status": "disabled",
+        "semantic_only": false
+      }
+    },
+    {
+      "fixture": "fastapi__full-stack-fastapi-template.json",
+      "fixture_sha256": "8fba16077db30938fabe74e056a60dab79fa4802dabefbd781d51c58eb3c5820",
+      "mode": "hybrid",
+      "budget": 10000,
+      "elapsed_seconds": 2.903,
+      "required_contracts": 10,
+      "missing": [],
+      "forbidden_present": [],
+      "estimated_tokens": 6817,
+      "status": "incomplete",
+      "retrieval": {
+        "mode": "hybrid",
+        "model": "nomic-ai/CodeRankEmbed",
+        "revision": "3c4b60807d71f79b43f3c4363786d9493691f8b1",
+        "status": "ready",
+        "indexed_units": 585,
+        "windows": 660,
+        "cached_windows": 660,
+        "semantic_only": false
+      }
+    },
+    {
+      "fixture": "jimleestone__next-real-world.json",
+      "fixture_sha256": "3f597f60180d01cfc6423d46c3875a2b9a2a24f00d9ca1e92075e4621860d875",
+      "mode": "lexical",
+      "budget": 4000,
+      "elapsed_seconds": 2.096,
+      "required_contracts": 6,
+      "missing": [],
+      "forbidden_present": [],
+      "estimated_tokens": 3641,
+      "status": "incomplete",
+      "retrieval": {
+        "mode": "lexical",
+        "status": "exact_scope",
+        "semantic_only": false
+      }
+    },
+    {
+      "fixture": "jimleestone__next-real-world.json",
+      "fixture_sha256": "3f597f60180d01cfc6423d46c3875a2b9a2a24f00d9ca1e92075e4621860d875",
+      "mode": "hybrid",
+      "budget": 4000,
+      "elapsed_seconds": 0.606,
+      "required_contracts": 6,
+      "missing": [],
+      "forbidden_present": [],
+      "estimated_tokens": 3641,
+      "status": "incomplete",
+      "retrieval": {
+        "mode": "lexical",
+        "status": "exact_scope",
+        "semantic_only": false
+      }
+    },
+    {
+      "fixture": "jimleestone__next-real-world.json",
+      "fixture_sha256": "3f597f60180d01cfc6423d46c3875a2b9a2a24f00d9ca1e92075e4621860d875",
+      "mode": "lexical",
+      "budget": 10000,
+      "elapsed_seconds": 0.727,
+      "required_contracts": 6,
+      "missing": [],
+      "forbidden_present": [],
+      "estimated_tokens": 3906,
+      "status": "review",
+      "retrieval": {
+        "mode": "lexical",
+        "status": "exact_scope",
+        "semantic_only": false
+      }
+    },
+    {
+      "fixture": "jimleestone__next-real-world.json",
+      "fixture_sha256": "3f597f60180d01cfc6423d46c3875a2b9a2a24f00d9ca1e92075e4621860d875",
+      "mode": "hybrid",
+      "budget": 10000,
+      "elapsed_seconds": 0.712,
+      "required_contracts": 6,
+      "missing": [],
+      "forbidden_present": [],
+      "estimated_tokens": 3906,
+      "status": "review",
+      "retrieval": {
+        "mode": "lexical",
+        "status": "exact_scope",
+        "semantic_only": false
+      }
+    }
+  ]
+}

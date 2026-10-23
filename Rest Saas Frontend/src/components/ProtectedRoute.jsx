@@ -1,12 +1,16 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import { useAuth } from "../context/AuthContext";
+import { rememberReturnPath } from '../lib/authReturn';
 
 export default function ProtectedRoute() {
   const { isAuthenticated, resolvingOAuthToken } = useAuth();
   const location = useLocation();
+  useEffect(() => {
+    if (!isAuthenticated && !resolvingOAuthToken) rememberReturnPath(location);
+  }, [isAuthenticated, resolvingOAuthToken, location]);
 
   if (resolvingOAuthToken) {
     return (

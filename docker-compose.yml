@@ -10,6 +10,16 @@
 # `docker compose up` before relying on it.
 
 services:
+  context:
+    build:
+      context: ./Rest Saas
+    command: python manage.py rqworker context --worker-class ingestion.workers.ContextWorker
+    env_file: [./Rest Saas/.env]
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      CONTEXA_SEMANTIC: "0"
+    depends_on: [redis]
+    volumes: ["./Rest Saas:/app"]
   redis:
     image: redis:7-alpine
     ports:

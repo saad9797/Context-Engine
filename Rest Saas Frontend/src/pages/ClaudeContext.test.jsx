@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import ClaudeContext from "./ClaudeContext";
@@ -15,10 +15,47 @@ const result = {
   handoff: { kind: "handoff", request: { task: "Add interviews" }, code: [{ path: "interview.ts", content: "export function scheduleInterview() {}" }], status: "review", context_gaps: [] },
   report: { base_size: 1200, task_size: 500, handoff_size: 900, privacy: "Database records excluded.", missing: [], omitted: [], included: [], selection: "Names and imports" },
 };
-beforeEach(() => { vi.clearAllMocks(); request.mockResolvedValue(result); clipboard.mockResolvedValue(true); });
+beforeEach(() => { vi.clearAllMocks(); request.mockReset(); sessionStorage.clear(); request.mockResolvedValue(result); clipboard.mockResolvedValue(true); });
 function open() { render(<MemoryRouter initialEntries={["/contexts/example/claude-context"]}><Routes><Route path="/contexts/:contextId/claude-context" element={<ClaudeContext />} /><Route path="/ingest/:jobId/progress" element={<div>Build queued</div>} /></Routes></MemoryRouter>); }
 
 describe("AI context pack workflow", () => {
+  it('prepares an asynchronous follow-up with the original task and acceptance criteria', async () => {
+    open();
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Copy JSON' })).toBeEnabled());
+    fireEvent.change(screen.getByLabelText('What do you want to build?'), { target: { value: 'Add interviews' } });
+    fireEvent.change(screen.getByLabelText('How will you know it works?'), { target: { value: 'Reject overlapping appointments' } });
+    fireEvent.change(screen.getByLabelText('AI request or validation error'), { target: { value: 'Please show scheduleInterview' } });
+    request.mockResolvedValueOnce({ preparation_id: 'prepared' }).mockResolvedValueOnce({ status: 'succeeded', output: result });
+    vi.useFakeTimers();
+    try {
+      await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Prepare follow-up context' })); });
+      expect(screen.getByRole('button', { name: 'Copy JSON' })).toBeDisabled();
+      await act(async () => { await vi.advanceTimersByTimeAsync(2500); });
+    } finally { vi.useRealTimers(); }
+    expect(request).toHaveBeenCalledWith('/api/ingestion/example/prepare/prepared/');
+    expect(request.mock.calls[1][1].body).toMatchObject({ task: 'Add interviews', acceptance: 'Reject overlapping appointments', follow_up: 'Please show scheduleInterview', retrieval_mode: 'fast' });
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Copy JSON' })).toBeEnabled());
+  }, 10000);
+
+  it('resumes a prepared task after reloading without storing source in browser storage', async () => {
+    sessionStorage.setItem('contexa-preparation:example', 'remembered');
+    request.mockResolvedValueOnce({ status: 'succeeded', output: result, request: { task: 'Add interviews', acceptance: 'No overlaps', max_tokens: 8000 } });
+    open();
+    await waitFor(() => expect(screen.getByLabelText('What do you want to build?')).toHaveValue('Add interviews'));
+    expect(screen.getByLabelText('How will you know it works?')).toHaveValue('No overlaps');
+    expect(request.mock.calls[0][0]).toBe('/api/ingestion/example/prepare/remembered/');
+    expect(sessionStorage.getItem('contexa-preparation:example')).toBe('remembered');
+  });
+
+  it('carries the original task into a refreshed snapshot and prepares against the new source', async () => {
+    request.mockResolvedValueOnce({ request: { task: 'Add interviews', acceptance: 'No overlaps', follow_up: 'Please show scheduleInterview', max_tokens: 8000 } }).mockResolvedValueOnce(result);
+    render(<MemoryRouter initialEntries={[{ pathname: '/contexts/example/claude-context', state: { carryTask: { contextId: 'previous', preparationId: 'old-job' } } }]}><Routes><Route path='/contexts/:contextId/claude-context' element={<ClaudeContext />} /></Routes></MemoryRouter>);
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Copy JSON' })).toBeEnabled());
+    expect(request.mock.calls[0][0]).toBe('/api/ingestion/previous/prepare/old-job/');
+    expect(request.mock.calls[1][0]).toBe('/api/ingestion/example/prepare/');
+    expect(request.mock.calls[1][1].body).toMatchObject({ task: 'Add interviews', acceptance: 'No overlaps', max_tokens: 8000, follow_up: 'Please show scheduleInterview' });
+    expect(screen.getByLabelText('What do you want to build?')).toHaveValue('Add interviews');
+  });
   it("copies one compact base pack and blocks stale copies after requirements change", async () => {
     open();
     await screen.findByRole("tab", { name: "Reusable base" });
@@ -33,7 +70,7 @@ describe("AI context pack workflow", () => {
     fireEvent.change(screen.getByLabelText("Who can use it?"), { target: { value: "Recruiters" } });
     fireEvent.click(screen.getByRole("button", { name: "Prepare context packs" }));
     await waitFor(() => expect(request).toHaveBeenCalledTimes(2));
-    expect(request.mock.calls[1][1].body).toMatchObject({ task: "Add interviews", access: "Recruiters", max_tokens: 4000 });
+    expect(request.mock.calls[1][1].body).toMatchObject({ task: "Add interviews", access: "Recruiters", max_tokens: 10000 });
     await waitFor(() => expect(screen.getByRole("button", { name: "Copy JSON" })).toBeEnabled());
     fireEvent.click(screen.getByRole("button", { name: "Copy JSON" }));
     await waitFor(() => expect(clipboard).toHaveBeenCalledTimes(2));
@@ -43,7 +80,7 @@ describe("AI context pack workflow", () => {
   it("copies a self-contained handoff and sends exact follow-up symbols", async () => {
     open();
     await waitFor(() => expect(screen.getByRole("button", { name: "Copy JSON" })).toBeEnabled());
-    expect(screen.getByRole("tab", { name: "Complete handoff" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tab", { name: "AI handoff" })).toHaveAttribute("aria-selected", "true");
     fireEvent.change(screen.getByLabelText("Additional symbols (optional)"), { target: { value: "validateInterview\nsrc/types/session.ts#SessionUser" } });
     expect(screen.getByRole("button", { name: "Download JSON" })).toBeDisabled();
     fireEvent.click(screen.getByRole("button", { name: "Prepare context packs" }));
@@ -77,13 +114,13 @@ describe("AI context pack workflow", () => {
 
   it("retries with the suggested single-copy budget and preserves the task", async () => {
     request.mockResolvedValueOnce({ ...result, handoff: { ...result.handoff, status: "incomplete" },
-      report: { ...result.report, suggested_handoff_budget: 10000 } }).mockResolvedValueOnce(result);
+      report: { ...result.report, suggested_handoff_budget: 16000 } }).mockResolvedValueOnce(result);
     open();
-    await screen.findByRole("button", { name: "Try 10,000 token budget" });
+    await screen.findByRole("button", { name: "Try 16,000 token budget" });
     fireEvent.change(screen.getByLabelText("What do you want to build?"), { target: { value: "Add interviews" } });
-    fireEvent.click(screen.getByRole("button", { name: "Try 10,000 token budget" }));
+    fireEvent.click(screen.getByRole("button", { name: "Try 16,000 token budget" }));
     await waitFor(() => expect(request).toHaveBeenCalledTimes(2));
-    expect(request.mock.calls[1][1].body).toMatchObject({ task: "Add interviews", max_tokens: 10000 });
+    expect(request.mock.calls[1][1].body).toMatchObject({ task: "Add interviews", max_tokens: 16000 });
     await waitFor(() => expect(screen.getByRole("button", { name: "Copy JSON" })).toBeEnabled());
   });
 

@@ -14,3 +14,21 @@ it("uses the deployed Vite API origin for authenticated requests", async () => {
     headers: expect.objectContaining({ Authorization: "Token test-only" }), credentials: "omit",
   }));
 });
+
+it('reports an unavailable service without exposing an HTML hosting error page', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 503, text: async () => '<html>upstream internal error</html>' }));
+  const { apiRequest } = await import('./client');
+  await expect(apiRequest('/api/auth/login/')).rejects.toThrow('Contexa is temporarily unavailable');
+});
+
+it('rejects HTML served by an incorrectly rewritten API URL', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, text: async () => '<html>React app</html>' }));
+  const { apiRequest } = await import('./client');
+  await expect(apiRequest('/api/ingestion/')).rejects.toThrow('unexpected response');
+});
+
+it('aborts requests that never respond', async () => {
+  vi.stubGlobal('fetch', vi.fn((_, options) => new Promise((resolve, reject) => options.signal.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError'))))));
+  const { apiRequest } = await import('./client');
+  await expect(apiRequest('/api/ingestion/', { timeoutMs: 5 })).rejects.toThrow('taking too long');
+});

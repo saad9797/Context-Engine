@@ -148,7 +148,7 @@ async function getFileContent(octokit, owner, repo, path, ref) {
     const content = Buffer.from(data.content, "base64").toString("utf8");
     // Capture whole units for later task selection. Never present fragments as
     // complete code; oversized files are reported as unavailable instead.
-    if (Buffer.byteLength(content, "utf8") > 128_000) return null;
+    if (Buffer.byteLength(content, "utf8") > 512_000) return null;
     return content;
   } catch {
     return null;
@@ -162,9 +162,11 @@ async function flattenTree(octokit, owner, repo, ref, treeSha) {
     // it so a truncated file_tree doesn't get mistaken for the whole repo.
     console.warn(`GitHub tree for ${owner}/${repo}@${ref} was truncated by the API — file list is incomplete.`);
   }
-  return (data.tree || []).map((item) => ({
+  const entries = (data.tree || []).map((item) => ({
     path: item.path, type: item.type, size: item.size, sha: item.sha,
   }));
+  entries.truncated = Boolean(data.truncated);
+  return entries;
 }
 
 // Builds a nested folder/file tree from the flat (already-filtered) file
@@ -290,43 +292,36 @@ async function inspectGitHub({ token, owner, repo, branch, includePaths = [] }) 
       return priority(a.path) - priority(b.path);
     })
     ;
-  // Reserve coverage across roles rather than spending the entire capture
-  // budget on the first directory of a large repository.
+  // Capture broadly; chat copy budgets are enforced later by task selection.
   const captureCandidates = candidates.filter((file) => {
-    if (/\.d\.ts$/.test(file.path) && allFiles.some((other) => other.path === file.path.replace(/\.d\.ts$/, ".ts"))) return false;
-    if (/\.js$/.test(file.path) && allFiles.some((other) => other.path === file.path.replace(/\.js$/, ".ts"))) return false;
+    if (/\.d\.ts$/.test(file.path) && allFiles.some(other => other.path === file.path.replace(/\.d\.ts$/, '.ts'))) return false;
+    if (/\.js$/.test(file.path) && allFiles.some(other => other.path === file.path.replace(/\.js$/, '.ts'))) return false;
     return true;
   });
-  const roleCounts = {};
-  const highValueFiles = captureCandidates.filter((file) => {
-    const role = inferFileRole(file.path);
-    const group = role === "route/controller" ? (/routes?\//i.test(file.path) ? "routes" : "controllers") : role;
-    roleCounts[group] = (roleCounts[group] || 0) + 1;
-    return requested.has(file.path) || roleCounts[group] <= (group === "controllers" ? 100 : 60);
-  }).slice(0, 220);
+  const highValueFiles = captureCandidates.slice(0, 1200);
 
   // Hard budget across ALL file content combined, not just a per-file cap.
   // Files are already priority-sorted (entry points → routes → models →
   // ... → tests/docs), so hitting the budget drops the least important
   // files first rather than truncating arbitrarily. This is what keeps a
   // huge repo from blowing past what's useful to hand to Claude in one go.
-  const MAX_TOTAL_CONTENT_BYTES = 2_000_000;
+  const MAX_TOTAL_CONTENT_BYTES = 12_000_000;
   const BATCH = 10;
   const fileContents = [];
   let totalBytes = 0;
   let budgetExhausted = false;
-  const omittedFiles = [];
+  const omittedFiles = captureCandidates.slice(1200).map(file => ({path: file.path, reason: '1200-file capture limit'}));
 
   for (let i = 0; i < highValueFiles.length; i += BATCH) {
     const batch = highValueFiles.slice(i, i + BATCH);
     const results = await Promise.all(
       batch.map(async (f) => {
-        const content = f.size > 128_000 ? null : await getFileContent(octokit, owner, repo, f.path, commitSha);
+        const content = f.size > 512_000 ? null : await getFileContent(octokit, owner, repo, f.path, commitSha);
         return { path: f.path, role: inferFileRole(f.path), size_bytes: f.size, sha: f.sha, content: content ?? null };
       })
     );
     for (const r of results) {
-      if (r.content === null) { omittedFiles.push({ path: r.path, reason: "unavailable or exceeds 128 KB source limit" }); continue; }
+      if (r.content === null) { omittedFiles.push({ path: r.path, reason: "unavailable or exceeds 512 KB source limit" }); continue; }
       const size = Buffer.byteLength(r.content, "utf8");
       if (totalBytes + size > MAX_TOTAL_CONTENT_BYTES) {
         budgetExhausted = true;
@@ -389,8 +384,8 @@ async function inspectGitHub({ token, owner, repo, branch, includePaths = [] }) 
     readme,
     env_vars: envVars,
     key_files_by_role: filesByRole,
-    key_files_truncated: budgetExhausted || highValueFiles.length < captureCandidates.length || omittedFiles.length > 0,
-    capture: { complete_files: fileContents.length, candidate_files: captureCandidates.length, content_bytes: totalBytes, omitted_files: omittedFiles, requested_paths: [...requested], unavailable_requested_paths: [...requested].filter(p => !fileContents.some(f => f.path === p)), max_file_bytes: 128_000, max_total_bytes: MAX_TOTAL_CONTENT_BYTES },
+    key_files_truncated: rawTree.truncated || budgetExhausted || highValueFiles.length < captureCandidates.length || omittedFiles.length > 0,
+    capture: { complete_files: fileContents.length, candidate_files: captureCandidates.length, content_bytes: totalBytes, omitted_files: omittedFiles, requested_paths: [...requested], unavailable_requested_paths: [...requested].filter(p => !fileContents.some(f => f.path === p)), max_file_bytes: 512_000, max_total_bytes: MAX_TOTAL_CONTENT_BYTES, max_files: 1200 },
     recent_commits: recentCommits,
   };
 }

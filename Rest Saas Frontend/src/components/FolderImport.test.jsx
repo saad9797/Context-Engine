@@ -18,7 +18,7 @@ it('reviews source without uploading and creates the snapshot only after the use
   expect(screen.getByText('src/invoice.ts')).toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Create snapshot and prepare AI context' }));
   await screen.findByText('Context workspace');
-  expect(request).toHaveBeenCalledWith('/api/ingestion/import/', { method: 'POST', body: { project_name: 'billing', files: [{ path: 'src/invoice.ts', content: 'export const invoice = 1;' }] } });
+  expect(request).toHaveBeenCalledWith('/api/ingestion/import/', { method: 'POST', body: { project_name: 'billing', omitted_source_files: 0, files: [{ path: 'src/invoice.ts', content: 'export const invoice = 1;' }] } });
 });
 it('keeps reviewed files available when an upload fails', async () => {
   request.mockRejectedValue(new Error('Import service unavailable'));

@@ -66,9 +66,9 @@ else:
     }
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-# Bounded source imports contain at most 2 MB of UTF-8; JSON escaping adds
+# Bounded source imports contain at most 12 MB of UTF-8; JSON escaping adds
 # transport overhead. Keep the request bounded before serializer validation.
-DATA_UPLOAD_MAX_MEMORY_SIZE = 8 * 1024 * 1024
+DATA_UPLOAD_MAX_MEMORY_SIZE = 80 * 1024 * 1024
 
 # Django's four standard validators aren't applied by default unless a
 # project's settings.py explicitly lists them (that's the startproject
@@ -99,6 +99,7 @@ CACHES = {
 }
 
 RQ_QUEUES = {
+    "context": {"URL": REDIS_URL, "DEFAULT_TIMEOUT": 900},
     "ingestion": {
         "URL": REDIS_URL,
         "DEFAULT_TIMEOUT": 900,
@@ -125,6 +126,7 @@ REST_FRAMEWORK = {
         # script (or bug) from saturating the Node runner pool.
         "ingestion": os.getenv("INGESTION_RATE_LIMIT", "20/hour"),
         "context_pack": os.getenv("CONTEXT_PACK_RATE_LIMIT", "60/hour"),
+        "context_poll": os.getenv("CONTEXT_POLL_RATE_LIMIT", "2400/hour"),
         # Added 2026-09-28 (production-readiness audit) — login/register had
         # no rate limiting at all. Login is scoped tighter per-minute since
         # brute-force needs fine-grained limiting; register is scoped

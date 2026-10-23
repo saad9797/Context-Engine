@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
+import { takeReturnPath } from '../../lib/authReturn';
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
@@ -19,6 +20,7 @@ import { GitHubIcon, GoogleIcon } from "../../components/BrandIcons";
 export default function Register() {
   const { register, startOAuth } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -32,7 +34,7 @@ export default function Register() {
     setBusy(true);
     try {
       await register(username, email, password);
-      navigate("/dashboard", {
+      navigate(takeReturnPath(location.state?.from), {
         replace: true,
       });
     } catch (err) {

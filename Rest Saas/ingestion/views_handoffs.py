@@ -9,13 +9,17 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .context_packs import build_packs
-from .models import IngestionContext, SavedHandoff
+from .models import IngestionContext, SavedHandoff, ContextPreparation
 from .privacy import safe_snapshot
 from .views_context_packs import PackRequest
 
 
 def summary(saved):
     return {'id': str(saved.id), 'title': saved.title, 'digest': saved.digest, 'created_at': saved.created_at.isoformat(), 'outcome': saved.outcome}
+
+
+class SaveRequest(PackRequest):
+    preparation_id = serializers.UUIDField(required=False)
 
 
 class SavedHandoffsView(APIView):
@@ -30,19 +34,26 @@ class SavedHandoffsView(APIView):
         return response
 
     def post(self, request, pk):
-        serializer = PackRequest(data=request.data)
+        serializer = SaveRequest(data=request.data)
         serializer.is_valid(raise_exception=True)
         values = safe_snapshot(dict(serializer.validated_data))
+        preparation_id = values.pop('preparation_id', None)
         if not values.get('task', '').strip():
             return Response({'error': 'Describe a task before saving a handoff.'}, status=400)
         with transaction.atomic():
             snapshot = IngestionContext.objects.select_for_update().filter(pk=pk, user=request.user).first()
             if not snapshot:
                 return Response({'error': 'Not found.'}, status=404)
-            try:
-                output = build_packs(snapshot.data, values, snapshot.id, snapshot.created_at.isoformat())
-            except ValueError as exc:
-                return Response({'error': str(exc)}, status=400)
+            if preparation_id:
+                prepared = ContextPreparation.objects.filter(pk=preparation_id, context=snapshot, status='succeeded').first()
+                if not prepared or prepared.request_data != values:
+                    return Response({'error': 'Prepared context expired or requirements changed. Prepare again before saving.'}, status=409)
+                output = prepared.output
+            else:
+                try:
+                    output = build_packs(snapshot.data, values, snapshot.id, snapshot.created_at.isoformat(), use_semantic=False)
+                except ValueError as exc:
+                    return Response({'error': str(exc)}, status=400)
             digest = hashlib.sha256(json.dumps(output['handoff'], sort_keys=True, separators=(',', ':')).encode()).hexdigest()
             saved = SavedHandoff.objects.filter(context=snapshot, digest=digest).first()
             if saved is None:

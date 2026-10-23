@@ -1,7 +1,19 @@
+# Current context workflow
+
+The latest release adds revision-pinned local CodeRankEmbed, background context
+preparation, source coverage reporting, acceptance criteria and pasted follow-ups.
+Use [CONTEXT_WORKFLOW.md](CONTEXT_WORKFLOW.md) for installation and operations.
+Apply migrations 0009 and 0010 and run the context worker in addition to ingestion workers.
+Without provisioned model weights, retrieval falls back with a visible notice.
+
+The earlier release notes below describe the lexical baseline; current capture
+limits are 1,200 files, 512 KB per file and 12 MB total. Neither release establishes
+a generated-code success rate on free AI plans.
+
 # Testable context-handoff release
 
 The primary workflow is now a single task-specific JSON handoff. A trained
-model is **not integrated or required**. This release uses static source
+custom-trained pilot model is not required. The lexical baseline uses static source
 parsing, weighted lexical ranking and dependency traversal. No customer source
 is sent to an AI provider by Contexa.
 
@@ -56,7 +68,7 @@ for the operator to run directly.
    request, budget and export. Results are private user assessments, not an
    automated accuracy score. Saved exports can be deleted individually.
 
-Folder imports accept 220 UTF-8 source/manifests, 128 KB per file, 2 MB total.
+Folder imports accept 1,200 UTF-8 source/manifests, 512 KB per file, 12 MB total.
 Credentials/generated/vendor files are excluded before browser reads and the
 server validates paths and byte limits again. Known credential patterns are
 redacted before storage; this is not an exhaustive secret scanner. Review the

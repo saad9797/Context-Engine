@@ -39,7 +39,8 @@ inspectGitHub({token:'test-only',owner:'fixture',repo:'fixture',includePaths:['s
   assert(paths.includes('src/utils/helper.ts'));
   assert(paths.includes('src/misc/last.ts'));
   assert.equal(result.capture.unavailable_requested_paths.length,0);
-  assert(result.key_files_truncated);
+  assert.equal(result.key_files_truncated, false);
+  assert.equal(paths.length, files.length);
 }).catch(e=>{console.error(e);process.exitCode=1;});
 '''
     result = subprocess.run(['node', '-e', script], cwd=engine, capture_output=True, encoding='utf-8', timeout=20)

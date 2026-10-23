@@ -91,11 +91,11 @@ function extract(file) {
 if (require.main === module) {
   let input = '';
   process.stdin.setEncoding('utf8');
-  process.stdin.on('data', chunk => { input += chunk; if (Buffer.byteLength(input) > 4 * 1024 * 1024) process.exit(2); });
+  process.stdin.on('data', chunk => { input += chunk; if (Buffer.byteLength(input) > 48 * 1024 * 1024) process.exit(2); });
   process.stdin.on('end', () => {
     try {
       const files = JSON.parse(input);
-      if (!Array.isArray(files) || files.length > 220) throw Error('Input limit');
+      if (!Array.isArray(files) || files.length > 1200) throw Error('Input limit');
       process.stdout.write(JSON.stringify(files.map(extract)));
     } catch { process.stderr.write('Source indexing failed'); process.exitCode = 2; }
   });

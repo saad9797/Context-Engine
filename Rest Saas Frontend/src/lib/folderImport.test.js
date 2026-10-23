@@ -15,7 +15,7 @@ describe('folder import privacy and bounds', () => {
     expect(result.projectName).toBe('project'); expect(result.skipped).toHaveLength(2);
   });
   it('rejects traversal, duplicates, binary and oversized files without silently including them', async () => {
-    const large = file('large.ts', 'x', 128001);
+    const large = file('large.ts', 'x', 512001);
     const result = await prepareFolder([file('../escape.ts', 'x'), file('ok.py', 'pass'), file('OK.py', 'pass'), file('binary.py', '\0'), large]);
     expect(result.files).toEqual([{ path: 'ok.py', content: 'pass' }]);
     expect(result.skipped).toHaveLength(4); expect(large.text).not.toHaveBeenCalled();

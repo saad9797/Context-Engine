@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Alert, Box, Button, Card, CardContent, CircularProgress, Stack, TextField, Typography } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 import { prepareFolder } from '../lib/folderImport';
@@ -7,6 +7,7 @@ import { prepareFolder } from '../lib/folderImport';
 export default function FolderImport() {
   const { request } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const generation = useRef(0);
   const [preview, setPreview] = useState(null);
   const [name, setName] = useState('');
@@ -26,8 +27,8 @@ export default function FolderImport() {
   async function upload() {
     setBusy(true); setError('');
     try {
-      const saved = await request('/api/ingestion/import/', { method: 'POST', body: { project_name: name.trim(), files: preview.files } });
-      navigate(`/contexts/${saved.id}/claude-context`);
+      const saved = await request('/api/ingestion/import/', { method: 'POST', body: { project_name: name.trim(), files: preview.files, omitted_source_files: preview.omittedSourceFiles || 0 } });
+      navigate(`/contexts/${saved.id}/claude-context`, { state: { carryTask: location.state?.carryTask } });
     } catch (e) { setError(e.message); setBusy(false); }
   }
   return <Card variant="outlined" sx={{ mb: 3 }}><CardContent><Stack spacing={2}>
@@ -41,11 +42,11 @@ export default function FolderImport() {
     {error && <Alert severity="error">{error}</Alert>}
     {preview && <>
       <TextField label="Imported project name" value={name} onChange={e => setName(e.target.value)} slotProps={{ htmlInput: { maxLength: 255 } }} disabled={busy} />
-      <Alert severity="info">{preview.files.length} files • {(preview.bytes / 1000).toFixed(0)} KB. Limit: 220 files, 128 KB per file, 2 MB total. Source is stored in your account; known credential patterns are redacted on the server. Review proprietary code before sharing it with an AI.</Alert>
+      <Alert severity="info">{preview.files.length} files • {(preview.bytes / 1000).toFixed(0)} KB. Limit: 1,200 files, 512 KB per file, 12 MB total. Source is stored in your account; known credential patterns are redacted on the server. Review proprietary code before sharing it with an AI.</Alert>
       {!!preview.skipped.length && <Alert severity="warning">{preview.skipped.length} files excluded. Missing project files can limit context selection. Review the list or select a more focused folder.</Alert>}
       <Box component="details"><summary>Review files before uploading</summary>
         <Box sx={{ maxHeight: 360, overflow: 'auto' }}>{preview.files.map(file => <Box key={file.path} component="details" sx={{ my: 1 }}><summary>{file.path}</summary>
-          <Button size="small" disabled={busy} onClick={() => setPreview(old => ({ ...old, files: old.files.filter(f => f.path !== file.path), bytes: old.bytes - new TextEncoder().encode(file.content).length }))}>Exclude file</Button>
+          <Button size="small" disabled={busy} onClick={() => setPreview(old => ({ ...old, files: old.files.filter(f => f.path !== file.path), omittedSourceFiles: (old.omittedSourceFiles || 0) + 1, bytes: old.bytes - new TextEncoder().encode(file.content).length }))}>Exclude file</Button>
           <Box component="pre" sx={{ fontSize: 11, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{file.content}</Box>
         </Box>)}</Box>
       </Box>

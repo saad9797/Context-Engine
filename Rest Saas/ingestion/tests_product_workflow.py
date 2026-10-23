@@ -86,7 +86,7 @@ def api(settings):
 @pytest.mark.django_db
 def test_import_authentication_and_total_byte_limit(api):
     client, _ = api
-    files = [{'path': f'{i}.ts', 'content': 'x' * 125001} for i in range(16)]
+    files = [{'path': f'{i}.ts', 'content': 'x' * 500001} for i in range(24)]
     response = client.post('/api/ingestion/import/', {'project_name': 'Too large', 'files': files}, format='json')
     assert response.status_code == 400
     assert not IngestionContext.objects.exists()
@@ -144,9 +144,9 @@ def test_folder_import_redacts_before_storage_and_generates_context_without_work
 @pytest.mark.django_db
 @pytest.mark.parametrize('files', [
     [{'path': '../escape.ts', 'content': 'x'}], [{'path': '.env', 'content': 'SECRET=x'}],
-    [{'path': 'node_modules/lib/a.js', 'content': 'x'}], [{'path': 'a.ts', 'content': 'x' * 128001}],
+    [{'path': 'node_modules/lib/a.js', 'content': 'x'}], [{'path': 'a.ts', 'content': 'x' * 512001}],
     [{'path': 'a.ts', 'content': '\x00'}], [{'path': 'a.ts', 'content': 'x'}, {'path': 'A.ts', 'content': 'x'}],
-    [{'path': 'package.json', 'content': '{}'}], [{'path': 'a.ts', 'content': 'é' * 65000}],
+    [{'path': 'package.json', 'content': '{}'}], [{'path': 'a.ts', 'content': 'é' * 256001}],
 ])
 def test_import_rejects_unsafe_oversized_duplicate_or_binary_files(api, files):
     client, _ = api
