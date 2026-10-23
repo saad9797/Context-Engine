@@ -71,6 +71,20 @@ def test_partial_capture_is_explicit_even_when_selected_contracts_fit():
     assert any('capture is partial' in gap for gap in result['handoff']['context_gaps'])
 
 
+def test_final_gap_metadata_evicts_whole_split_contract_instead_of_failing_short_task():
+    content = 'def invoice():\n    # ' + 'x' * 3800 + '\n    return 1'
+    raw = source({'invoice.py': content})
+    result = build_packs(raw, {'task': 'Edit invoice', 'max_tokens': 2000,
+                              'include_paths': ['p' + str(i) + 'x' * 220 + '.py' for i in range(5)]}, use_semantic=False)
+    assert all(token_estimate(result[key]) <= 2000 for key in ('base', 'task', 'handoff'))
+    assert any(item.get('pack') == 'task' and item['path'] == 'invoice.py'
+               and 'final metadata' in item['reason'] for item in result['report']['omitted'])
+    assert result['handoff']['status'] == 'incomplete'
+    assert result['handoff']['request']['task'] == 'Edit invoice'
+    assert not any(item.get('pack') == 'task' and item['path'] == 'invoice.py'
+                   for item in result['report']['included'])
+
+
 def test_relevant_tests_are_preserved_without_running_them():
     raw = source({'billing/invoice.py': 'def calculate_invoice():\n    return 1',
                   'billing/tests/test_invoice.py': 'from billing.invoice import calculate_invoice\ndef test_total():\n    assert calculate_invoice() == 1'})

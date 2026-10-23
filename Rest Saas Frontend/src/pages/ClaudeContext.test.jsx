@@ -110,6 +110,10 @@ describe("AI context pack workflow", () => {
     fireEvent.click(screen.getByRole("button", { name: "Prepare context packs" }));
     await screen.findByText("Source unavailable");
     expect(screen.getByRole("button", { name: "Copy JSON" })).toBeDisabled();
+    expect(screen.getByText('Preparation failed')).toBeInTheDocument();
+    expect(screen.queryByText('Preparing…')).not.toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Prepare context packs' })).toBeEnabled();
   });
 
   it("retries with the suggested single-copy budget and preserves the task", async () => {

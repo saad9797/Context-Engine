@@ -56,7 +56,8 @@ export default function ClaudeContext() {
     const deadline = Date.now() + 30 * 60 * 1000;
     let job = initial;
     while (current === generation.current) {
-      if (job?.progress) setProgress(job.progress);
+      if (job?.status === 'pending') setProgress({ stage: 'Waiting for the preparation worker' });
+      else if (job?.progress) setProgress(job.progress);
       if (job?.status === 'succeeded') return { ...job.output, preparation_id: preparationId };
       if (job?.status === 'failed') throw new Error(job.error || 'Context preparation failed. Retry.');
       if (Date.now() > deadline) throw new Error('Preparation is taking too long. Check the worker service and retry.');
@@ -224,7 +225,7 @@ export default function ClaudeContext() {
             {report.retrieval.semantic_only && ' Matches are based on meaning without identifier overlap; review selected source carefully.'}
           </Typography>}
           <Stack direction="row" sx={{ mb: 2, gap: 1, flexWrap: "wrap", alignItems: "center" }}>
-            <Chip size="small" label={count == null ? "Preparing…" : `~${count.toLocaleString()} tokens`} />
+            <Chip size="small" color={error ? 'error' : 'default'} label={loading ? 'Preparing…' : error ? 'Preparation failed' : count == null ? 'No context prepared' : `~${count.toLocaleString()} tokens`} />
             {report?.source_files_available != null && <Chip size="small" variant="outlined" label={`${report.source_files_available} captured source files`} />}
             {packType === "handoff" && pack?.request?.task && <Chip size="small" color={pack.status === "incomplete" ? "warning" : "default"} label={pack.status === "incomplete" ? "Missing contracts" : "Ready to review"} />}
             {result?.base?.base_id && <Chip size="small" variant="outlined" label={`Base ${result.base.base_id.slice(0, 8)}`} />}
@@ -235,7 +236,7 @@ export default function ClaudeContext() {
           {packType === "handoff" && pack?.status === "incomplete" && <Alert severity="warning" sx={{ mb: 2 }}>This handoff has missing contracts. Increase the budget, rebuild missing source, or request a narrower task before generating code.
             {report?.suggested_handoff_budget > budget && <Button size="small" disabled={loading} onClick={() => { const size = report.suggested_handoff_budget; setBudget(size); setDirty(true); generate(form, size); }}>Try {report.suggested_handoff_budget.toLocaleString()} token budget</Button>}
           </Alert>}
-          {loading && <Stack direction="row" spacing={2} sx={{ my: 2, alignItems: 'center' }}><CircularProgress size={24} /><Box><Typography variant="body2" role="status">{progress?.stage || 'Searching source and tracing dependencies'}{progress?.total ? `: ${progress.completed} / ${progress.total} source sections` : ''}</Typography><Typography variant="caption">Initial indexing can take several minutes. Later searches reuse this snapshot’s index. Preparation resumes if you reload this page.</Typography></Box></Stack>}
+          {loading && <Stack direction="row" spacing={2} sx={{ my: 2, alignItems: 'center' }}><CircularProgress size={24} /><Box><Typography variant="body2" role="status">{progress?.stage || 'Searching source and tracing dependencies'}{progress?.total ? `: ${progress.completed} / ${progress.total} source sections` : ''}</Typography><Typography variant="caption">{form.retrieval_mode === 'semantic' ? 'Initial semantic indexing can take several minutes. Later searches reuse this snapshot’s index.' : 'Fast search does not load the semantic model. Server startup and a busy worker can delay preparation.'} Preparation resumes if you reload this page.</Typography></Box></Stack>}
           {copied && <Alert severity="success" sx={{ mb: 2 }}>Paste this into your AI chat. Review its changes, apply them locally, and run the project checks. If it asks for source or a check fails, use the follow-up box below.</Alert>}
           {pack?.source?.kind === 'folder' && <Alert severity="info" sx={{ mb: 2 }}>This is a snapshot of your selected local files. Reimport the folder after code changes; Contexa cannot check your local folder for updates. <Button size="small" disabled={stale} onClick={() => navigate('/ingest/new', { state: { carryTask } })}>Import updated folder</Button></Alert>}
           <SavedHandoffs contextId={contextId} values={savedValues} disabled={stale || !form.task.trim() || !result} onRestore={restoreSaved} />

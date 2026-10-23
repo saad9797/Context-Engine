@@ -381,16 +381,42 @@ def build_packs(raw, request, snapshot_id="", generated_at="", use_semantic=True
         report["missing"].append("No reusable authentication/permission contract fits the base pack. Include the auth file before generating protected endpoints.")
     for source, message in ((raw.get("_meta") or {}).get("errors") or {}).items():
         report["missing"].append(f"Source capture reported an error for {source}; check the snapshot before generating code.")
+    # Gap diagnostics are added after selection. Their size is not a fixed
+    # 300-token allowance: evict whole source contracts if those diagnostics
+    # push a split pack over budget, rather than blaming a short user request.
+    def fit_split_pack(pack, groups):
+        removed = []
+        for sections in groups:
+            while token_estimate(pack) > budget and any(pack.get(s) for s in sections):
+                if len(sections) == 1 and sections[0] in ('code', 'contracts'):
+                    units = [pack[sections[0]].pop()]
+                else:
+                    units = [unit for section in sections for unit in pack.get(section, [])]
+                    for section in sections:
+                        pack[section] = []
+                removed.extend(units)
+                if pack['kind'] == 'task':
+                    pack['context_gaps'] = list(dict.fromkeys(pack.get('context_gaps', []) +
+                        ['Additional source contracts were omitted to fit this copy; request missing source before coding.']))
+        report['omitted'].extend({'path': u.get('path', u.get('name', 'schema')),
+                                  'pack': pack['kind'], 'reason': 'source plus final metadata exceeds copy budget'} for u in removed)
+        if removed:
+            retained = {unit.get('path', unit.get('name', 'schema'))
+                        for sections in groups for section in sections for unit in pack.get(section, [])}
+            report['included'] = [entry for entry in report['included']
+                                  if entry.get('pack') != pack['kind'] or entry.get('path') in retained]
+        if token_estimate(pack) > budget:
+            raise ValueError(f'Context metadata needs at least {token_estimate(pack):,} estimated tokens, above the {budget:,}-token budget. Increase the copy budget or narrow the task and requested files.')
+
     # The base identity represents the exact reusable content and budget, so a
     # task cannot silently refer to a differently selected base pack.
-    base["base_id"] = hashlib.sha256(encoded(base).encode()).hexdigest()[:16]
-    scoped["base_id"] = base["base_id"]
     scoped["context_gaps"] = report["missing"][:5]
     if report["omitted"]:
         scoped["context_gaps"].append("Some source units were omitted. Ask for unresolved imports or model types instead of inventing them.")
-    # Do not let an overlong request silently breach a budget.
-    if token_estimate(scoped) > budget or token_estimate(base) > budget:
-        raise ValueError("The request and metadata exceed this budget. Shorten the task fields or increase the budget.")
+    fit_split_pack(base, [('example',), ('contracts',)])
+    fit_split_pack(scoped, [('code',), ('database', 'enums'), ('models',)])
+    base["base_id"] = hashlib.sha256(encoded(base).encode()).hexdigest()[:16]
+    scoped["base_id"] = base["base_id"]
 
     # A self-contained alternative: never require the user to remember a base
     # from another chat, and enforce ONE budget on the text they actually copy.
