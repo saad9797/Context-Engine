@@ -259,6 +259,10 @@ const faqs = [
     "Contexa inspects your connected sources to produce a saved snapshot. It does not generate commits or edit your application. Connection credentials are encrypted in your browser and again at rest.",
   ],
   [
+    "How are my connection credentials protected?",
+    "Database and storage credentials are encrypted in your browser before sending and stored encrypted in our database. The storage encryption key is kept separately from the database. Contexa decrypts credentials on the server to connect to your source; saved credentials are never returned to your browser. Use a dedicated read-only account with limited access. You can also import a source ZIP or folder without saving connection credentials.",
+  ],
+  [
     "How do I keep the context useful?",
     "Build a new snapshot after meaningful changes. You can check freshness, compare snapshots, focus the context on a specific task, and set a token budget before copying it.",
   ],
@@ -593,8 +597,9 @@ export default function Landing() {
               <div>
                 <strong>Your credentials stay protected.</strong>
                 <span>
-                  Encrypted in your browser and at rest. Saved credentials are
-                  never displayed back.
+                  Database and storage credentials are encrypted in your browser
+                  and stored encrypted, with the key kept separately from the database.
+                  Contexa decrypts them on the server to connect to your source.
                 </span>
               </div>
               <Link to={destination}>

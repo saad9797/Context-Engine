@@ -121,16 +121,10 @@ function ConnectionFormDialog({ kind, open, onClose, onSaved }) {
         name,
         kind,
       };
-      if (isTransitEncryptionSupported()) {
-        // Encrypted in the browser (AES-256-GCM, key wrapped with the
-        // server's RSA-OAEP public key) before it's ever sent — see
-        // src/api/transitCrypto.js. Falls back to plain `config` only if
-        // Web Crypto genuinely isn't available (very old browser, or a
-        // non-HTTPS/non-localhost origin where SubtleCrypto is disabled).
-        body.transit_payload = await encryptForTransit(request, config);
-      } else {
-        body.config = config;
+      if (!isTransitEncryptionSupported()) {
+        throw new Error("Your browser cannot encrypt this connection. Open Contexa over HTTPS in a current browser and try again.");
       }
+      body.transit_payload = await encryptForTransit(request, config);
       await request("/api/connections/", {
         method: "POST",
         body,
@@ -164,7 +158,7 @@ function ConnectionFormDialog({ kind, open, onClose, onSaved }) {
           <Typography variant="caption">
             {isTransitEncryptionSupported()
               ? "Encrypted in your browser before it's sent, then re-encrypted at rest."
-              : "Encrypted at rest on save."}
+              : "Browser encryption is unavailable. Use HTTPS and a current browser to save a connection."}
           </Typography>
         </Stack>
         <Stack spacing={2}>
@@ -412,6 +406,12 @@ export default function Connections() {
         title="Connected sources"
         description="Bring your stack together. Connect once, then choose these sources whenever you build a project snapshot."
       />
+
+      <Alert severity="info" icon={<LockOutlinedIcon />} sx={{ mb: 3 }}>
+        <Typography variant="subtitle2">How your connection credentials are protected</Typography>
+        <Typography variant="body2">Database and storage credentials are encrypted in your browser before sending. Our database stores an encrypted copy, with the encryption key kept separately from the database. Saved credentials are never returned to your browser.</Typography>
+        <Typography variant="body2" sx={{ mt: 1 }}>Contexa decrypts credentials on the server when connecting to your source. Use a dedicated read-only account with access only to what you want to inspect. Prefer not to save connection credentials? Import a source ZIP or folder instead.</Typography>
+      </Alert>
 
       {error && (
         <Alert
