@@ -982,9 +982,87 @@ summary:focus-visible {
 }
 .workflow-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 55px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 32px;
   padding: 15px 0 55px;
+}
+.workflow-diagram {
+  margin: 0 0 40px;
+  padding: 28px;
+  background: #fff;
+  border: 1px solid #dfe6d6;
+  border-radius: 20px;
+}
+.workflow-diagram figcaption {
+  font-size: 15px;
+  font-weight: 600;
+  color: #34422c;
+  margin-bottom: 24px;
+}
+.workflow-diagram-track {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.workflow-diagram-step {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+.workflow-diagram-node {
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  flex: 1;
+  min-width: 0;
+  gap: 9px;
+  padding: 18px 12px;
+  border: 1px solid #e3e8dc;
+  border-radius: 12px;
+  background: #f8faf5;
+}
+.workflow-diagram-step:last-child .workflow-diagram-node {
+  background: #edf4e3;
+  border-color: #b9ce9e;
+}
+.workflow-diagram-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin-bottom: 5px;
+  background: #e7eddc;
+  color: #526a3d;
+  border-radius: 10px;
+}
+.workflow-diagram-icon svg { font-size: 20px; }
+.workflow-diagram-label {
+  font-size: 10px;
+  line-height: 1.5;
+  color: #647454;
+}
+.workflow-diagram-node strong { font-size: 13px; line-height: 1.5; }
+.workflow-diagram-detail { font-size: 11px; line-height: 1.7; color: #65715b; }
+.workflow-diagram-arrow { display: flex; padding: 0 5px; color: #8a9d77; }
+.workflow-diagram-arrow svg { font-size: 18px; }
+.workflow-diagram-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 22px 0 0;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #5e6b55;
+}
+.workflow-diagram-note svg { font-size: 17px; flex-shrink: 0; }
+@media (max-width: 900px) {
+  .workflow-diagram { padding: 22px; }
+  .workflow-diagram-track { flex-direction: column; }
+  .workflow-diagram-step { flex-direction: column; }
+  .workflow-diagram-node { padding: 16px; }
+  .workflow-diagram-arrow { padding: 8px 0; transform: rotate(90deg); }
 }
 .step-number {
   display: inline-grid;
@@ -1009,6 +1087,13 @@ summary:focus-visible {
   line-height: 1.85;
   color: #5e6b55;
   margin: 0;
+}
+.workflow-grid .workflow-example {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-left: 2px solid #b7c89e;
+  background: #eef2e6;
+  border-radius: 0 8px 8px 0;
 }
 .trust-strip {
   display: flex;

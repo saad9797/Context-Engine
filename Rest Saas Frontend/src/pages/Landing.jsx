@@ -564,31 +564,70 @@ export default function Landing() {
           <div className="landing-container">
             <div className="section-heading">
               <div className="eyebrow">FROM SCATTERED TO STRUCTURED</div>
-              <h2>Three steps to a clearer project.</h2>
-              <p>No more assembling context by hand.</p>
+              <h2>How to use Contexa.</h2>
+              <p>Follow these five steps to turn your project sources into precise context for your next task.</p>
             </div>
+            <figure className="workflow-diagram" aria-labelledby="workflow-diagram-caption">
+              <figcaption id="workflow-diagram-caption">Your project sources become context your AI can use.</figcaption>
+              <ol className="workflow-diagram-track">
+                {[
+                  { icon: <StorageOutlined />, title: "Connect sources", detail: "GitHub · Databases · Files", label: "Connections" },
+                  { icon: <AccountTreeOutlined />, title: "Build a snapshot", detail: "Bring your project together", label: "Project snapshot" },
+                  { icon: <DataObject />, title: "Create AI context", detail: "Capture how your project works", label: "AI context" },
+                  { icon: <Code />, title: "Describe your task", detail: "What do you want to change?", label: "Your task" },
+                  { icon: <ContentCopyOutlined />, title: "Get precise context", detail: "Review, copy, and give to your AI", label: "Ready to use" },
+                ].map((step, index) => (
+                  <li key={step.title} className="workflow-diagram-step">
+                    <div className="workflow-diagram-node">
+                      <span className="workflow-diagram-icon" aria-hidden="true">{step.icon}</span>
+                      <span className="workflow-diagram-label">0{index + 1} / {step.label}</span>
+                      <strong>{step.title}</strong>
+                      <span className="workflow-diagram-detail">{step.detail}</span>
+                    </div>
+                    {index < 4 && <span className="workflow-diagram-arrow" aria-hidden="true"><ArrowForward /></span>}
+                  </li>
+                ))}
+              </ol>
+              <p className="workflow-diagram-note"><Check aria-hidden="true" /> Start with the sources you have. Focus the final context on the task you need.</p>
+            </figure>
             <div className="workflow-grid">
               {[
                 [
                   "01",
-                  "Connect your sources",
-                  "Choose a GitHub repo or database. Add storage to bring more of your stack into view.",
+                  "Go to Connections",
+                  "Connect GitHub, your databases, or any other supported sources your project uses. Start with whatever sources you have available.",
+                  "Example: Connect the Orbit GitHub repository and its PostgreSQL database.",
                 ],
                 [
                   "02",
-                  "Get the full picture",
-                  "Build a snapshot of your architecture, schemas, routes, and project conventions.",
+                  "Build a snapshot",
+                  "Open Build a snapshot, select the sources for your project, and build it. You can also include a local folder or ZIP. Wait for the snapshot to finish.",
+                  "Example: Select the Orbit repository and database to build one project snapshot.",
                 ],
                 [
                   "03",
-                  "Give your AI a head start",
-                  "Focus on a task, choose your context budget, and copy it into your next session.",
+                  "Create AI context",
+                  "Open AI context for your completed snapshot to create context from the project sources you included.",
+                  "Example: Bring Orbit's code, database schema, and project conventions into context.",
                 ],
-              ].map(([n, t, d]) => (
+                [
+                  "04",
+                  "Describe your task",
+                  "Explain what you want to build, fix, or understand. Include the relevant requirements and constraints so Contexa can focus on your task.",
+                  'Example: "Add a project endpoint using the existing authentication and API conventions."',
+                ],
+                [
+                  "05",
+                  "Prepare precise task context",
+                  "Choose a context budget and prepare the context needed for your task. Review the selected sources and any gaps, then copy the handoff into your AI tool.",
+                  "Example: Give your AI the relevant routes, models, and authentication rules for the new endpoint.",
+                ],
+              ].map(([n, t, d, demo]) => (
                 <article key={n}>
                   <span className="step-number">{n}</span>
                   <h3>{t}</h3>
                   <p>{d}</p>
+                  <p className="workflow-example">{demo}</p>
                 </article>
               ))}
             </div>
