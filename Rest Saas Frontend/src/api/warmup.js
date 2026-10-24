@@ -1,19 +1,46 @@
 import { API_BASE } from './client';
 
-// Start the backend while visitors read the landing page or enter credentials.
-// One request per page load; it never blocks rendering or authentication.
-let started = false;
+let status = 'idle';
+let pending = null;
+const listeners = new Set();
+function update(next) {
+  status = next;
+  listeners.forEach((listener) => listener());
+}
+export const getBackendStatus = () => status;
+export function subscribeBackendStatus(listener) {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+// Wake the service without blocking rendering or replaying user actions.
 export function warmBackend() {
-  if (started) return;
-  started = true;
+  if (pending) return pending;
+  update('checking');
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 90000);
-  fetch(`${API_BASE}/healthz`, {
-    method: 'GET',
-    credentials: 'omit',
-    cache: 'no-store',
-    signal: controller.signal,
-  })
-    .catch(() => { /* Best effort: normal API requests handle errors. */ })
-    .finally(() => clearTimeout(timer));
+  const slowTimer = setTimeout(() => update('starting'), 4000);
+  const deadline = setTimeout(() => controller.abort(), 90000);
+  pending = (async () => {
+    try {
+      while (!controller.signal.aborted) {
+        try {
+          const response = await fetch(`${API_BASE}/healthz`, {
+            method: 'GET', credentials: 'omit', cache: 'no-store',
+            headers: { Accept: 'application/json' }, signal: controller.signal,
+          });
+          if (response.ok && (await response.json()).status === 'ok') {
+            update('ready');
+            return;
+          }
+        } catch { /* A sleeping host can return errors before it is ready. */ }
+        if (!controller.signal.aborted) await new Promise((resolve) => setTimeout(resolve, 3000));
+      }
+      update('unavailable');
+    } finally {
+      clearTimeout(slowTimer);
+      clearTimeout(deadline);
+      pending = null;
+    }
+  })();
+  return pending;
 }

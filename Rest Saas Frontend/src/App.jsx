@@ -10,6 +10,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import PageTransition, { PageLoading } from "./components/PageTransition";
 
 import Landing from "./pages/Landing";
+import BackendStatus from "./components/BackendStatus";
 const Login = lazy(() => import("./pages/auth/Login"));
 const Register = lazy(() => import("./pages/auth/Register"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -63,6 +64,7 @@ export default function App() {
           <AuthProvider>
             <ToastProvider>
               <RoutePosition />
+              <BackendStatus />
               <Suspense
                 fallback={<PageLoading />}
               >
