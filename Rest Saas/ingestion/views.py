@@ -20,6 +20,8 @@ the existence of someone else's data.
 
 import django_rq
 from django.utils import timezone
+from django.db.models import Q
+from rest_framework.pagination import PageNumberPagination
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -335,6 +337,12 @@ class IngestionDiffView(APIView):
         })
 
 
+class LibraryPagination(PageNumberPagination):
+    page_size = 12
+    page_size_query_param = "page_size"
+    max_page_size = 48
+
+
 class IngestionListView(APIView):
     """
     GET /api/ingestion/  —  list saved ingestion contexts for the current user.
@@ -348,10 +356,21 @@ class IngestionListView(APIView):
     def get(self, request):
         contexts = (
             IngestionContext.objects.filter(user=request.user)
-            .order_by("-created_at")
+            .order_by("-created_at", "-id")
             .values("id", "project_name", "created_at", "data___meta", "data__database__metadata",
                     "data__mongo_database__metadata", "data__object_storage__containers", "data__codebase__repository")
         )
+        query = request.query_params.get("q", "").strip()[:255]
+        if query:
+            contexts = contexts.filter(
+                Q(project_name__icontains=query) | Q(data__codebase__repository__full_name__icontains=query)
+            )
+        # Preserve the array response for existing integrations. The dashboard
+        # opts into bounded pages and searches across the complete library.
+        if "page_size" in request.query_params:
+            paginator = LibraryPagination()
+            page = paginator.paginate_queryset(contexts, request, view=self)
+            return paginator.get_paginated_response([_summarise(context) for context in page])
         return Response([_summarise(context) for context in contexts])
 
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Box,
@@ -35,29 +35,37 @@ export default function Dashboard() {
   const [error, setError] = useState(null);
   const [query, setQuery] = useState("");
   const [reload, setReload] = useState(0);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [total, setTotal] = useState(0);
+  useEffect(() => {
+    if (query.trim() === search) return;
+    const timer = setTimeout(() => { setSearch(query.trim()); setPage(1); }, 300);
+    return () => clearTimeout(timer);
+  }, [query, search]);
   useEffect(() => {
     let cancelled = false;
     setError(null);
-    request("/api/ingestion/")
+    setLoading(true);
+    request("/api/ingestion/", { params: { page_size: 12, page, q: search } })
       .then((res) => {
-        if (!cancelled) setItems(res);
+        if (!cancelled) {
+          setItems((previous) => page === 1 ? res.results : [...(previous || []), ...res.results]);
+          setHasMore(!!res.next);
+          setTotal(res.count);
+        }
       })
       .catch((e) => {
         if (!cancelled) setError(e.message);
-      });
+      })
+      .finally(() => { if (!cancelled) setLoading(false); });
     return () => {
       cancelled = true;
     };
-  }, [request, reload]);
-  const filtered = useMemo(
-    () =>
-      (items || []).filter((c) =>
-        `${c.project_name || ""} ${c.summary?.repository || ""}`
-          .toLowerCase()
-          .includes(query.trim().toLowerCase()),
-      ),
-    [items, query],
-  );
+  }, [request, reload, search, page]);
+  const filtered = items || [];
   const projectCount = new Set(
     (items || []).map((c) => c.project_name || c.summary?.repository || c.id),
   ).size;
@@ -141,11 +149,11 @@ export default function Dashboard() {
             <div className="workspace-stat">
               <span>Projects</span>
               <strong>{projectCount}</strong>
-              <small>Across your saved snapshots</small>
+              <small>In loaded snapshots</small>
             </div>
             <div className="workspace-stat">
               <span>Saved snapshots</span>
-              <strong>{items.length}</strong>
+              <strong>{total}</strong>
               <small>Ready to explore and reuse</small>
             </div>
             <div className="workspace-stat">
@@ -163,10 +171,10 @@ export default function Dashboard() {
                   of 4
                 </Typography>
               </strong>
-              <small>Code, databases, and storage</small>
+              <small>In loaded snapshots</small>
             </div>
           </div>
-          {items.length === 0 ? (
+          {items.length === 0 && !search ? (
             <Box>
               <Typography variant="h6">Make yourself at home.</Typography>
               <Typography
@@ -246,7 +254,7 @@ export default function Dashboard() {
                       fontSize: 13,
                     }}
                   >
-                    {items.length}
+                    {total}
                   </Typography>
                 </Typography>
                 <SearchField
@@ -261,6 +269,7 @@ export default function Dashboard() {
                   }}
                 />
               </Stack>
+              {loading && <Typography role="status" sx={{ mb: 2 }}>Loading snapshots?</Typography>}
               <Stack spacing={1.5}>
                 {filtered.map((c) => (
                   <Card key={c.id}>
@@ -359,6 +368,13 @@ export default function Dashboard() {
                   </Card>
                 ))}
               </Stack>
+              {hasMore && (
+                <Box sx={{ mt: 3, textAlign: "center" }}>
+                  <Button disabled={loading || !!error || query.trim() !== search} onClick={() => setPage((current) => current + 1)}>
+                    {loading ? "Loading snapshots?" : "Load more snapshots"}
+                  </Button>
+                </Box>
+              )}
               {filtered.length === 0 && (
                 <Box
                   sx={{

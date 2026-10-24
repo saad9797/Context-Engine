@@ -29,6 +29,7 @@ class IngestionContext(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+        indexes = [models.Index(fields=["user", "-created_at", "-id"], name="context_user_recent_idx")]
 
     def __str__(self):
         return f"{self.project_name or 'Unnamed'} — {self.user} — {self.id}"
