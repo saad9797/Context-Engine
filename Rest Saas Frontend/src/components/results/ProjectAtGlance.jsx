@@ -10,10 +10,11 @@ import {
 } from "@mui/material";
 import ArrowForward from "@mui/icons-material/ArrowForward";
 import DataObject from "@mui/icons-material/DataObject";
-import ArchitectureDiagram from "./ArchitectureDiagram";
+import SystemArchitecture from "./SystemArchitecture";
 
 export default function ProjectAtGlance({
   graph,
+  data,
   context,
   onExplore,
   onPrepare,
@@ -59,7 +60,7 @@ export default function ProjectAtGlance({
                 Explore
               </Button>
             </Stack>
-            <ArchitectureDiagram graph={graph} compact />
+            <SystemArchitecture data={data} compact />
           </CardContent>
         </Card>
       )}

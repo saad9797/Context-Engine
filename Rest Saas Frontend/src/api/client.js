@@ -18,6 +18,8 @@ function resolveApiBase() {
   return (fromEnv || "http://localhost:8000").replace(/\/$/, "");
 }
 
+import { updateBackendStatus } from './backendStatus';
+
 export const API_BASE = resolveApiBase();
 
 const TOKEN_KEY = "cxa_token";
@@ -99,6 +101,12 @@ export async function apiRequest(path, { method = "GET", body, params, token, on
       payload = /^\s*</.test(text) ? null : text.slice(0, 500);
       if (res.ok) throw new Error('Contexa returned an unexpected response. Please try again shortly.');
     }
+  }
+
+  // A valid API response also proves the server is awake, including auth
+  // and validation errors. Hosting failures must not clear the warning.
+  if (res.status < 500 && (res.status === 204 || (payload && typeof payload === 'object'))) {
+    updateBackendStatus('ready');
   }
 
   if (!res.ok) {

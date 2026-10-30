@@ -1,24 +1,25 @@
 import { API_BASE } from './client';
+import { getBackendStatus, subscribeBackendStatus, updateBackendStatus as update } from './backendStatus';
+export { getBackendStatus, subscribeBackendStatus } from './backendStatus';
 
-let status = 'idle';
 let pending = null;
-const listeners = new Set();
-function update(next) {
-  status = next;
-  listeners.forEach((listener) => listener());
-}
-export const getBackendStatus = () => status;
-export function subscribeBackendStatus(listener) {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
+let retryTimer = null;
+subscribeBackendStatus(() => {
+  if (getBackendStatus() === 'ready') clearTimeout(retryTimer);
+});
 
 // Wake the service without blocking rendering or replaying user actions.
 export function warmBackend() {
   if (pending) return pending;
+  clearTimeout(retryTimer);
   update('checking');
   const controller = new AbortController();
-  const slowTimer = setTimeout(() => update('starting'), 4000);
+  const unsubscribe = subscribeBackendStatus(() => {
+    if (getBackendStatus() === 'ready') controller.abort();
+  });
+  const slowTimer = setTimeout(() => {
+    if (getBackendStatus() !== 'ready') update('starting');
+  }, 4000);
   const deadline = setTimeout(() => controller.abort(), 90000);
   pending = (async () => {
     try {
@@ -35,11 +36,16 @@ export function warmBackend() {
         } catch { /* A sleeping host can return errors before it is ready. */ }
         if (!controller.signal.aborted) await new Promise((resolve) => setTimeout(resolve, 3000));
       }
-      update('unavailable');
+      if (getBackendStatus() !== 'ready') update('unavailable');
     } finally {
+      unsubscribe();
       clearTimeout(slowTimer);
       clearTimeout(deadline);
       pending = null;
+      // Keep checking after the initial cold-start window expires.
+      if (getBackendStatus() === 'unavailable') {
+        retryTimer = setTimeout(warmBackend, 15000);
+      }
     }
   })();
   return pending;

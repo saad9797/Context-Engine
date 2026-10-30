@@ -10,6 +10,7 @@ import CloudQueueOutlinedIcon from "@mui/icons-material/CloudQueueOutlined";
 import AltRouteOutlinedIcon from "@mui/icons-material/AltRouteOutlined";
 import CategoryOutlinedIcon from "@mui/icons-material/CategoryOutlined";
 import ArchitectureDiagram from "./ArchitectureDiagram";
+import SystemArchitecture from "./SystemArchitecture";
 import EntityRow from "./EntityRow";
 const NODE_ICON = {
   table: DnsOutlinedIcon,
@@ -22,7 +23,7 @@ const EDGE_LABEL = {
   references: "references →",
   uploads_to: "uploads to →",
 };
-export default function ArchitectureTab({ graph }) {
+export default function ArchitectureTab({ graph, data }) {
   const [view, setView] = useState("diagram");
   const nodesById = useMemo(
     () => Object.fromEntries(graph.nodes.map((n) => [n.id, n])),
@@ -57,9 +58,8 @@ export default function ArchitectureTab({ graph }) {
             maxWidth: 520,
           }}
         >
-          {graph.nodes.length} nodes, {graph.edges.length} edges — tables,
-          collections, storage buckets, and detected routes merged into one
-          graph instead of four separate trees.
+          See how your application and data sources fit together. Explore the
+          technical details for individual tables, collections, and routes.
         </Typography>
         <ToggleButtonGroup
           size="small"
@@ -67,12 +67,14 @@ export default function ArchitectureTab({ graph }) {
           value={view}
           onChange={(e, v) => v && setView(v)}
         >
-          <ToggleButton value="diagram">Diagram</ToggleButton>
+          <ToggleButton value="diagram">System overview</ToggleButton>
+          <ToggleButton value="details">Technical diagram</ToggleButton>
           <ToggleButton value="list">List</ToggleButton>
         </ToggleButtonGroup>
       </Stack>
 
-      {view === "diagram" && <ArchitectureDiagram graph={graph} />}
+      {view === "diagram" && <SystemArchitecture data={data} />}
+      {view === "details" && <ArchitectureDiagram graph={graph} />}
 
       {view === "list" &&
         Object.entries(groups).map(([type, nodes]) => (

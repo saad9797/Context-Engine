@@ -364,6 +364,7 @@ export default function Results() {
           )}
           <ProjectAtGlance
             graph={graph}
+            data={data}
             context={data.claude_context}
             onExplore={() => setTab("architecture")}
             onPrepare={() => navigate(`/contexts/${contextId}/claude-context`)}
@@ -381,7 +382,7 @@ export default function Results() {
       {tab === "mongo" && mongo && <MongoTab mongo={mongo} />}
       {tab === "storage" && storage && <StorageTab storage={storage} />}
       {tab === "codebase" && codebase && <CodebaseTab codebase={codebase} />}
-      {tab === "architecture" && graph && <ArchitectureTab graph={graph} />}
+      {tab === "architecture" && graph && <ArchitectureTab graph={graph} data={data} />}
       {tab === "changes" && diffData?.has_previous && (
         <ChangesTab diffData={diffData} />
       )}

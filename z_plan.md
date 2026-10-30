@@ -22,3 +22,10 @@ i cannot upload a project folder heere all files wont go i think this should be 
 
 
 
+
+
+
+improvements :
+System Design Architechture Diagram
+
+populate claude code feature in one click get to claude code with pasted prompt.(make sure claude code is loggen in the browser when using this feature)

@@ -42,3 +42,36 @@ it('ends a stalled check and allows a manual retry', async () => {
   await api.warmBackend();
   expect(api.getBackendStatus()).toBe('ready');
 });
+
+it('clears a stalled health check when a normal API request reaches the server', async () => {
+  vi.useFakeTimers();
+  vi.stubGlobal('fetch', vi.fn((url, { signal }) => {
+    if (url.endsWith('/healthz')) return new Promise((resolve, reject) => {
+      signal.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')));
+    });
+    return Promise.resolve({ ok: true, status: 200, text: async () => '{"items":[]}' });
+  }));
+  const api = await import('./warmup');
+  const { apiRequest } = await import('./client');
+  const request = api.warmBackend();
+  await vi.advanceTimersByTimeAsync(4000);
+  expect(api.getBackendStatus()).toBe('starting');
+  await apiRequest('/api/ingestion/');
+  await request;
+  await vi.advanceTimersByTimeAsync(100000);
+  expect(api.getBackendStatus()).toBe('ready');
+});
+
+it('automatically detects recovery after the initial deadline', async () => {
+  vi.useFakeTimers();
+  const fetch = vi.fn().mockResolvedValue({ ok: false });
+  vi.stubGlobal('fetch', fetch);
+  const api = await import('./warmup');
+  const request = api.warmBackend();
+  await vi.advanceTimersByTimeAsync(90000);
+  await request;
+  expect(api.getBackendStatus()).toBe('unavailable');
+  fetch.mockResolvedValue({ ok: true, json: async () => ({ status: 'ok' }) });
+  await vi.advanceTimersByTimeAsync(15000);
+  expect(api.getBackendStatus()).toBe('ready');
+});
