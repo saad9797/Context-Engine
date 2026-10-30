@@ -48,8 +48,7 @@ export default function ProjectAtGlance({
                   Your architecture, connected
                 </Typography>
                 <Typography variant="caption">
-                  {graph.nodes?.length || 0} entities ·{" "}
-                  {graph.edges?.length || 0} relationships
+                  How the application, databases, and files fit together
                 </Typography>
               </Box>
               <Button

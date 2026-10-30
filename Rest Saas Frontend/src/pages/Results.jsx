@@ -29,6 +29,7 @@ import {
 } from "../components/results/Tabs";
 import CodebaseTab from "../components/results/CodebaseTab";
 import ArchitectureTab from "../components/results/ArchitectureTab";
+import DatabaseERD from "../components/results/DatabaseERD";
 import ChangesTab, { countDiffItems } from "../components/results/ChangesTab";
 import JsonViewer from "../components/results/JsonTree";
 import SourceContextActions from "../components/results/SourceContextActions";
@@ -115,7 +116,7 @@ export default function Results() {
   const mongo = data.mongo_database;
   const storage = data.object_storage;
   const codebase = data.codebase;
-  const graph = data.architecture_graph;
+  const graph = data.architecture_graph || (database || mongo || storage || codebase ? { nodes: [], edges: [] } : null);
   const sourceExports = {
     postgres: { sourceKey: "database", source: database, label: database?.dialect === "mysql" ? "MySQL" : "PostgreSQL" },
     mongo: { sourceKey: "mongo_database", source: mongo, label: "MongoDB" },
@@ -152,6 +153,7 @@ export default function Results() {
       label: "Architecture",
       n: graph.nodes?.length,
     },
+    database && { id: 'erd', label: 'Database ERD', n: database.tables?.length },
     diffData?.has_previous && {
       id: "changes",
       label: "Changes",
@@ -383,6 +385,7 @@ export default function Results() {
       {tab === "storage" && storage && <StorageTab storage={storage} />}
       {tab === "codebase" && codebase && <CodebaseTab codebase={codebase} />}
       {tab === "architecture" && graph && <ArchitectureTab graph={graph} data={data} />}
+      {tab === "erd" && <DatabaseERD database={database} />}
       {tab === "changes" && diffData?.has_previous && (
         <ChangesTab diffData={diffData} />
       )}

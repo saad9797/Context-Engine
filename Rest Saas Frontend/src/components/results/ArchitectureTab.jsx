@@ -11,6 +11,7 @@ import AltRouteOutlinedIcon from "@mui/icons-material/AltRouteOutlined";
 import CategoryOutlinedIcon from "@mui/icons-material/CategoryOutlined";
 import ArchitectureDiagram from "./ArchitectureDiagram";
 import SystemArchitecture from "./SystemArchitecture";
+import DatabaseERD from "./DatabaseERD";
 import EntityRow from "./EntityRow";
 const NODE_ICON = {
   table: DnsOutlinedIcon,
@@ -66,14 +67,17 @@ export default function ArchitectureTab({ graph, data }) {
           exclusive
           value={view}
           onChange={(e, v) => v && setView(v)}
+          sx={{ flexWrap: 'wrap' }}
         >
           <ToggleButton value="diagram">System overview</ToggleButton>
+          <ToggleButton value="erd">Database ERD</ToggleButton>
           <ToggleButton value="details">Technical diagram</ToggleButton>
           <ToggleButton value="list">List</ToggleButton>
         </ToggleButtonGroup>
       </Stack>
 
       {view === "diagram" && <SystemArchitecture data={data} />}
+      {view === "erd" && <DatabaseERD database={data?.database} />}
       {view === "details" && <ArchitectureDiagram graph={graph} />}
 
       {view === "list" &&
