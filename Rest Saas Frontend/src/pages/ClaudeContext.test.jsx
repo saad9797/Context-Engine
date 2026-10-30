@@ -19,6 +19,39 @@ beforeEach(() => { vi.clearAllMocks(); request.mockReset(); sessionStorage.clear
 function open() { render(<MemoryRouter initialEntries={["/contexts/example/claude-context"]}><Routes><Route path="/contexts/:contextId/claude-context" element={<ClaudeContext />} /><Route path="/ingest/:jobId/progress" element={<div>Build queued</div>} /></Routes></MemoryRouter>); }
 
 describe("AI context pack workflow", () => {
+  it('opens the full self-contained handoff even when the task-only tab is selected', async () => {
+    const tab = { closed: false, document: { body: { style: {} } }, location: { replace: vi.fn() }, close: vi.fn() };
+    const popup = vi.spyOn(window, 'open').mockReturnValue(tab);
+    try {
+      open();
+      await waitFor(() => expect(screen.getByRole('button', { name: 'Open in Claude Code' })).toBeEnabled());
+      fireEvent.click(screen.getByRole('tab', { name: 'Task only' }));
+      request.mockResolvedValueOnce({ id: 'launch', url: 'https://claude.ai/code?prompt_url=https%3A%2F%2Fapi.example.com%2Fprompt', expires_at: '2026-10-30T12:00:00Z' });
+      fireEvent.click(screen.getByRole('button', { name: 'Open in Claude Code' }));
+      await waitFor(() => expect(tab.location.replace).toHaveBeenCalled());
+      expect(request).toHaveBeenLastCalledWith('/api/ingestion/example/claude-launch/', { method: 'POST', body: { handoff: result.handoff } });
+    } finally { popup.mockRestore(); }
+  });
+
+  it('reserves a tab during Prepare and opens Claude automatically after preparation', async () => {
+    const tab = { closed: false, document: { body: { style: {} } }, location: { replace: vi.fn() }, close: vi.fn() };
+    const popup = vi.spyOn(window, 'open').mockReturnValue(tab);
+    let resolve;
+    try {
+      open();
+      await waitFor(() => expect(screen.getByRole('button', { name: 'Open in Claude Code' })).toBeEnabled());
+      fireEvent.click(screen.getByRole('checkbox', { name: 'Open Claude Code automatically after I prepare a task' }));
+      fireEvent.change(screen.getByLabelText('What do you want to build?'), { target: { value: 'Add interviews' } });
+      request.mockReturnValueOnce(new Promise(done => { resolve = done; })).mockResolvedValueOnce({ id: 'launch', url: 'https://claude.ai/code?prompt_url=https%3A%2F%2Fapi.example.com%2Fprompt', expires_at: '2026-10-30T12:00:00Z' });
+      fireEvent.click(screen.getByRole('button', { name: 'Prepare context packs' }));
+      expect(popup).toHaveBeenCalledOnce();
+      expect(tab.location.replace).not.toHaveBeenCalled();
+      await act(async () => resolve(result));
+      await waitFor(() => expect(tab.location.replace).toHaveBeenCalled());
+      expect(request).toHaveBeenLastCalledWith('/api/ingestion/example/claude-launch/', { method: 'POST', body: { handoff: result.handoff } });
+    } finally { popup.mockRestore(); }
+  });
+
   it('prepares an asynchronous follow-up with the original task and acceptance criteria', async () => {
     open();
     await waitFor(() => expect(screen.getByRole('button', { name: 'Copy JSON' })).toBeEnabled());

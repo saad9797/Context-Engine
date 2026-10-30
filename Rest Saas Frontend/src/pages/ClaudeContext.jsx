@@ -13,6 +13,8 @@ import CircularProgress from "@mui/material/CircularProgress";
 import MenuItem from "@mui/material/MenuItem";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
+import Checkbox from "@mui/material/Checkbox";
+import FormControlLabel from "@mui/material/FormControlLabel";
 import ArrowBack from "@mui/icons-material/ArrowBack";
 import ContentCopy from "@mui/icons-material/ContentCopyOutlined";
 import { useAuth } from "../context/AuthContext";
@@ -21,6 +23,7 @@ import { useToast } from "../components/ToastProvider";
 import PageHeader from "../components/PageHeader";
 import SavedHandoffs from "../components/SavedHandoffs";
 import SnapshotBuildScreen from "../components/SnapshotBuildScreen";
+import ClaudeHandoff, { useClaudeHandoff } from "../components/ClaudeHandoff";
 
 const emptyTask = { retrieval_mode: 'fast', task: "", endpoints: "", access: "", rules: "", response_shape: "", acceptance: "", follow_up: "", paths: "", symbols: "" };
 const fields = [
@@ -49,6 +52,8 @@ export default function ClaudeContext() {
   const [deleting, setDeleting] = useState(false);
   const [copied, setCopied] = useState(false);
   const [progress, setProgress] = useState(null);
+  const [openClaudeWhenReady, setOpenClaudeWhenReady] = useState(false);
+  const claude = useClaudeHandoff(contextId, request);
   const generation = useRef(0);
   const resumeKey = `contexa-preparation:${contextId}`;
 
@@ -69,6 +74,7 @@ export default function ClaudeContext() {
   }
 
   async function generate(values, size) {
+    const claudeTab = openClaudeWhenReady && values.task.trim() ? claude.reserve() : null;
     const current = ++generation.current;
     setLoading(true); setError(""); setProgress(null);
     try {
@@ -82,10 +88,12 @@ export default function ClaudeContext() {
         try { sessionStorage.setItem(resumeKey, preparationId); } catch { /* storage can be disabled */ }
         output = await pollPrepared(preparationId, current);
       }
-      if (current !== generation.current) return;
+      if (current !== generation.current) { claude.cancel(claudeTab); return; }
       if (!output?.handoff || !output?.base || !output?.report) throw new Error('The prepared context response was incomplete. Please retry.');
       if (current === generation.current) { setResult(output); setDirty(false); setCopied(false); }
+      if (claudeTab) await claude.launch(output.handoff, claudeTab);
     } catch (e) {
+      claude.cancel(claudeTab, 'Context preparation failed. Fix the preparation error below, then try again.');
       if (current === generation.current) { setError(e.message); setResult(null); try { sessionStorage.removeItem(resumeKey); } catch { /* optional */ } }
     } finally {
       if (current === generation.current) setLoading(false);
@@ -233,6 +241,8 @@ export default function ClaudeContext() {
             <Button size="small" variant="contained" onClick={() => copy(true)} disabled={copyDisabled}>Copy for AI chat</Button>
             <Button size="small" onClick={download} disabled={copyDisabled}>Download JSON</Button>
           </Stack>
+          <ClaudeHandoff handoff={result?.handoff} disabled={stale || !result?.handoff?.request?.task} controller={claude} />
+          <FormControlLabel sx={{ mb: 2 }} control={<Checkbox checked={openClaudeWhenReady} disabled={loading || claude.busy} onChange={event => setOpenClaudeWhenReady(event.target.checked)} />} label="Open Claude Code automatically after I prepare a task" />
           {packType === "handoff" && pack?.status === "incomplete" && <Alert severity="warning" sx={{ mb: 2 }}>This handoff has missing contracts. Increase the budget, rebuild missing source, or request a narrower task before generating code.
             {report?.suggested_handoff_budget > budget && <Button size="small" disabled={loading} onClick={() => { const size = report.suggested_handoff_budget; setBudget(size); setDirty(true); generate(form, size); }}>Try {report.suggested_handoff_budget.toLocaleString()} token budget</Button>}
           </Alert>}

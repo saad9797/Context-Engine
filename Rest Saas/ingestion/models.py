@@ -220,6 +220,14 @@ class ContextPreparation(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
 
+class ClaudeLaunch(models.Model):
+    """Expiring capability for Claude's prompt_url fetch; never an account token."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    context = models.ForeignKey(IngestionContext, on_delete=models.CASCADE, related_name='claude_launches')
+    encrypted_prompt = models.TextField()
+    expires_at = models.DateTimeField(db_index=True)
+
+
 class AuditLogEntry(models.Model):
     """Append-only record of who did what, for after-the-fact review."""
 

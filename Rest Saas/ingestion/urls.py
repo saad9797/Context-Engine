@@ -13,6 +13,7 @@ from .views import (
     IngestionResultView,
 )
 from .views_crypto import TransitPublicKeyView
+from .views_claude import ClaudeLaunchView, ClaudeLaunchDetailView, ClaudePromptView
 from .views_import import ImportSnapshotView
 from .views_handoffs import SavedHandoffsView, SavedHandoffView
 from .views_context_packs import ContextPackView, RebuildSnapshotView, PrepareContextView, PreparedContextView
@@ -29,6 +30,9 @@ from .views_github import (
 )
 
 urlpatterns = [
+    path('api/ingestion/<uuid:pk>/claude-launch/', ClaudeLaunchView.as_view(), name='claude-launch'),
+    path('api/ingestion/<uuid:pk>/claude-launch/<uuid:launch_id>/', ClaudeLaunchDetailView.as_view(), name='claude-launch-detail'),
+    path('api/claude-prompts/<uuid:launch_id>/', ClaudePromptView.as_view(), name='claude-prompt'),
     path('api/ingestion/<uuid:pk>/prepare/', PrepareContextView.as_view(), name='prepare-context'),
     path('api/ingestion/<uuid:pk>/prepare/<uuid:preparation_id>/', PreparedContextView.as_view(), name='prepared-context'),
     path("api/ingestion/<uuid:pk>/handoffs/", SavedHandoffsView.as_view(), name="saved-handoffs"),
