@@ -1,7 +1,33 @@
 const tableId = table => table.schema ? `${table.schema}.${table.name}` : table.name;
+const list = value => Array.isArray(value) ? value.filter(Boolean) : [];
+
+// Older Postgres snapshots can contain information_schema domain arrays as
+// their wire-format string, e.g. {email} or {"tenant,id",email}.
+export function columnNames(value) {
+  if (Array.isArray(value)) return value.filter(name => typeof name === 'string');
+  if (typeof value !== 'string' || !value.trim()) return [];
+  const input = value.trim();
+  if (input.startsWith('[')) {
+    try { const parsed = JSON.parse(input); return Array.isArray(parsed) ? columnNames(parsed) : []; } catch { return []; }
+  }
+  if (!input.startsWith('{') || !input.endsWith('}')) return [input];
+  const names = [];
+  let name = '', quoted = false, escaped = false, wasQuoted = false;
+  const append = () => { if (name && (wasQuoted || name !== 'NULL')) names.push(name); name = ''; wasQuoted = false; };
+  for (const char of input.slice(1, -1)) {
+    if (escaped) { name += char; escaped = false; }
+    else if (char === '\\') escaped = true;
+    else if (char === '"') { quoted = !quoted; wasQuoted = true; }
+    else if (char === ',' && !quoted) append();
+    else name += char;
+  }
+  if (quoted || escaped) return [];
+  append();
+  return names;
+}
 
 export function buildERD(database = {}) {
-  const tables = (database.tables || []).map(table => ({ ...table, id: tableId(table), columns: table.columns || [], primary_keys: table.primary_keys || [], foreign_keys: table.foreign_keys || [], unique_constraints: table.unique_constraints || [] }));
+  const tables = list(database?.tables).filter(table => typeof table.name === 'string' && table.name).map(table => ({ ...table, id: tableId(table), columns: list(table.columns).filter(column => typeof column.name === 'string'), primary_keys: columnNames(table.primary_keys), foreign_keys: list(table.foreign_keys), unique_constraints: list(table.unique_constraints).map(key => ({ ...key, columns: columnNames(key.columns) })) }));
   const byId = new Map(tables.map(table => [table.id, table]));
   const resolve = (schema, name) => {
     const exact = schema ? `${schema}.${name}` : name;
@@ -22,7 +48,7 @@ export function buildERD(database = {}) {
     if (!fk.references?.table) continue;
     add({ from: table.id, fromColumn: fk.column, to: resolve(fk.references.schema, fk.references.table), toColumn: fk.references.column, constraint: fk.constraint, onDelete: fk.on_delete });
   }
-  for (const edge of database.relationship_graph || []) {
+  for (const edge of list(database?.relationship_graph)) {
     add({ from: resolve(null, edge.from), fromColumn: edge.from_column, to: resolve(null, edge.to), toColumn: edge.to_column, onDelete: edge.on_delete });
   }
   return { tables, relationships };

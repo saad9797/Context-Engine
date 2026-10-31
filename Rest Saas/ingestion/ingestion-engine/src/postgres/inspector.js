@@ -197,7 +197,7 @@ async function inspectPostgres(connectionString) {
 
     const { rows: uniqueRows } = await client.query(`
       SELECT tc.table_schema, tc.table_name, tc.constraint_name,
-             array_agg(kcu.column_name ORDER BY kcu.ordinal_position) AS columns
+             array_agg(kcu.column_name::text ORDER BY kcu.ordinal_position) AS columns
       FROM information_schema.table_constraints tc
       JOIN information_schema.key_column_usage kcu
         ON kcu.constraint_name = tc.constraint_name AND kcu.table_schema = tc.table_schema

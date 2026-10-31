@@ -24,10 +24,10 @@ describe("AI context pack workflow", () => {
     const popup = vi.spyOn(window, 'open').mockReturnValue(tab);
     try {
       open();
-      await waitFor(() => expect(screen.getByRole('button', { name: 'Open in Claude Code' })).toBeEnabled());
+      await waitFor(() => expect(screen.getByRole('button', { name: 'Open in Claude Code (paid)' })).toBeEnabled());
       fireEvent.click(screen.getByRole('tab', { name: 'Task only' }));
       request.mockResolvedValueOnce({ id: 'launch', url: 'https://claude.ai/code?prompt_url=https%3A%2F%2Fapi.example.com%2Fprompt', expires_at: '2026-10-30T12:00:00Z' });
-      fireEvent.click(screen.getByRole('button', { name: 'Open in Claude Code' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Open in Claude Code (paid)' }));
       await waitFor(() => expect(tab.location.replace).toHaveBeenCalled());
       expect(request).toHaveBeenLastCalledWith('/api/ingestion/example/claude-launch/', { method: 'POST', body: { handoff: result.handoff } });
     } finally { popup.mockRestore(); }
@@ -39,8 +39,8 @@ describe("AI context pack workflow", () => {
     let resolve;
     try {
       open();
-      await waitFor(() => expect(screen.getByRole('button', { name: 'Open in Claude Code' })).toBeEnabled());
-      fireEvent.click(screen.getByRole('checkbox', { name: 'Open Claude Code automatically after I prepare a task' }));
+      await waitFor(() => expect(screen.getByRole('button', { name: 'Open in Claude Code (paid)' })).toBeEnabled());
+      fireEvent.click(screen.getByRole('checkbox', { name: 'Open Claude automatically after I prepare a task' }));
       fireEvent.change(screen.getByLabelText('What do you want to build?'), { target: { value: 'Add interviews' } });
       request.mockReturnValueOnce(new Promise(done => { resolve = done; })).mockResolvedValueOnce({ id: 'launch', url: 'https://claude.ai/code?prompt_url=https%3A%2F%2Fapi.example.com%2Fprompt', expires_at: '2026-10-30T12:00:00Z' });
       fireEvent.click(screen.getByRole('button', { name: 'Prepare context packs' }));
@@ -48,7 +48,9 @@ describe("AI context pack workflow", () => {
       expect(tab.location.replace).not.toHaveBeenCalled();
       await act(async () => resolve(result));
       await waitFor(() => expect(tab.location.replace).toHaveBeenCalled());
-      expect(request).toHaveBeenLastCalledWith('/api/ingestion/example/claude-launch/', { method: 'POST', body: { handoff: result.handoff } });
+      expect(request.mock.calls.some(([path]) => path.endsWith('/claude-launch/'))).toBe(false);
+      expect(clipboard).toHaveBeenCalledWith(expect.stringContaining(JSON.stringify(result.handoff)));
+      expect(tab.location.replace.mock.calls[0][0]).toMatch(/^https:\/\/claude.ai\/new/);
     } finally { popup.mockRestore(); }
   });
 

@@ -242,7 +242,7 @@ export default function ClaudeContext() {
             <Button size="small" onClick={download} disabled={copyDisabled}>Download JSON</Button>
           </Stack>
           <ClaudeHandoff handoff={result?.handoff} disabled={stale || !result?.handoff?.request?.task} controller={claude} />
-          <FormControlLabel sx={{ mb: 2 }} control={<Checkbox checked={openClaudeWhenReady} disabled={loading || claude.busy} onChange={event => setOpenClaudeWhenReady(event.target.checked)} />} label="Open Claude Code automatically after I prepare a task" />
+          <FormControlLabel sx={{ mb: 2 }} control={<Checkbox checked={openClaudeWhenReady} disabled={loading || claude.busy} onChange={event => setOpenClaudeWhenReady(event.target.checked)} />} label="Open Claude automatically after I prepare a task" />
           {packType === "handoff" && pack?.status === "incomplete" && <Alert severity="warning" sx={{ mb: 2 }}>This handoff has missing contracts. Increase the budget, rebuild missing source, or request a narrower task before generating code.
             {report?.suggested_handoff_budget > budget && <Button size="small" disabled={loading} onClick={() => { const size = report.suggested_handoff_budget; setBudget(size); setDirty(true); generate(form, size); }}>Try {report.suggested_handoff_budget.toLocaleString()} token budget</Button>}
           </Alert>}

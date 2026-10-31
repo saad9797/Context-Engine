@@ -2,9 +2,25 @@ import React from 'react';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, expect, it } from 'vitest';
 import DatabaseERD from './DatabaseERD';
-import { buildERD, layoutERD } from './erdModel';
+import { buildERD, layoutERD, columnNames } from './erdModel';
 
 afterEach(cleanup);
+
+it('renders the exact legacy unique-constraint shape from the reported join crash', () => {
+  const legacy = { tables: [{ schema: 'public', name: 'accounts', columns: [{ name: 'email', type: 'text' }, { name: 'tenant_id', type: 'uuid' }], primary_keys: '{}', unique_constraints: [{ name: 'account_email', columns: '{tenant_id,email}' }] }] };
+  render(<DatabaseERD database={legacy} />);
+  expect(screen.getByText('public.accounts')).toBeInTheDocument();
+  expect(screen.getAllByText(/unique constraints: tenant_id \+ email/)).toHaveLength(2);
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Keys only' }));
+  expect(screen.getByText('email', { exact: true })).toBeInTheDocument();
+});
+
+it('normalizes quoted Postgres identifiers, JSON arrays, and scalar column names', () => {
+  expect(columnNames('{"tenant,id",email}')).toEqual(['tenant,id', 'email']);
+  expect(columnNames('["id","email"]')).toEqual(['id', 'email']);
+  expect(columnNames('email')).toEqual(['email']);
+  expect(columnNames(null)).toEqual([]);
+});
 const database = { tables: [
   { schema: 'public', name: 'users', primary_keys: ['id'], columns: [{ name: 'id', type: 'integer', nullable: false }, { name: 'name', type: 'text', nullable: true }] },
   { schema: 'public', name: 'orders', primary_keys: ['id'], columns: [{ name: 'id', type: 'integer' }, { name: 'user_id', type: 'integer' }, { name: 'note', type: 'text' }], foreign_keys: [{ constraint: 'orders_user', column: 'user_id', references: { schema: 'public', table: 'users', column: 'id' } }] },
@@ -64,4 +80,12 @@ it('does not resolve an explicit schema to a similarly named table in another sc
 it('shows an actionable empty state for snapshots without a relational database', () => {
   render(<DatabaseERD />);
   expect(screen.getByText(/Connect PostgreSQL or MySQL/)).toBeInTheDocument();
+});
+
+it('handles explicitly null databases and incomplete legacy schema arrays', () => {
+  const view = render(<DatabaseERD database={null} />);
+  expect(screen.getByText(/No relational database tables/)).toBeInTheDocument();
+  view.rerender(<DatabaseERD database={{ tables: [null, { schema: 'public', name: 'legacy', columns: null, primary_keys: null, foreign_keys: null, unique_constraints: null }], relationship_graph: null }} />);
+  expect(screen.getByText('public.legacy')).toBeInTheDocument();
+  expect(screen.getByText('No columns captured')).toBeInTheDocument();
 });

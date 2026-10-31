@@ -1,6 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, Box, Button, CircularProgress, Stack, Typography } from '@mui/material';
 import OpenInNew from '@mui/icons-material/OpenInNew';
+import { copyToClipboard } from '../lib/format';
+
+export const claudePrompt = handoff => 'Implement the request using this self-contained context. Review context_gaps and ask for missing contracts first.\n\n' + JSON.stringify(handoff);
 
 export function useClaudeHandoff(contextId, request) {
   const [state, setState] = useState({ kind: 'idle' });
@@ -26,7 +29,7 @@ export function useClaudeHandoff(contextId, request) {
     }
     tab.opener = null;
     tab.document.title = 'Preparing your Claude handoff — Contexa';
-    tab.document.body.textContent = 'Preparing your context for Claude Code. Keep this tab open; it will continue automatically when the handoff is ready. You can return to Contexa while you wait.';
+    tab.document.body.textContent = 'Preparing your context for Claude. Keep this tab open; it will continue automatically when the handoff is ready. You can return to Contexa while you wait.';
     tab.document.body.style.cssText = 'max-width:640px;margin:15vh auto;padding:24px;font:18px/1.7 system-ui;color:#273329;background:#f8faf5';
     pending.current = tab;
     setState({ kind: 'preparing' });
@@ -40,7 +43,32 @@ export function useClaudeHandoff(contextId, request) {
     setState(text ? { kind: 'error', text } : { kind: 'idle' });
   }
 
-  async function launch(handoff, tab = reserve()) {
+  async function launch(handoff, reservedTab) {
+    if (!handoff?.request?.task) return;
+    const prompt = claudePrompt(handoff);
+    const destination = new URL('https://claude.ai/new');
+    destination.searchParams.set('q', prompt);
+    const prefilled = destination.href.length <= 6000;
+    // Start clipboard access in the original click, before focusing a new tab.
+    const copying = copyToClipboard(prompt);
+    const tab = reservedTab || reserve();
+    if (!tab) return;
+    const current = revision.current;
+    const copied = await copying;
+    if (current !== revision.current) return;
+    if (!prefilled && !copied) {
+      cancel(tab, 'Clipboard access was denied. Copy the complete AI handoff using Copy for AI chat, then open claude.ai and paste it. No context was truncated.');
+      return;
+    }
+    if (tab.closed) { cancel(tab, 'The Claude tab was closed. Choose Open in Claude again.'); return; }
+    try {
+      tab.location.replace(prefilled ? destination.href : 'https://claude.ai/new');
+      pending.current = null;
+      setState({ kind: 'chat', prefilled, copied });
+    } catch (error) { cancel(tab, error.message || 'Could not open Claude. Your context is still here.'); }
+  }
+
+  async function launchCode(handoff, tab = reserve()) {
     if (!tab) return;
     if (tab.closed) {
       cancel(tab, 'The Claude tab was closed. Your context is ready; choose Open in Claude Code to try again.');
@@ -74,26 +102,27 @@ export function useClaudeHandoff(contextId, request) {
       setState({ kind: 'revoked' });
     } catch (error) { setState(old => ({ ...old, revokeError: error.message })); }
   }
-  return { state, reserve, launch, cancel, revoke, busy: state.kind === 'preparing' || state.kind === 'opening' };
+  return { state, reserve, launch, launchCode, cancel, revoke, busy: state.kind === 'preparing' || state.kind === 'opening' };
 }
 
 export default function ClaudeHandoff({ handoff, disabled, controller }) {
-  const { state, launch, revoke, busy } = controller;
+  const { state, launch, launchCode, revoke, busy } = controller;
   return <Box sx={{ mb: 2 }}>
     <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', flexWrap: 'wrap', mb: 1 }}>
       <Button variant="contained" startIcon={busy ? <CircularProgress size={16} color="inherit" /> : <OpenInNew />} disabled={disabled || busy} onClick={() => launch(handoff)}>
-        {busy ? 'Preparing Claude handoff…' : 'Open in Claude Code'}
+        {busy ? 'Preparing Claude handoff…' : 'Open in Claude'}
       </Button>
-      <Typography variant="caption" color="text.secondary">Opens your full AI handoff in a new tab, ready to review.</Typography>
+      <Button variant="outlined" disabled={disabled || busy} onClick={() => launchCode(handoff)}>Open in Claude Code (paid)</Button>
     </Stack>
     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-      Use a browser signed in to Claude. If you are signed out, Claude will ask you to sign in. Claude Code also needs access to your GitHub repository and a cloud environment. Review the prompt and press Send there.
+      Claude chat opens without requiring Claude Code access. Short prompts are prefilled; larger handoffs are copied in full — paste them into Claude with Ctrl+V (⌘V on Mac). Sign in there if asked, review the prompt, then send.
     </Typography>
     <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
-      Opening Claude shares the self-contained handoff, including selected source code, through a private link valid for 15 minutes. Contexa cannot check your Claude sign-in status.
+      Claude Code is a separate paid feature and may show an upgrade screen if your account is not eligible. Use Open in Claude instead. Code handoffs use a private link valid for 15 minutes; Contexa cannot check your Claude subscription or sign-in status.
     </Typography>
     {state.kind === 'error' && <Alert severity="error" role="alert">{state.text}</Alert>}
-    {busy && <Alert severity="info" role="status">{state.kind === 'preparing' ? 'Preparing your context. The new tab will open Claude Code automatically when ready.' : 'Creating your private Claude handoff…'}</Alert>}
+    {busy && <Alert severity="info" role="status">{state.kind === 'preparing' ? 'Preparing your context. The new tab will open Claude automatically when ready.' : 'Creating your private Claude handoff…'}</Alert>}
+    {state.kind === 'chat' && <Alert severity="success" role="status">{state.prefilled ? 'Claude chat opened with the prompt prefilled. If sign-in clears the prompt, return here and open Claude again.' : 'Your complete handoff was copied and Claude chat opened. Paste with Ctrl+V (⌘V on Mac), then review and send. Browser security prevents Contexa from pasting into another website automatically.'}</Alert>}
     {state.kind === 'opened' && <Alert severity="info" role="status">
       Claude Code opened with your handoff link. Sign in there if asked. If the prompt does not appear after sign-in, return here and choose Open in Claude Code again. The link expires at {new Date(state.expires_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.
       <Button size="small" onClick={revoke}>Revoke handoff link</Button>

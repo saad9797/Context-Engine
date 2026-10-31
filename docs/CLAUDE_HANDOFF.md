@@ -1,12 +1,24 @@
-# Open prepared context in Claude Code
+# Open prepared context in Claude
+
+**Open in Claude** is the default and opens ordinary Claude chat at
+`https://claude.ai/new`. Short prompts are prefilled using `q`. To avoid sending
+large source packs in a URL, handoffs over 6,000 encoded URL characters are copied
+in full and Claude opens with instructions to paste. No content is truncated.
+Clipboard denial is reported explicitly; existing copy/preview/download options
+remain available. Automatic opening after preparation also targets regular chat.
+
+**Open in Claude Code (paid)** remains available separately for accounts with
+Claude Code access. Signing in does not grant a Code subscription. Contexa cannot
+read account eligibility, bypass an upgrade screen, or paste into a cross-origin
+composer. If Code shows upgrade, use the default Claude chat button.
 
 On the AI context page, describe a task and prepare the context. **Open in Claude
-Code** opens `https://claude.ai/code` with the entire self-contained AI handoff
+Code (paid)** opens `https://claude.ai/code` with the entire self-contained AI handoff
 prefilled through Claude's official `prompt_url` parameter. When a GitHub
 repository was captured, it is preselected. The self-contained handoff is used
 even if the user is inspecting the base-only or task-only export tab.
 
-Check **Open Claude Code automatically after I prepare a task** to reserve a tab
+Check **Open Claude automatically after I prepare a task** to reserve a tab
 when clicking Prepare. The tab waits until preparation completes, then navigates
 to Claude. Initial page loading and restoring saved context do not open tabs.
 Preparation errors close the waiting tab. Blocked pop-ups, closed tabs, invalid
