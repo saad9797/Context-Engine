@@ -51,26 +51,49 @@ export function buildERD(database = {}) {
   for (const edge of list(database?.relationship_graph)) {
     add({ from: resolve(null, edge.from), fromColumn: edge.from_column, to: resolve(null, edge.to), toColumn: edge.to_column, onDelete: edge.on_delete });
   }
-  return { tables, relationships };
+  return { tables, relationships, enums: list(database?.enums) };
 }
 
-export function layoutERD(model, query = '', keysOnly = false) {
+export function searchERD(model, query = '') {
+  const words = query.toLowerCase().trim().split(/\s+/).filter(Boolean);
+  return model.tables.map(table => {
+    const tableText = `${table.id} ${table.comment || ''}`.toLowerCase();
+    const matches = table.columns.filter(column => {
+      const enumText = (model.enums || []).filter(item => item.name === column.udt || item.name === column.type).map(item => JSON.stringify(item)).join(' ');
+      return words.every(word => `${tableText} ${column.name} ${column.type || ''} ${column.udt || ''} ${column.default ?? ''} ${column.comment || ''} ${enumText}`.toLowerCase().includes(word));
+    });
+    const tableMatch = words.every(word => tableText.includes(word));
+    return { table, matches, tableMatch };
+  }).filter(result => result.tableMatch || result.matches.length).sort((a, b) => Number(b.tableMatch) - Number(a.tableMatch) || a.table.id.localeCompare(b.table.id));
+}
+
+export function layoutERD(model, query = '', keysOnly = false, options = {}) {
   const match = query.trim().toLowerCase();
   const degree = id => model.relationships.filter(edge => edge.from === id || edge.to === id).length;
   const tables = model.tables.filter(table => !match || table.id.toLowerCase().includes(match)).sort((a, b) => degree(b.id) - degree(a.id) || a.id.localeCompare(b.id));
   const positions = Object.create(null);
-  const cardWidth = 400, rowHeight = 30, header = 56, gap = 100, margin = 60;
+  const cardWidth = 360, rowHeight = 26, header = 50, gap = 56, margin = 24;
   const entries = tables.map(table => {
     const keys = new Set([...table.primary_keys, ...table.foreign_keys.map(fk => fk.column), ...table.unique_constraints.flatMap(key => key.columns)]);
     for (const edge of model.relationships) {
       if (edge.from === table.id) keys.add(edge.fromColumn);
       if (edge.to === table.id) keys.add(edge.toColumn);
     }
-    const columns = table.columns.filter(column => !keysOnly || keys.has(column.name));
-    return { table, columns, height: header + Math.max(1, columns.length) * rowHeight + 12 };
+    const columns = options.detail === 'overview' ? [] : table.columns.filter(column => !keysOnly || keys.has(column.name));
+    return { table, columns, height: options.detail === 'overview' ? header + 6 : header + Math.max(1, columns.length) * rowHeight + 8 };
   });
-  const averageHeight = entries.reduce((sum, entry) => sum + entry.height, 0) / Math.max(1, entries.length);
-  const columnCount = Math.max(1, Math.ceil(Math.sqrt(entries.length * (averageHeight + gap) / (cardWidth + gap))));
+  // Tall cards share shelves, so a single tall table doesn't leave holes in
+  // every row. Choose the packing that best fills the actual canvas shape.
+  entries.sort((a, b) => b.height - a.height || degree(b.table.id) - degree(a.table.id) || a.table.id.localeCompare(b.table.id));
+  const aspect = options.aspectRatio || 1.6;
+  let columnCount = 1, best = Infinity;
+  for (let count = 1; count <= Math.max(1, Math.min(entries.length, 20)); count++) {
+    let candidateHeight = margin * 2;
+    for (let index = 0; index < entries.length; index += count) candidateHeight += Math.max(...entries.slice(index, index + count).map(entry => entry.height)) + (index ? gap : 0);
+    const candidateWidth = margin * 2 + count * (cardWidth + gap) - gap;
+    const score = Math.max(candidateWidth / aspect, candidateHeight);
+    if (score < best) { best = score; columnCount = count; }
+  }
   let y = margin;
   for (let index = 0; index < entries.length; index += columnCount) {
     const row = entries.slice(index, index + columnCount);
@@ -85,7 +108,7 @@ export function layoutERD(model, query = '', keysOnly = false) {
   const edges = model.relationships.filter(edge => edge.available && positions[edge.from] && positions[edge.to]).map((edge, index) => {
     const from = positions[edge.from], to = positions[edge.to];
     const y1 = fieldY(from, edge.fromColumn), y2 = fieldY(to, edge.toColumn);
-    const offset = 20 + index % 5 * 5;
+    const offset = 10 + index % 5 * 5;
     let d;
     if (from.column === to.column) {
       const x = from.x + cardWidth, lane = x + offset;
@@ -103,5 +126,5 @@ export function layoutERD(model, query = '', keysOnly = false) {
     }
     return { ...edge, d };
   });
-  return { positions, edges, width: Math.max(520, margin * 2 + columnCount * (cardWidth + gap) - gap), height: Math.max(200, y - gap + margin), rowHeight, header };
+  return { positions, edges, width: margin * 2 + columnCount * (cardWidth + gap) - gap, height: Math.max(104, y - gap + margin), rowHeight, header };
 }

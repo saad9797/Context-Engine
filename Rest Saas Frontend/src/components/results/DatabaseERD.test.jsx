@@ -2,10 +2,41 @@ import React from 'react';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, expect, it } from 'vitest';
 import DatabaseERD from './DatabaseERD';
-import { buildERD, layoutERD, columnNames } from './erdModel';
+import { buildERD, layoutERD, columnNames, searchERD } from './erdModel';
 import { fitCamera, zoomCamera } from './useDiagramCanvas';
 
 afterEach(cleanup);
+
+it('searches columns, types, defaults, notes and captured enum values', () => {
+  const model = buildERD({ tables: [{ name: 'orders', columns: [{ name: 'status', type: 'USER-DEFINED', udt: 'order_status', default: 'pending', comment: 'Fulfilment stage' }] }], enums: [{ name: 'order_status', values: ['paid', 'cancelled'] }] });
+  for (const query of ['status', 'order_status', 'pending', 'fulfilment', 'cancelled']) {
+    expect(searchERD(model, query)[0].matches[0].name).toBe('status');
+  }
+  expect(searchERD(model, 'not present')).toEqual([]);
+});
+
+it('keeps the board stable while searching and jumps directly to a matching column', () => {
+  render(<DatabaseERD database={database} />);
+  const board = screen.getByLabelText('Interactive database diagram canvas');
+  const before = board.querySelector('svg').getAttribute('viewBox');
+  fireEvent.change(screen.getByLabelText('Search schema'), { target: { value: 'user_id' } });
+  expect(board.querySelector('svg').getAttribute('viewBox')).toBe(before);
+  expect(screen.getByRole('button', { name: 'Focus table public.users' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Explore column public.orders.user_id' }));
+  expect(board.querySelector('svg').getAttribute('viewBox')).not.toBe(before);
+  expect(screen.getByLabelText('Table inspector')).toHaveTextContent('public.orders');
+});
+
+it('reduces large schemas to keys initially and can focus just a table neighborhood', () => {
+  const large = { ...database, tables: [...database.tables, ...Array.from({ length: 15 }, (_, i) => ({ name: `extra_${i}`, columns: [{ name: 'description', type: 'text' }] }))] };
+  render(<DatabaseERD database={large} />);
+  expect(screen.getByRole('button', { name: 'Keys only' })).toHaveAttribute('aria-pressed', 'true');
+  fireEvent.click(screen.getByRole('button', { name: 'Focus table public.orders' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Focus related tables' }));
+  expect(screen.getByText(/2 of 17 tables/)).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Fit all tables' }));
+  expect(screen.getByText(/17 of 17 tables/)).toBeInTheDocument();
+});
 
 it('fits a large schema on a compact board without overlapping table cards', () => {
   const model = buildERD({ tables: Array.from({ length: 77 }, (_, i) => ({ name: `table_${i}`, columns: Array.from({ length: 10 }, (_, j) => ({ name: `field_${j}` })) })) });
@@ -50,9 +81,9 @@ it('offers a single fitted canvas, zoom controls and expanded mode', () => {
 it('renders the exact legacy unique-constraint shape from the reported join crash', () => {
   const legacy = { tables: [{ schema: 'public', name: 'accounts', columns: [{ name: 'email', type: 'text' }, { name: 'tenant_id', type: 'uuid' }], primary_keys: '{}', unique_constraints: [{ name: 'account_email', columns: '{tenant_id,email}' }] }] };
   render(<DatabaseERD database={legacy} />);
-  expect(screen.getByText('public.accounts')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Focus table public.accounts' })).toBeInTheDocument();
   expect(screen.getAllByText(/unique constraints: tenant_id \+ email/)).toHaveLength(2);
-  fireEvent.click(screen.getByRole('checkbox', { name: 'Keys only' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Keys only' }));
   expect(screen.getByText('email', { exact: true })).toBeInTheDocument();
 });
 
@@ -80,10 +111,10 @@ it('deduplicates graph references and attaches arrows to actual field rows', () 
 
 it('renders columns, keys and declared relationships; keys-only preserves endpoints', () => {
   render(<DatabaseERD database={database} />);
-  expect(screen.getByText('public.users')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Focus table public.users' })).toBeInTheDocument();
   expect(screen.getByText('user_id')).toBeInTheDocument();
   expect(screen.getByText('FK', { exact: true })).toBeInTheDocument();
-  fireEvent.click(screen.getByRole('checkbox', { name: 'Keys only' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Keys only' }));
   expect(screen.queryByText('note', { exact: true })).not.toBeInTheDocument();
   expect(screen.getByText('user_id')).toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Focus table public.orders' }));
@@ -92,11 +123,11 @@ it('renders columns, keys and declared relationships; keys-only preserves endpoi
 
 it('filters tables and handles searches without matches', () => {
   render(<DatabaseERD database={database} />);
-  fireEvent.change(screen.getByLabelText('Find a table'), { target: { value: 'orders' } });
-  expect(screen.getByText('public.orders')).toBeInTheDocument();
-  expect(screen.queryByText('public.users')).not.toBeInTheDocument();
-  expect(screen.getByText(/1 of 2 tables/)).toHaveTextContent('0 of 1 field relationships shown');
-  fireEvent.change(screen.getByLabelText('Find a table'), { target: { value: 'absent' } });
+  fireEvent.change(screen.getByLabelText('Search schema'), { target: { value: 'orders' } });
+  expect(screen.getByRole('button', { name: 'Focus table public.orders' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Focus table public.users' })).toBeInTheDocument();
+  expect(screen.getByText(/2 of 2 tables/)).toHaveTextContent('1 of 1 field relationships shown');
+  fireEvent.change(screen.getByLabelText('Search schema'), { target: { value: 'absent' } });
   expect(screen.getByText(/No tables match/)).toBeInTheDocument();
 });
 
@@ -127,6 +158,6 @@ it('handles explicitly null databases and incomplete legacy schema arrays', () =
   const view = render(<DatabaseERD database={null} />);
   expect(screen.getByText(/No relational database tables/)).toBeInTheDocument();
   view.rerender(<DatabaseERD database={{ tables: [null, { schema: 'public', name: 'legacy', columns: null, primary_keys: null, foreign_keys: null, unique_constraints: null }], relationship_graph: null }} />);
-  expect(screen.getByText('public.legacy')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Focus table public.legacy' })).toBeInTheDocument();
   expect(screen.getByText('No columns captured')).toBeInTheDocument();
 });

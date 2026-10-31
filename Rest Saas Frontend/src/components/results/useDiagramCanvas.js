@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 export function fitCamera(world, viewport) {
-  const scale = Math.min(viewport.width / (world.width + 60), viewport.height / (world.height + 60), 1);
+  const scale = Math.min(viewport.width / (world.width + 20), viewport.height / (world.height + 20), 1.35);
   return { scale, x: (world.width - viewport.width / scale) / 2, y: (world.height - viewport.height / scale) / 2 };
 }
 export function zoomCamera(camera, factor, point) {
@@ -30,6 +30,10 @@ export default function useDiagramCanvas(width, height) {
   useEffect(fit, [fit]);
   const zoom = useCallback((factor, point = { x: viewport.width / 2, y: viewport.height / 2 }) => setCamera(value => zoomCamera(value, factor, point)), [viewport]);
   const center = useCallback(point => setCamera(value => ({ ...value, x: point.x - viewport.width / value.scale / 2, y: point.y - viewport.height / value.scale / 2 })), [viewport]);
+  const focus = useCallback(bounds => {
+    const scale = Math.min(1.25, viewport.width / (bounds.width + 80), viewport.height / (bounds.height + 80));
+    setCamera({ scale, x: bounds.x + bounds.width / 2 - viewport.width / scale / 2, y: bounds.y + bounds.height / 2 - viewport.height / scale / 2 });
+  }, [viewport]);
   useEffect(() => {
     const element = container.current;
     if (!element) return;
@@ -78,5 +82,5 @@ export default function useDiagramCanvas(width, height) {
       }
     },
   };
-  return { container, camera, viewport, zoom, center, fit, handlers, dragged, panning, viewBox: `${camera.x} ${camera.y} ${viewport.width / camera.scale} ${viewport.height / camera.scale}` };
+  return { container, camera, viewport, zoom, center, focus, fit, handlers, dragged, panning, viewBox: `${camera.x} ${camera.y} ${viewport.width / camera.scale} ${viewport.height / camera.scale}` };
 }
