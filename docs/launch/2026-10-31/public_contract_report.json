@@ -1,0 +1,86 @@
+{
+  "format": "contexa.public-contract-checks.v1",
+  "scope": "Agent-authored contract checks on pinned public application source. Not complete-context ground truth, semantic precision, or generated-code compile/test results.",
+  "public_source_executed": false,
+  "comparison_budget": "Same total copied JSON estimate; legacy splits budget between base and task.",
+  "current": [
+    {
+      "repository": "SeuRonao/realworld-express-prisma",
+      "commit": "1f5a21ed6eec656410655cab9d5d3c7148b57a93",
+      "source_files": 82,
+      "budget": 4000,
+      "estimated_copy_tokens": 3558,
+      "within_budget": true,
+      "checked_contracts": 9,
+      "missing": [
+        "src/middleware/auth/authenticator.ts: export const authenticate = jwt(",
+        "src/view/articleViewer.ts: export default function articleViewer(",
+        "src/view/profileViewer.ts: export default function profileViewer(",
+        "src/app.ts: app.use(\"/api/articles\", articlesRouter)"
+      ],
+      "checked_contract_recall": 0.5555555555555556,
+      "status": "incomplete",
+      "omitted_count": 24,
+      "source_bytes": 74305,
+      "handoff_source_bytes": 6516,
+      "elapsed_ms": 376,
+      "fixture_sha256": "b8ba2e13868a11cf50c96b13cdb6c0e4b2ec0fe0f57ac8d54cdbad4b35d33d9d"
+    },
+    {
+      "repository": "SeuRonao/realworld-express-prisma",
+      "commit": "1f5a21ed6eec656410655cab9d5d3c7148b57a93",
+      "source_files": 82,
+      "budget": 10000,
+      "estimated_copy_tokens": 7934,
+      "within_budget": true,
+      "checked_contracts": 9,
+      "missing": [],
+      "checked_contract_recall": 1.0,
+      "status": "review",
+      "omitted_count": 0,
+      "source_bytes": 74305,
+      "handoff_source_bytes": 15994,
+      "elapsed_ms": 353,
+      "fixture_sha256": "b8ba2e13868a11cf50c96b13cdb6c0e4b2ec0fe0f57ac8d54cdbad4b35d33d9d"
+    },
+    {
+      "repository": "Sean-Miningah/realWorld-DjangoRestFramework",
+      "commit": "8e4729aaee0a3deef8fcf5ca53a02b1565440c97",
+      "source_files": 32,
+      "budget": 4000,
+      "estimated_copy_tokens": 3610,
+      "within_budget": true,
+      "checked_contracts": 9,
+      "missing": [
+        "articles/serializers.py: class ArticleSerializer(",
+        "articles/serializers.py: class AuthorSerializer(",
+        "articles/models.py: class Article(",
+        "accounts/models.py: class User(AbstractUser)"
+      ],
+      "checked_contract_recall": 0.5555555555555556,
+      "status": "incomplete",
+      "omitted_count": 7,
+      "source_bytes": 37289,
+      "handoff_source_bytes": 6624,
+      "elapsed_ms": 60,
+      "fixture_sha256": "79eae188a2218823c24f4534ff00174189e8744d198be1ae83019549e3594a71"
+    },
+    {
+      "repository": "Sean-Miningah/realWorld-DjangoRestFramework",
+      "commit": "8e4729aaee0a3deef8fcf5ca53a02b1565440c97",
+      "source_files": 32,
+      "budget": 10000,
+      "estimated_copy_tokens": 7171,
+      "within_budget": true,
+      "checked_contracts": 9,
+      "missing": [],
+      "checked_contract_recall": 1.0,
+      "status": "review",
+      "omitted_count": 0,
+      "source_bytes": 37289,
+      "handoff_source_bytes": 15733,
+      "elapsed_ms": 73,
+      "fixture_sha256": "79eae188a2218823c24f4534ff00174189e8744d198be1ae83019549e3594a71"
+    }
+  ]
+}

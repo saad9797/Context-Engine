@@ -1,0 +1,58 @@
+{
+  "started_at": "2026-10-31T17:05:03.065309+00:00",
+  "scope": "Django application fixture recovery; not full Postgres/PITR or scheduled/off-site backup proof.",
+  "checks": [
+    {
+      "name": "application_fixture_export",
+      "passed": true
+    },
+    {
+      "name": "encrypted_backup_roundtrip",
+      "passed": true
+    },
+    {
+      "name": "isolated_restore_database_created",
+      "passed": true
+    },
+    {
+      "name": "fixture_restored_to_scratch_database",
+      "passed": true
+    },
+    {
+      "name": "all_application_model_counts_match",
+      "passed": true
+    },
+    {
+      "name": "all_application_records_match",
+      "passed": true
+    },
+    {
+      "name": "restored_application_system_check",
+      "passed": true
+    },
+    {
+      "name": "scratch_database_removed",
+      "passed": true
+    }
+  ],
+  "excluded_virtual_app": "django_rq (unmanaged dashboard; queue state is in Redis)",
+  "encrypted_backup": "tmp\\launch-backups\\contexa_restorecheck_1d8e674afd9b1c35.json.fernet",
+  "fixture_bytes": 29260480,
+  "model_counts": {
+    "auth.permission": 69,
+    "auth.user": 8,
+    "contenttypes.contenttype": 18,
+    "ingestion.auditlogentry": 37,
+    "ingestion.contextpreparation": 4,
+    "ingestion.datasourceconnection": 3,
+    "ingestion.githubappinstallation": 2,
+    "ingestion.githubidentity": 1,
+    "ingestion.googleidentity": 4,
+    "ingestion.ingestioncontext": 8,
+    "ingestion.ingestionjob": 7
+  },
+  "finished_at": "2026-10-31T17:12:33.089209+00:00",
+  "passed": true,
+  "scratch_database": "contexa_restorecheck_1d8e674afd9b1c35",
+  "scratch_cleanup_note": "Verified removal after terminating only idle pooled connections to the guarded scratch database."
+}

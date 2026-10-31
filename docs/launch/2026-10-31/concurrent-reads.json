@@ -1,0 +1,50 @@
+{
+  "checked_at": "2026-10-31T17:01:13.677774+00:00",
+  "scope": "Ten simultaneous profile reads, not ten simultaneous project imports or a stress test.",
+  "requests": [
+    {
+      "status": 200,
+      "seconds": 2.625
+    },
+    {
+      "status": 200,
+      "seconds": 2.578
+    },
+    {
+      "status": 200,
+      "seconds": 2.703
+    },
+    {
+      "status": 200,
+      "seconds": 2.703
+    },
+    {
+      "status": 200,
+      "seconds": 2.453
+    },
+    {
+      "status": 200,
+      "seconds": 2.5
+    },
+    {
+      "status": 200,
+      "seconds": 2.5
+    },
+    {
+      "status": 200,
+      "seconds": 2.75
+    },
+    {
+      "status": 200,
+      "seconds": 2.563
+    },
+    {
+      "status": 200,
+      "seconds": 2.594
+    }
+  ],
+  "median_seconds": 2.586,
+  "max_seconds": 2.75,
+  "passed": true,
+  "temporary_session_removed": true
+}

@@ -1,0 +1,36 @@
+[
+  {
+    "path": "/healthz",
+    "status": 200,
+    "seconds": 1.031,
+    "result": {
+      "status": "ok"
+    }
+  },
+  {
+    "path": "/readyz",
+    "status": 200,
+    "seconds": 2.578,
+    "result": {
+      "status": "ok",
+      "checks": {
+        "database": {
+          "ok": true
+        },
+        "redis": {
+          "ok": true
+        }
+      }
+    }
+  },
+  {
+    "path": "/api/auth/google/login-url/",
+    "status": 200,
+    "seconds": 0.61
+  },
+  {
+    "path": "/api/integrations/github/login-url/",
+    "status": 200,
+    "seconds": 0.812
+  }
+]

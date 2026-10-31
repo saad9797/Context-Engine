@@ -1,5 +1,7 @@
 # Contexa — Production Readiness
 
+> Latest evidence and release decision: [31 October 2026 launch-readiness pass](launch/2026-10-31/READINESS.md).
+
 > Historical audit from September 2026. Inventory and blocker claims below are
 > preserved as history and are not current release status. See
 > [the current test/deployment guide](RELEASE_CANDIDATE.md),

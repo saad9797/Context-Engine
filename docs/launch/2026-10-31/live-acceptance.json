@@ -1,0 +1,194 @@
+{
+  "started_at": "2026-10-31T16:44:12.878363+00:00",
+  "api": "https://context-engine-z4s8.onrender.com",
+  "scope": "Synthetic, bounded API acceptance; not a browser, restore or load test.",
+  "checks": [
+    {
+      "name": "register",
+      "passed": true,
+      "status": 201,
+      "seconds": 4.094
+    },
+    {
+      "name": "profile",
+      "passed": true
+    },
+    {
+      "name": "logout",
+      "passed": true
+    },
+    {
+      "name": "revoked_token_rejected",
+      "passed": true
+    },
+    {
+      "name": "login",
+      "passed": true,
+      "seconds": 2.687
+    },
+    {
+      "name": "register",
+      "passed": true,
+      "status": 201,
+      "seconds": 3.266
+    },
+    {
+      "name": "profile",
+      "passed": true
+    },
+    {
+      "name": "logout",
+      "passed": true
+    },
+    {
+      "name": "revoked_token_rejected",
+      "passed": true
+    },
+    {
+      "name": "login",
+      "passed": true,
+      "seconds": 3.281
+    },
+    {
+      "name": "folder_import",
+      "passed": true,
+      "status": 201,
+      "seconds": 2.157
+    },
+    {
+      "name": "snapshot_read",
+      "passed": true
+    },
+    {
+      "name": "private_snapshot_no_store",
+      "passed": false,
+      "cache_control": "missing"
+    },
+    {
+      "name": "library",
+      "passed": true
+    },
+    {
+      "name": "cross_owner_get_d7efd719-2d4f-4d4f-b561-19bd0d2d532d",
+      "passed": true,
+      "status": 404
+    },
+    {
+      "name": "cross_owner_delete_d7efd719-2d4f-4d4f-b561-19bd0d2d532d",
+      "passed": true,
+      "status": 404
+    },
+    {
+      "name": "cross_owner_post_prepare",
+      "passed": true,
+      "status": 404
+    },
+    {
+      "name": "cross_owner_get_handoffs",
+      "passed": true,
+      "status": 404
+    },
+    {
+      "name": "credential_file_rejected",
+      "passed": true
+    },
+    {
+      "name": "prepare_admitted",
+      "passed": true,
+      "status": 202,
+      "seconds": 1.953
+    },
+    {
+      "name": "prepare_completed",
+      "passed": true
+    },
+    {
+      "name": "handoff_has_task_and_source",
+      "passed": true
+    },
+    {
+      "name": "handoff_progress_instruction",
+      "passed": true
+    },
+    {
+      "name": "save_prepared_handoff",
+      "passed": true,
+      "status": 201
+    },
+    {
+      "name": "restore_saved_handoff_exactly",
+      "passed": true
+    },
+    {
+      "name": "prepare_admitted",
+      "passed": true,
+      "status": 202,
+      "seconds": 2.062
+    },
+    {
+      "name": "prepare_completed",
+      "passed": true
+    },
+    {
+      "name": "follow_up_preserves_original_task",
+      "passed": true
+    },
+    {
+      "name": "claude_launch_created",
+      "passed": true,
+      "status": 201
+    },
+    {
+      "name": "claude_full_handoff_prefill",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "claude_prompt_cors",
+      "passed": true
+    },
+    {
+      "name": "claude_link_revocation",
+      "passed": true
+    },
+    {
+      "name": "two_bounded_concurrent_preparations_admitted",
+      "passed": true,
+      "statuses": [
+        202,
+        202
+      ]
+    },
+    {
+      "name": "concurrent_preparation_completed",
+      "passed": true
+    },
+    {
+      "name": "concurrent_preparation_completed",
+      "passed": true
+    },
+    {
+      "name": "synthetic_snapshot_cleanup",
+      "passed": true
+    },
+    {
+      "name": "final_logout",
+      "passed": true
+    },
+    {
+      "name": "final_logout",
+      "passed": true
+    }
+  ],
+  "test_accounts": [
+    "launchcheck_20261031_338fccaf_0",
+    "launchcheck_20261031_338fccaf_1"
+  ],
+  "snapshots_deleted": [
+    "d7efd719-2d4f-4d4f-b561-19bd0d2d532d"
+  ],
+  "errors": [],
+  "finished_at": "2026-10-31T16:45:14.619483+00:00",
+  "passed": false,
+  "account_cleanup_note": "The exact empty synthetic accounts were deleted by the guarded operator cleanup. No credentials or test projects remain."
+}

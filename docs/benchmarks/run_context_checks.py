@@ -81,9 +81,11 @@ def public_checks(builder):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--baseline-ref', help='Trusted Contexa Git revision for a frozen legacy comparison')
+    parser.add_argument('--output-dir', type=Path, default=ROOT)
     args = parser.parse_args()
+    args.output_dir.mkdir(parents=True, exist_ok=True)
     fixture_report = evaluate(build_packs)
-    (ROOT / 'context_after.json').write_text(json.dumps(fixture_report, indent=2), encoding='utf-8')
+    (args.output_dir / 'context_after.json').write_text(json.dumps(fixture_report, indent=2), encoding='utf-8')
     report = dict(format='contexa.public-contract-checks.v1',
         scope='Agent-authored contract checks on pinned public application source. Not complete-context ground truth, semantic precision, or generated-code compile/test results.',
         public_source_executed=False, comparison_budget='Same total copied JSON estimate; legacy splits budget between base and task.',
@@ -96,7 +98,7 @@ def main():
         exec(compile(source, 'trusted-contexa-selector-baseline', 'exec'), module.__dict__)
         report.update(baseline_revision=revision, baseline_selector_sha256=hashlib.sha256(source.encode()).hexdigest(),
                       baseline=public_checks(module.build_packs))
-    (ROOT / 'public_contract_report.json').write_text(json.dumps(report, indent=2), encoding='utf-8')
+    (args.output_dir / 'public_contract_report.json').write_text(json.dumps(report, indent=2), encoding='utf-8')
     print(json.dumps({'controlled_checks_pass': fixture_report['all_contracts_present'],
         'public': [{'repository': r['repository'], 'budget': r['budget'], 'recall': r['checked_contract_recall'],
                     'tokens': r['estimated_copy_tokens'], 'status': r['status']} for r in report['current']]}, indent=2))

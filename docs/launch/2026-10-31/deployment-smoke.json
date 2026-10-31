@@ -1,0 +1,95 @@
+{
+  "frontend": "https://contexa.tech",
+  "api": "https://context-engine-z4s8.onrender.com",
+  "passed": true,
+  "checks": [
+    {
+      "name": "frontend_root",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "name": "direct_load:/dashboard",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "name": "direct_load:/login",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "name": "direct_load:/audit-log",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "name": "direct_load:/ingest/new",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "name": "direct_load:/connections",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "name": "direct_load:/register",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "name": "direct_load:/contexts/00000000-0000-0000-0000-000000000000",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "name": "direct_load:/contexts/00000000-0000-0000-0000-000000000000/claude-context",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "name": "direct_load:/ingest/00000000-0000-0000-0000-000000000000/progress",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "name": "direct_load:/settings",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "name": "compiled_javascript",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "name": "api:/healthz",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "name": "api:/readyz",
+      "status": 200,
+      "passed": true,
+      "dependencies": {
+        "database": {
+          "ok": true
+        },
+        "redis": {
+          "ok": true
+        }
+      }
+    },
+    {
+      "name": "protected_api_requires_authentication",
+      "status": 401,
+      "passed": true
+    },
+    {
+      "name": "production_cors",
+      "status": 200,
+      "passed": true
+    }
+  ]
+}

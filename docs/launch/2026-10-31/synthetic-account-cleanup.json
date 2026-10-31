@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "deleted_synthetic_accounts": [
+    "launchcheck_20261031_338fccaf_0",
+    "launchcheck_20261031_338fccaf_1"
+  ],
+  "source_snapshot_data_deleted": false,
+  "scope": "Exact empty audit accounts only; staff, active sessions, projects and connections are guarded."
+}

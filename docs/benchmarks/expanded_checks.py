@@ -1,5 +1,6 @@
 """Additional pinned real-project regression tasks. Never executes app code."""
 import hashlib
+import argparse
 import json
 from pathlib import Path
 import sys
@@ -27,6 +28,10 @@ CASES = [
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--output-dir', type=Path, default=ROOT)
+    args = parser.parse_args()
+    args.output_dir.mkdir(parents=True, exist_ok=True)
     results = []
     for case in CASES:
         raw = json.loads((ROOT / 'public_apps' / case['fixture']).read_text(encoding='utf-8'))
@@ -42,7 +47,7 @@ def main():
                             'context_gaps': output['handoff']['context_gaps'], 'selected_units': len(units)})
     report = {'scope': 'Agent-authored regression checks informed implementation. Not blind evaluation, generated-code success or complete-context ground truth.',
               'public_source_executed': False, 'results': results}
-    (ROOT / 'expanded_contract_report.json').write_text(json.dumps(report, indent=2), encoding='utf-8')
+    (args.output_dir / 'expanded_contract_report.json').write_text(json.dumps(report, indent=2), encoding='utf-8')
     print(json.dumps(results, indent=2))
     if any(r['estimated_copy_tokens'] > r['budget'] or r['forbidden_present'] or r['budget'] >= 10000 and r['missing'] for r in results):
         raise SystemExit('Expanded regression contracts failed; inspect report.')
