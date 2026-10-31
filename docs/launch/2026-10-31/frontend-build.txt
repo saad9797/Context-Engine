@@ -1,0 +1,69 @@
+﻿
+> build
+> vite build
+
+vite v8.3.4 building client environment for production...
+transforming...
+✓ 1080 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                       1.31 kB │ gzip:  0.68 kB
+dist/assets/SnapshotBuildScreen-C1R2qxN2.css          6.13 kB │ gzip:  1.85 kB
+dist/assets/IngestionProgress-C9eD3LMP.css           17.98 kB │ gzip:  4.07 kB
+dist/assets/index-CpeVMIe6.css                       34.69 kB │ gzip:  8.08 kB
+dist/assets/Add-CQNRYMRM.js                           0.14 kB │ gzip:  0.14 kB
+dist/assets/ArrowBack-DYhonKv6.js                     0.17 kB │ gzip:  0.16 kB
+dist/assets/LogoutOutlined-Cz05c6gc.js                0.22 kB │ gzip:  0.20 kB
+dist/assets/dividerClasses-CgqLhA6z.js                0.27 kB │ gzip:  0.21 kB
+dist/assets/KeyboardArrowRight-1HDnfLK8.js            0.27 kB │ gzip:  0.20 kB
+dist/assets/Search-CyG99rL0.js                        0.33 kB │ gzip:  0.24 kB
+dist/assets/ExpandMore-DZKnnCFm.js                    0.46 kB │ gzip:  0.31 kB
+dist/assets/SearchField-BMFJGOVZ.js                   0.52 kB │ gzip:  0.34 kB
+dist/assets/EmptyState-DYHLwUV2.js                    0.55 kB │ gzip:  0.36 kB
+dist/assets/Card-B7zIn4Ht.js                          0.55 kB │ gzip:  0.37 kB
+dist/assets/CardContent-DpFoIGtc.js                   0.56 kB │ gzip:  0.37 kB
+dist/assets/CloudQueueOutlined-B8go8Wq6.js            0.78 kB │ gzip:  0.43 kB
+dist/assets/zero-styled-BduVOmx6.js                   0.81 kB │ gzip:  0.44 kB
+dist/assets/VisibilityOffOutlined-BxgPb3xV.js         1.19 kB │ gzip:  0.61 kB
+dist/assets/NotFound-CnuKQgLZ.js                      1.23 kB │ gzip:  0.76 kB
+dist/assets/HistoryOutlined-B3TQ2VPS.js               1.40 kB │ gzip:  0.79 kB
+dist/assets/AuthLayout-DaCqvZcT.js                    1.50 kB │ gzip:  0.64 kB
+dist/assets/preload-helper-BLdHbfdN.js                1.51 kB │ gzip:  0.79 kB
+dist/assets/useMediaQuery-B4G0WRLG.js                 1.60 kB │ gzip:  0.86 kB
+dist/assets/InputAdornment-BM04JRCo.js                1.73 kB │ gzip:  0.91 kB
+dist/assets/BrandIcons-CE65-hL4.js                    1.93 kB │ gzip:  0.90 kB
+dist/assets/OpenInNew-0bNNP-JX.js                     2.47 kB │ gzip:  1.04 kB
+dist/assets/Login-BLix-JU-.js                         3.10 kB │ gzip:  1.34 kB
+dist/assets/Register-C1pyLacZ.js                      3.20 kB │ gzip:  1.34 kB
+dist/assets/Skeleton-BquY_vDn.js                      3.29 kB │ gzip:  1.41 kB
+dist/assets/Link-BQC1DgO6.js                          3.37 kB │ gzip:  1.36 kB
+dist/assets/ChevronRight-CzMYDLVr.js                  3.37 kB │ gzip:  1.39 kB
+dist/assets/Divider-TRt7oAP3.js                       3.44 kB │ gzip:  1.21 kB
+dist/assets/Settings-DNGnSfOQ.js                      3.94 kB │ gzip:  1.50 kB
+dist/assets/MenuItem-CJ4izO3a.js                      3.98 kB │ gzip:  1.65 kB
+dist/assets/PageHeader-Dz5F6St_.js                    3.99 kB │ gzip:  1.79 kB
+dist/assets/CheckCircleOutlineOutlined-CH3dpIVf.js    4.44 kB │ gzip:  1.77 kB
+dist/assets/Dialog-DkLwlpgu.js                        4.71 kB │ gzip:  1.78 kB
+dist/assets/TableCell-D1JUBCmj.js                     6.09 kB │ gzip:  2.05 kB
+dist/assets/Chip-fRneODjE.js                          8.17 kB │ gzip:  2.67 kB
+dist/assets/Dashboard-C0krZ9S-.js                     8.21 kB │ gzip:  3.30 kB
+dist/assets/AuditLog-C1mGsWWc.js                     11.91 kB │ gzip:  4.45 kB
+dist/assets/SnapshotBuildScreen-DBsBu8mQ.js          13.80 kB │ gzip:  5.05 kB
+dist/assets/useSlotProps-50_PmNHM.js                 13.93 kB │ gzip:  5.32 kB
+dist/assets/Tab-DlCulMo4.js                          14.99 kB │ gzip:  5.25 kB
+dist/assets/Connections-CTdW9u9W.js                  15.26 kB │ gzip:  5.34 kB
+dist/assets/Menu-ZuN-A3oz.js                         15.83 kB │ gzip:  6.04 kB
+dist/assets/IngestionProgress-BL4aAKIc.js            16.63 kB │ gzip:  6.18 kB
+dist/assets/NewIngestion-ub9sQRph.js                 23.45 kB │ gzip:  8.07 kB
+dist/assets/AppShell-Bfm0HpWH.js                     24.73 kB │ gzip:  8.72 kB
+dist/assets/ClaudeContext-BauFQLlW.js                30.59 kB │ gzip: 10.34 kB
+dist/assets/Tooltip-DtEfCeO1.js                      30.89 kB │ gzip: 11.09 kB
+dist/assets/ScrollTrigger-BoM0pWIV.js                42.74 kB │ gzip: 17.54 kB
+dist/assets/TextField-B2AiT8Z8.js                    47.67 kB │ gzip: 14.14 kB
+dist/assets/gsap-DLHyXJrb.js                         69.96 kB │ gzip: 27.43 kB
+dist/assets/Results-BbkT2tCQ.js                      83.10 kB │ gzip: 25.32 kB
+dist/assets/zip.js-C_MBVyge.js                      127.74 kB │ gzip: 57.22 kB
+dist/assets/Box-D0g2xxNy.js                         153.28 kB │ gzip: 53.60 kB
+dist/assets/index-uARatwQQ.js                       230.50 kB │ gzip: 72.55 kB
+
+✓ built in 1.69s

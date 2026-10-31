@@ -10,6 +10,7 @@ for an unrestricted production service.
 | --- | --- | --- |
 | Backend, after security patches | 140 tests passed | [test output](backend-tests.txt), [JUnit](backend-tests.xml) |
 | Frontend | 107 tests passed across 22 files | [test output](frontend-tests.txt), [JSON](frontend-tests.json) |
+| Production frontend build | Passed with the deployed HTTPS API origin | [build output](frontend-build.txt) |
 | Backend dependency audit | Zero known vulnerabilities in 30 resolved packages after updates | [current audit](backend-audit.json) |
 | Frontend dependency audit | Zero known vulnerabilities, including development dependencies | [audit](frontend-audit.json) |
 | Ingestion runtime dependency audit | Zero known vulnerabilities | [audit](engine-audit.json) |
