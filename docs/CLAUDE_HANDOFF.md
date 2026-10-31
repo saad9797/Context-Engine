@@ -7,6 +7,13 @@ in full and Claude opens with instructions to paste. No content is truncated.
 Clipboard denial is reported explicitly; existing copy/preview/download options
 remain available. Automatic opening after preparation also targets regular chat.
 
+The Code button also starts copying the complete prompt during the original
+click, before opening its tab or awaiting a network request. The status reports
+whether copying succeeded. **Copy handoff again** retries with fresh browser
+activation; **View full prompt** opens a read-only, selectable prompt when
+clipboard access is denied. Neither copying nor opening a URL proves Claude has
+inserted the prompt into its composer. Use Paste if prefill did not load.
+
 **Open in Claude Code (paid)** remains available separately for accounts with
 Claude Code access. Signing in does not grant a Code subscription. Contexa cannot
 read account eligibility, bypass an upgrade screen, or paste into a cross-origin

@@ -58,47 +58,50 @@ export function layoutERD(model, query = '', keysOnly = false) {
   const match = query.trim().toLowerCase();
   const degree = id => model.relationships.filter(edge => edge.from === id || edge.to === id).length;
   const tables = model.tables.filter(table => !match || table.id.toLowerCase().includes(match)).sort((a, b) => degree(b.id) - degree(a.id) || a.id.localeCompare(b.id));
-  const positions = {};
-  const width = 1080, cardWidth = 400, rowHeight = 30, header = 56;
-  let y = 36;
-  for (let index = 0; index < tables.length; index += 2) {
-    let rowMax = 0;
-    tables.slice(index, index + 2).forEach((table, column) => {
-      const keyColumns = new Set([...table.primary_keys, ...table.foreign_keys.map(fk => fk.column), ...table.unique_constraints.flatMap(key => key.columns || [])]);
-      for (const edge of model.relationships) {
-        if (edge.from === table.id) keyColumns.add(edge.fromColumn);
-        if (edge.to === table.id) keyColumns.add(edge.toColumn);
-      }
-      const columns = table.columns.filter(col => !keysOnly || keyColumns.has(col.name));
-      const height = header + Math.max(1, columns.length) * rowHeight + 12;
-      positions[table.id] = { table, columns, x: 50 + column * 580, y, width: cardWidth, height, column };
-      rowMax = Math.max(rowMax, height);
-    });
-    y += rowMax + 72;
+  const positions = Object.create(null);
+  const cardWidth = 400, rowHeight = 30, header = 56, gap = 100, margin = 60;
+  const entries = tables.map(table => {
+    const keys = new Set([...table.primary_keys, ...table.foreign_keys.map(fk => fk.column), ...table.unique_constraints.flatMap(key => key.columns)]);
+    for (const edge of model.relationships) {
+      if (edge.from === table.id) keys.add(edge.fromColumn);
+      if (edge.to === table.id) keys.add(edge.toColumn);
+    }
+    const columns = table.columns.filter(column => !keysOnly || keys.has(column.name));
+    return { table, columns, height: header + Math.max(1, columns.length) * rowHeight + 12 };
+  });
+  const averageHeight = entries.reduce((sum, entry) => sum + entry.height, 0) / Math.max(1, entries.length);
+  const columnCount = Math.max(1, Math.ceil(Math.sqrt(entries.length * (averageHeight + gap) / (cardWidth + gap))));
+  let y = margin;
+  for (let index = 0; index < entries.length; index += columnCount) {
+    const row = entries.slice(index, index + columnCount);
+    const rowBottom = y + Math.max(...row.map(entry => entry.height));
+    row.forEach((entry, column) => { positions[entry.table.id] = { ...entry, x: margin + column * (cardWidth + gap), y, width: cardWidth, column, rowBottom }; });
+    y = rowBottom + gap;
   }
   const fieldY = (position, name) => {
-    const index = position.columns.findIndex(col => col.name === name);
+    const index = position.columns.findIndex(column => column.name === name);
     return position.y + (index < 0 ? 28 : header + index * rowHeight + rowHeight / 2);
   };
   const edges = model.relationships.filter(edge => edge.available && positions[edge.from] && positions[edge.to]).map((edge, index) => {
     const from = positions[edge.from], to = positions[edge.to];
     const y1 = fieldY(from, edge.fromColumn), y2 = fieldY(to, edge.toColumn);
-    let x1, x2, mid;
+    const offset = 20 + index % 5 * 5;
+    let d;
     if (from.column === to.column) {
-      const right = from.column === 1;
-      x1 = from.x + (right ? cardWidth : 0);
-      x2 = x1;
-      mid = x1 + (right ? 1 : -1) * (18 + index % 4 * 7);
+      const x = from.x + cardWidth, lane = x + offset;
+      d = `M${x} ${y1} H${lane} V${y2 === y1 ? y2 - 12 : y2} H${x}`;
     } else {
-      x1 = from.x + (from.column === 0 ? cardWidth : 0);
-      x2 = to.x + (to.column === 0 ? cardWidth : 0);
-      mid = 510 + index % 5 * 14;
+      const right = from.column < to.column;
+      const x1 = from.x + (right ? cardWidth : 0), x2 = to.x + (right ? 0 : cardWidth);
+      const lane1 = x1 + (right ? offset : -offset), lane2 = x2 + (right ? -offset : offset);
+      if (from.y === to.y && Math.abs(from.column - to.column) === 1) {
+        d = `M${x1} ${y1} H${(x1 + x2) / 2} V${y2} H${x2}`;
+      } else {
+        const laneY = from.rowBottom + offset;
+        d = `M${x1} ${y1} H${lane1} V${laneY} H${lane2} V${y2} H${x2}`;
+      }
     }
-    // A self-reference returns to the same row by taking an outer loop.
-    const d = edge.from === edge.to && y1 === y2
-      ? `M${x1} ${y1} H${mid} V${y1 - 12} H${x2}`
-      : `M${x1} ${y1} H${mid} V${y2} H${x2}`;
     return { ...edge, d };
   });
-  return { positions, edges, width, height: Math.max(200, y - 30), rowHeight, header };
+  return { positions, edges, width: Math.max(520, margin * 2 + columnCount * (cardWidth + gap) - gap), height: Math.max(200, y - gap + margin), rowHeight, header };
 }

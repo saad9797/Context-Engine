@@ -57,9 +57,22 @@ it('opens synchronously, sends the complete handoff, and navigates with no opene
   fireEvent.click(screen.getByRole('button', { name: 'Open in Claude Code (paid)' }));
   expect(open).toHaveBeenCalledWith('about:blank', '_blank');
   expect(tab.opener).toBeNull();
+  expect(copyToClipboard).toHaveBeenCalledWith(expect.stringContaining(JSON.stringify(handoff)));
   expect(request).toHaveBeenCalledWith('/api/ingestion/snapshot/claude-launch/', { method: 'POST', body: { handoff } });
   await waitFor(() => expect(tab.location.replace).toHaveBeenCalledWith(response.url));
   expect(screen.getByText(/Claude Code opened with your handoff link/)).toBeInTheDocument();
+  expect(screen.getByText(/AI handoff copied. If the composer is empty/)).toBeInTheDocument();
+});
+
+it('offers a selectable complete prompt if clipboard copying fails for Code', async () => {
+  copyToClipboard.mockResolvedValue(false);
+  render(<Harness />);
+  fireEvent.click(screen.getByRole('button', { name: 'Open in Claude Code (paid)' }));
+  await screen.findByText(/Clipboard access was blocked/);
+  fireEvent.click(screen.getByRole('button', { name: 'View full prompt' }));
+  const preview = screen.getByLabelText('Complete AI handoff prompt');
+  expect(preview.value).toContain(JSON.stringify(handoff));
+  expect(preview).toHaveAttribute('readonly');
 });
 
 it('does not create a link if a pop-up was blocked', () => {

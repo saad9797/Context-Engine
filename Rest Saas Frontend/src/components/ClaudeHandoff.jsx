@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Box, Button, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField, Typography } from '@mui/material';
 import OpenInNew from '@mui/icons-material/OpenInNew';
 import { copyToClipboard } from '../lib/format';
 
@@ -68,7 +68,11 @@ export function useClaudeHandoff(contextId, request) {
     } catch (error) { cancel(tab, error.message || 'Could not open Claude. Your context is still here.'); }
   }
 
-  async function launchCode(handoff, tab = reserve()) {
+  async function launchCode(handoff, reservedTab) {
+    if (!handoff?.request?.task) return;
+    // Copy in the original click before opening another tab or awaiting the API.
+    const copying = copyToClipboard(claudePrompt(handoff));
+    const tab = reservedTab || reserve();
     if (!tab) return;
     if (tab.closed) {
       cancel(tab, 'The Claude tab was closed. Your context is ready; choose Open in Claude Code to try again.');
@@ -78,7 +82,7 @@ export function useClaudeHandoff(contextId, request) {
     setState({ kind: 'opening' });
     let created;
     try {
-      const output = await request(`/api/ingestion/${contextId}/claude-launch/`, { method: 'POST', body: { handoff } });
+      const [output, copied] = await Promise.all([request(`/api/ingestion/${contextId}/claude-launch/`, { method: 'POST', body: { handoff } }), copying]);
       created = output.id;
       if (current !== revision.current) {
         if (created) await request(`/api/ingestion/${contextId}/claude-launch/${created}/`, { method: 'DELETE' }).catch(() => {});
@@ -89,7 +93,7 @@ export function useClaudeHandoff(contextId, request) {
       if (tab.closed) throw new Error('The Claude tab was closed. Open Claude Code again to retry.');
       tab.location.replace(destination.href);
       pending.current = null;
-      setState({ kind: 'opened', ...output });
+      setState({ kind: 'opened', ...output, copied });
     } catch (error) {
       if (created) request(`/api/ingestion/${contextId}/claude-launch/${created}/`, { method: 'DELETE' }).catch(() => {});
       if (current === revision.current) cancel(tab, error.message || 'Could not open Claude. Your context is still available to copy or download.');
@@ -107,12 +111,21 @@ export function useClaudeHandoff(contextId, request) {
 
 export default function ClaudeHandoff({ handoff, disabled, controller }) {
   const { state, launch, launchCode, revoke, busy } = controller;
+  const [showPrompt, setShowPrompt] = useState(false);
+  const [copyStatus, setCopyStatus] = useState('');
+  async function copyAgain() {
+    const copied = await copyToClipboard(claudePrompt(handoff));
+    setCopyStatus(copied ? 'AI handoff copied. Paste it into the Claude composer with Ctrl+V (⌘V on Mac).' : 'Automatic copy was blocked. Select the prompt below and copy it manually.');
+    if (!copied) setShowPrompt(true);
+  }
   return <Box sx={{ mb: 2 }}>
     <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', flexWrap: 'wrap', mb: 1 }}>
       <Button variant="contained" startIcon={busy ? <CircularProgress size={16} color="inherit" /> : <OpenInNew />} disabled={disabled || busy} onClick={() => launch(handoff)}>
         {busy ? 'Preparing Claude handoff…' : 'Open in Claude'}
       </Button>
       <Button variant="outlined" disabled={disabled || busy} onClick={() => launchCode(handoff)}>Open in Claude Code (paid)</Button>
+      <Button disabled={disabled || busy} onClick={copyAgain}>Copy handoff again</Button>
+      <Button disabled={disabled || busy} onClick={() => setShowPrompt(true)}>View full prompt</Button>
     </Stack>
     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
       Claude chat opens without requiring Claude Code access. Short prompts are prefilled; larger handoffs are copied in full — paste them into Claude with Ctrl+V (⌘V on Mac). Sign in there if asked, review the prompt, then send.
@@ -124,10 +137,16 @@ export default function ClaudeHandoff({ handoff, disabled, controller }) {
     {busy && <Alert severity="info" role="status">{state.kind === 'preparing' ? 'Preparing your context. The new tab will open Claude automatically when ready.' : 'Creating your private Claude handoff…'}</Alert>}
     {state.kind === 'chat' && <Alert severity="success" role="status">{state.prefilled ? 'Claude chat opened with the prompt prefilled. If sign-in clears the prompt, return here and open Claude again.' : 'Your complete handoff was copied and Claude chat opened. Paste with Ctrl+V (⌘V on Mac), then review and send. Browser security prevents Contexa from pasting into another website automatically.'}</Alert>}
     {state.kind === 'opened' && <Alert severity="info" role="status">
-      Claude Code opened with your handoff link. Sign in there if asked. If the prompt does not appear after sign-in, return here and choose Open in Claude Code again. The link expires at {new Date(state.expires_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.
+      Claude Code opened with your handoff link. {state.copied ? 'AI handoff copied. If the composer is empty, paste with Ctrl+V (⌘V on Mac). Copying puts the context on your clipboard; it does not submit a message.' : 'Clipboard access was blocked. Use Copy handoff again or View full prompt if the composer is empty.'} Sign in there if asked. The link expires at {new Date(state.expires_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.
       <Button size="small" onClick={revoke}>Revoke handoff link</Button>
       {state.revokeError && <Typography variant="body2" color="error">{state.revokeError}</Typography>}
     </Alert>}
     {state.kind === 'revoked' && <Alert severity="success">The handoff link was revoked. Any context already loaded into Claude remains there.</Alert>}
+    {copyStatus && <Alert severity="info" role="status" sx={{ mt: 1 }}>{copyStatus}</Alert>}
+    <Dialog open={showPrompt} onClose={() => setShowPrompt(false)} maxWidth="md" fullWidth>
+      <DialogTitle>Your complete Claude prompt</DialogTitle>
+      <DialogContent><Typography variant="body2" sx={{ mb: 2 }}>Copy this text and paste it into the Claude chat or Code composer. It contains the complete prepared handoff.</Typography><TextField fullWidth multiline minRows={10} maxRows={20} value={handoff ? claudePrompt(handoff) : ''} label="Complete AI handoff prompt" slotProps={{ input: { readOnly: true } }} onFocus={event => event.target.select()} /></DialogContent>
+      <DialogActions><Button onClick={() => setShowPrompt(false)}>Close</Button><Button onClick={copyAgain}>Copy complete prompt</Button></DialogActions>
+    </Dialog>
   </Box>;
 }

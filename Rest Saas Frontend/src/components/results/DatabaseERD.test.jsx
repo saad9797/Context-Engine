@@ -3,8 +3,49 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, expect, it } from 'vitest';
 import DatabaseERD from './DatabaseERD';
 import { buildERD, layoutERD, columnNames } from './erdModel';
+import { fitCamera, zoomCamera } from './useDiagramCanvas';
 
 afterEach(cleanup);
+
+it('fits a large schema on a compact board without overlapping table cards', () => {
+  const model = buildERD({ tables: Array.from({ length: 77 }, (_, i) => ({ name: `table_${i}`, columns: Array.from({ length: 10 }, (_, j) => ({ name: `field_${j}` })) })) });
+  const layout = layoutERD(model);
+  const positions = Object.values(layout.positions);
+  expect(positions).toHaveLength(77);
+  expect(layout.height / layout.width).toBeLessThan(2);
+  for (let a = 0; a < positions.length; a++) for (let b = a + 1; b < positions.length; b++) {
+    const first = positions[a], second = positions[b];
+    expect(first.x + first.width <= second.x || second.x + second.width <= first.x || first.y + first.height <= second.y || second.y + second.height <= first.y).toBe(true);
+  }
+  const camera = fitCamera(layout, { width: 1000, height: 640 });
+  expect(camera.x).toBeLessThanOrEqual(0);
+  expect(camera.y).toBeLessThanOrEqual(0);
+  expect(camera.x + 1000 / camera.scale).toBeGreaterThanOrEqual(layout.width);
+  expect(camera.y + 640 / camera.scale).toBeGreaterThanOrEqual(layout.height);
+});
+
+it('zooms around the cursor without moving its world position', () => {
+  const before = { x: 30, y: 40, scale: .2 }, point = { x: 300, y: 200 };
+  const after = zoomCamera(before, 2, point);
+  expect(after.x + point.x / after.scale).toBeCloseTo(before.x + point.x / before.scale);
+  expect(after.y + point.y / after.scale).toBeCloseTo(before.y + point.y / before.scale);
+});
+
+it('offers a single fitted canvas, zoom controls and expanded mode', () => {
+  render(<DatabaseERD database={database} />);
+  const board = screen.getByLabelText('Interactive database diagram canvas');
+  const svg = board.querySelector('svg');
+  const fitted = svg.getAttribute('viewBox');
+  fireEvent.click(screen.getByRole('button', { name: 'Zoom ERD in' }));
+  expect(svg.getAttribute('viewBox')).not.toBe(fitted);
+  fireEvent.click(screen.getByRole('button', { name: 'Fit all tables' }));
+  expect(svg.getAttribute('viewBox')).toBe(fitted);
+  expect(screen.getByRole('button', { name: 'Database overview minimap' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Expand board' }));
+  expect(screen.getByRole('button', { name: 'Exit expanded view' })).toBeInTheDocument();
+  fireEvent.keyDown(board, { key: 'Escape' });
+  expect(screen.getByRole('button', { name: 'Expand board' })).toBeInTheDocument();
+});
 
 it('renders the exact legacy unique-constraint shape from the reported join crash', () => {
   const legacy = { tables: [{ schema: 'public', name: 'accounts', columns: [{ name: 'email', type: 'text' }, { name: 'tenant_id', type: 'uuid' }], primary_keys: '{}', unique_constraints: [{ name: 'account_email', columns: '{tenant_id,email}' }] }] };
