@@ -1,5 +1,12 @@
 # Open prepared context in Claude
 
+Both Claude destinations now export the AI handoff JSON itself, matching the
+handoff copy action, without an extra prompt or ask-for-missing-context preface.
+Newly prepared handoffs instruct the AI to make useful progress, state reasonable
+assumptions, and ask only about genuinely blocked changes while continuing
+independent work. Existing saved handoffs keep their stored instructions;
+prepare a fresh handoff to pick up the updated implementation policy.
+
 **Open in Claude** is the default and opens ordinary Claude chat at
 `https://claude.ai/new`. Short prompts are prefilled using `q`. To avoid sending
 large source packs in a URL, handoffs over 6,000 encoded URL characters are copied

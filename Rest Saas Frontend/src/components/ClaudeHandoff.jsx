@@ -3,7 +3,8 @@ import { Alert, Box, Button, CircularProgress, Dialog, DialogActions, DialogCont
 import OpenInNew from '@mui/icons-material/OpenInNew';
 import { copyToClipboard } from '../lib/format';
 
-export const claudePrompt = handoff => 'Implement the request using this self-contained context. Review context_gaps and ask for missing contracts first.\n\n' + JSON.stringify(handoff);
+// Match the AI handoff export exactly; do not prepend a second set of instructions.
+export const claudePrompt = handoff => JSON.stringify(handoff);
 
 export function useClaudeHandoff(contextId, request) {
   const [state, setState] = useState({ kind: 'idle' });

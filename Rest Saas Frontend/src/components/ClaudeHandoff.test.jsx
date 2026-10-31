@@ -1,7 +1,7 @@
 import React from 'react';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import ClaudeHandoff, { useClaudeHandoff } from './ClaudeHandoff';
+import ClaudeHandoff, { useClaudeHandoff, claudePrompt } from './ClaudeHandoff';
 import { copyToClipboard } from '../lib/format';
 vi.mock('../lib/format', () => ({ copyToClipboard: vi.fn() }));
 
@@ -20,13 +20,18 @@ beforeEach(() => {
 });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
+it('exports the AI handoff itself with no additional prompt or ask-first preface', () => {
+  expect(claudePrompt(handoff)).toBe(JSON.stringify(handoff));
+  expect(JSON.parse(claudePrompt(handoff))).toEqual(handoff);
+});
+
 it('opens ordinary Claude chat by default, without a Code subscription or backend launch', async () => {
   render(<Harness />);
   fireEvent.click(screen.getByRole('button', { name: 'Open in Claude', exact: true }));
   await waitFor(() => expect(tab.location.replace).toHaveBeenCalled());
   const url = new URL(tab.location.replace.mock.calls[0][0]);
   expect(url.pathname).toBe('/new');
-  expect(url.searchParams.get('q')).toContain(JSON.stringify(handoff));
+  expect(url.searchParams.get('q')).toBe(JSON.stringify(handoff));
   expect(request).not.toHaveBeenCalled();
 });
 
@@ -57,7 +62,7 @@ it('opens synchronously, sends the complete handoff, and navigates with no opene
   fireEvent.click(screen.getByRole('button', { name: 'Open in Claude Code (paid)' }));
   expect(open).toHaveBeenCalledWith('about:blank', '_blank');
   expect(tab.opener).toBeNull();
-  expect(copyToClipboard).toHaveBeenCalledWith(expect.stringContaining(JSON.stringify(handoff)));
+  expect(copyToClipboard).toHaveBeenCalledWith(JSON.stringify(handoff));
   expect(request).toHaveBeenCalledWith('/api/ingestion/snapshot/claude-launch/', { method: 'POST', body: { handoff } });
   await waitFor(() => expect(tab.location.replace).toHaveBeenCalledWith(response.url));
   expect(screen.getByText(/Claude Code opened with your handoff link/)).toBeInTheDocument();

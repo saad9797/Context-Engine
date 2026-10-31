@@ -1,4 +1,5 @@
 from datetime import timedelta
+import json
 from urllib.parse import urlsplit, parse_qs
 
 import pytest
@@ -49,6 +50,15 @@ def test_long_prompt_roundtrip_is_private_encrypted_and_not_in_launch_url(launch
     assert public['Access-Control-Allow-Origin'] == 'https://claude.ai'
     assert 'no-store' in public['Cache-Control']
     assert response['Cache-Control'] == 'no-store'
+
+
+def test_claude_receives_only_the_ai_handoff_without_an_extra_prompt(launch_setup):
+    client, snapshot = launch_setup
+    handoff = {'request': {'task': 'Implement interviews'}, 'code': [], 'instruction': 'Make useful progress.'}
+    response = create_launch(client, snapshot, handoff)
+    public = APIClient().get(prompt_path(response))
+    assert json.loads(public.content) == handoff
+    assert not public.content.decode().startswith('Implement the request using')
 
 
 def test_cannot_create_or_revoke_another_owners_launch(launch_setup):

@@ -25,7 +25,6 @@ from .privacy import safe_snapshot
 
 TTL = 15 * 60
 SALT = 'contexa.claude.prompt.v1'
-PREFACE = 'Implement the request using this self-contained context. Review context_gaps and ask for missing contracts first.'
 
 
 class LaunchRequest(serializers.Serializer):
@@ -61,7 +60,7 @@ class ClaudeLaunchView(APIView):
             if ClaudeLaunch.objects.filter(context__user=request.user).count() >= 20:
                 return Response({'error': 'Twenty Claude handoffs are active. Revoke an earlier handoff or wait 15 minutes.'}, status=429)
             handoff = serializer.validated_data['handoff']
-            prompt = PREFACE + '\n\n' + json.dumps(handoff, ensure_ascii=False, separators=(',', ':'))
+            prompt = json.dumps(handoff, ensure_ascii=False, separators=(',', ':'))
             launch = ClaudeLaunch.objects.create(context=snapshot, expires_at=now + timedelta(seconds=TTL), encrypted_prompt=encrypt_json({'prompt': prompt}))
         token = signing.dumps(str(launch.id), salt=SALT)
         prompt_url = base + reverse('claude-prompt', kwargs={'launch_id': launch.id}) + '?' + urlencode({'token': token})

@@ -154,7 +154,7 @@ export default function ClaudeContext() {
   const carryTask = result?.preparation_id ? { contextId, preparationId: result.preparation_id } : undefined;
   async function copy(asPrompt) {
     if (!pack || stale) return;
-    const preface = packType === "handoff" ? "Implement the request using this self-contained context. Review context_gaps and ask for missing contracts first."
+    const preface = packType === "handoff" ? ""
       : packType === "base"
       ? "Keep this project base pack as reference for this conversation. I will send a task pack next. Do not generate code yet."
       : "Use this task pack with the matching base_id from this conversation. If that base pack or an essential contract is missing, ask for it before generating code. Follow exact ORM fields, enums, imports and access rules. Return complete changed files and commands to validate them.";

@@ -28,6 +28,9 @@ def project():
 
 def test_exact_models_relations_maps_enums_and_contracts(project):
     output = build_packs(project, {"task": "Schedule interviews", "max_tokens": 4000})
+    assert 'Make useful progress now' in output['handoff']['instruction']
+    assert 'not an automatic reason to stop' in output['handoff']['instruction']
+    assert 'MISSING_CONTEXT' not in output['handoff']['instruction']
     names = {block["name"] for block in output["task"]["models"]}
     assert names == {"Interview", "Applicant", "InterviewStatus"}
     assert any('@@map("interviews")' in block["content"] for block in output["task"]["models"])
