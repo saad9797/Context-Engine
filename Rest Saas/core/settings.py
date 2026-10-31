@@ -46,6 +46,7 @@ MIDDLEWARE = [
     # First-ish so the id exists for the entire response cycle, including
     # anything logged by exception handling further down the chain.
     "core.middleware.RequestIDMiddleware",
+    "core.middleware.PrivateAPICacheMiddleware",
 ]
 
 ROOT_URLCONF = "core.urls"

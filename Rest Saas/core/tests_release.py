@@ -102,3 +102,25 @@ def test_html_only_api_request_is_not_a_template_server_error():
     response = APIClient().get('/healthz', HTTP_ACCEPT='text/html')
     assert response.status_code == 406
     assert response['Content-Type'].startswith('application/json')
+
+
+@pytest.mark.django_db
+def test_private_snapshot_and_account_responses_are_not_cacheable():
+    from django.contrib.auth.models import User
+    from ingestion.models import IngestionContext
+    user = User.objects.create_user(username='cache-policy-owner')
+    snapshot = IngestionContext.objects.create(user=user, data={'codebase': {}})
+    client = APIClient()
+    client.force_authenticate(user)
+    for path in [f'/api/ingestion/{snapshot.id}/', '/api/ingestion/', '/api/auth/me/']:
+        response = client.get(path)
+        assert response.status_code == 200
+        assert 'no-store' in response['Cache-Control']
+        assert 'Authorization' in response['Vary']
+
+
+def test_authentication_errors_are_not_cacheable_but_health_is_independent():
+    response = APIClient().get('/api/auth/me/')
+    assert response.status_code == 401
+    assert 'no-store' in response['Cache-Control']
+    assert 'Cache-Control' not in APIClient().get('/healthz')

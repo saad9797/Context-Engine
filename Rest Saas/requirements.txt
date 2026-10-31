@@ -7,7 +7,7 @@
 # accident of a fresh install picking up whatever's newest.
 django==5.2.17
 django-cors-headers==4.9.0
-djangorestframework==3.17.2  # 3.17.1 has two known CVEs (PYSEC-2026-3827, -3828); found via pip-audit 2026-09-28
+djangorestframework==3.18.2  # Patched security release; launch audit 2026-10-31.
 python-dotenv==1.2.2
 psycopg2-binary==2.9.12
 dj-database-url==3.1.2
@@ -19,8 +19,8 @@ PyJWT[crypto]==2.15.0
 requests==2.34.2
 urllib3==2.8.0  # Pin the audited transitive HTTP dependency.
 sqlparse==0.6.0  # Pin the audited Django SQL parsing dependency.
-dnspython==2.8.0
-pymongo==4.18.2
+dnspython==2.9.0
+pymongo==4.18.3
 # Production WSGI server — manage.py runserver is dev-only (Django's own
 # warning on every startup says so).
 gunicorn==26.2.0

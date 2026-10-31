@@ -8,8 +8,23 @@ request/response to inspect directly.
 
 import uuid
 from contextvars import ContextVar
+from django.utils.cache import patch_vary_headers
 
 _request_id_var: ContextVar[str] = ContextVar("request_id", default="-")
+
+
+class PrivateAPICacheMiddleware:
+    """Auth tokens, private source, and account data must not be cached."""
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        if request.path.startswith('/api/'):
+            response.setdefault('Cache-Control', 'no-store, private')
+            patch_vary_headers(response, ['Authorization'])
+        return response
 
 
 def get_current_request_id() -> str:
